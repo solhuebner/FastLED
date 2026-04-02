@@ -52,11 +52,11 @@ class sstream {
         return *this;
     }
 
-    sstream &operator<<(const Tile2x2_u8 &subpixel);
-    sstream &operator<<(const Tile2x2_u8_wrap &tile);  // New overload for wrapped tiles
+    sstream &operator<<(const Tile2x2_u8 &subpixel) FL_NOEXCEPT;
+    sstream &operator<<(const Tile2x2_u8_wrap &tile) FL_NOEXCEPT;  // New overload for wrapped tiles
 
     // Bins support - implemented in strstream.cpp.hpp
-    sstream &operator<<(const audio::fft::Bins &bins);
+    sstream &operator<<(const audio::fft::Bins &bins) FL_NOEXCEPT;
 
     // vec2<T> support - format as (x,y)
     template<typename T>
@@ -304,7 +304,7 @@ class sstream {
     //-------------------------------------------------------------------------
     template<typename T>
     typename fl::enable_if<fl::is_enum<T>::value, sstream&>::type
-    operator<<(T e) {
+    operator<<(T e) FL_NOEXCEPT {
         using underlying_t = typename fl::underlying_type<T>::type;
         return (*this) << static_cast<underlying_t>(e);
     }
@@ -316,7 +316,7 @@ class sstream {
     // Uses is_multi_byte_integer trait to select only non-char integer types
     template<typename T>
     typename fl::enable_if<fl::is_multi_byte_integer<T>::value, sstream&>::type
-    operator<<(T val) {
+    operator<<(T val) FL_NOEXCEPT {
         using target_t = typename int_cast_detail::cast_target<T>::type;
         appendFormatted(static_cast<target_t>(val));
         return *this;
@@ -327,7 +327,7 @@ class sstream {
     //-------------------------------------------------------------------------
     template<typename T>
     typename fl::enable_if<
-        fl::is_same<decltype(static_cast<const T*>(nullptr)->to_float()), float>::value
+        fl::is_same<decltype(static_cast<const T*>(nullptr)->to_float()) FL_NOEXCEPT , float>::value
         && !fl::is_floating_point<T>::value,
         sstream&>::type
     operator<<(const T &val) {
@@ -361,9 +361,9 @@ class sstream {
     int getBase() const FL_NOEXCEPT { return mBase; }
 
     // Friend operators for manipulators
-    friend sstream& operator<<(sstream&, const hex_t&);
-    friend sstream& operator<<(sstream&, const dec_t&);
-    friend sstream& operator<<(sstream&, const oct_t&);
+    friend sstream& operator<<(sstream&, const hex_t&) FL_NOEXCEPT;
+    friend sstream& operator<<(sstream&, const dec_t&) FL_NOEXCEPT;
+    friend sstream& operator<<(sstream&, const oct_t&) FL_NOEXCEPT;
 
   private:
     string mStr;
@@ -371,13 +371,13 @@ class sstream {
     int mBase = 10;  // Default to decimal
 
     // Helper methods to format integers based on current base
-    void appendFormatted(fl::i8 val);
-    void appendFormatted(fl::i16 val);
-    void appendFormatted(fl::i32 val);
-    void appendFormatted(fl::i64 val);
-    void appendFormatted(fl::u16 val);
-    void appendFormatted(fl::u32 val);
-    void appendFormatted(fl::u64 val);
+    void appendFormatted(fl::i8 val) FL_NOEXCEPT;
+    void appendFormatted(fl::i16 val) FL_NOEXCEPT;
+    void appendFormatted(fl::i32 val) FL_NOEXCEPT;
+    void appendFormatted(fl::i64 val) FL_NOEXCEPT;
+    void appendFormatted(fl::u16 val) FL_NOEXCEPT;
+    void appendFormatted(fl::u32 val) FL_NOEXCEPT;
+    void appendFormatted(fl::u64 val) FL_NOEXCEPT;
 };
 
 class sstream_noop {
@@ -403,7 +403,7 @@ class sstream_noop {
     // Enum support to match sstream interface
     template<typename T>
     typename fl::enable_if<fl::is_enum<T>::value, sstream_noop&>::type
-    operator<<(T) { return *this; }
+    operator<<(T) FL_NOEXCEPT { return *this; }
 
     sstream_noop &operator<<(float) FL_NOEXCEPT { return *this; }
     sstream_noop &operator<<(double) FL_NOEXCEPT { return *this; }
@@ -415,7 +415,7 @@ class sstream_noop {
     // Handles all multi-byte integer types (excludes char types which are handled separately)
     template<typename T>
     typename fl::enable_if<fl::is_multi_byte_integer<T>::value, sstream_noop&>::type
-    operator<<(T) { return *this; }
+    operator<<(T) FL_NOEXCEPT { return *this; }
 
     // Generic pointer and other type support for compatibility
     sstream_noop &operator<<(const void*) FL_NOEXCEPT { return *this; }

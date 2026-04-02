@@ -18,8 +18,8 @@ namespace detail {
 // On Windows, inline functions with static locals create per-DLL copies.
 // This registry ensures all DLLs share the same singleton instance.
 // Defined in singleton.cpp.hpp.
-void* singleton_registry_get(const char* key);
-void singleton_registry_set(const char* key, void* value);
+void* singleton_registry_get(const char* key) FL_NOEXCEPT;
+void singleton_registry_set(const char* key, void* value) FL_NOEXCEPT;
 
 } // namespace detail
 

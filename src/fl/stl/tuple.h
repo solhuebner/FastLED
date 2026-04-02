@@ -62,46 +62,46 @@ struct tuple_element<I, tuple<Head, Tail...>>
 // get<I>(tuple)
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I == 0, Head&>::type
-get(tuple<Head, Tail...>& t) {
+get(tuple<Head, Tail...>& t) FL_NOEXCEPT {
     return t.head;
 }
 
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I != 0, typename tuple_element<I, tuple<Head, Tail...>>::type&>::type
-get(tuple<Head, Tail...>& t) {
+get(tuple<Head, Tail...>& t) FL_NOEXCEPT {
     return get<I-1>(t.tail);
 }
 
 // const overloads
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I == 0, const Head&>::type
-get(const tuple<Head, Tail...>& t) {
+get(const tuple<Head, Tail...>& t) FL_NOEXCEPT {
     return t.head;
 }
 
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I != 0, const typename tuple_element<I, tuple<Head, Tail...>>::type&>::type
-get(const tuple<Head, Tail...>& t) {
+get(const tuple<Head, Tail...>& t) FL_NOEXCEPT {
     return get<I-1>(t.tail);
 }
 
 // rvalue overloads
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I == 0, Head&&>::type
-get(tuple<Head, Tail...>&& t) {
+get(tuple<Head, Tail...>&& t) FL_NOEXCEPT {
     return fl::move(t.head);
 }
 
 template<size_t I, typename Head, typename... Tail>
 typename enable_if<I != 0, typename tuple_element<I, tuple<Head, Tail...>>::type&&>::type
-get(tuple<Head, Tail...>&& t) {
+get(tuple<Head, Tail...>&& t) FL_NOEXCEPT {
     return get<I-1>(fl::move(t.tail));
 }
 
 // make_tuple
 template<typename... Ts>
 tuple<typename fl::decay<Ts>::type...>
-make_tuple(Ts&&... args) {
+make_tuple(Ts&&... args) FL_NOEXCEPT {
     return tuple<typename fl::decay<Ts>::type...>(fl::forward<Ts>(args)...);
 }
 

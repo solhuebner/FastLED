@@ -36,11 +36,11 @@ public:
         return *this;
     }
 
-    ostream& operator<<(fl::i8 n);
-    ostream& operator<<(fl::u8 n);
-    ostream& operator<<(fl::i16 n);
-    ostream& operator<<(fl::i32 n);
-    ostream& operator<<(fl::u32 n);
+    ostream& operator<<(fl::i8 n) FL_NOEXCEPT;
+    ostream& operator<<(fl::u8 n) FL_NOEXCEPT;
+    ostream& operator<<(fl::i16 n) FL_NOEXCEPT;
+    ostream& operator<<(fl::i32 n) FL_NOEXCEPT;
+    ostream& operator<<(fl::u32 n) FL_NOEXCEPT;
 
     ostream& operator<<(float f) FL_NOEXCEPT {
         string temp;
@@ -68,7 +68,7 @@ public:
     // Mirrors the pattern used by sstream.
     template<typename T>
     typename fl::enable_if<fl::is_multi_byte_integer<T>::value, ostream&>::type
-    operator<<(T val) {
+    operator<<(T val) FL_NOEXCEPT {
         using target_t = typename int_cast_detail::cast_target<T>::type;
         string temp;
         temp.append(static_cast<target_t>(val));
@@ -80,9 +80,9 @@ public:
     int getBase() const FL_NOEXCEPT { return mBase; }
 
     // Friend operators for manipulators
-    friend ostream& operator<<(ostream&, const hex_t&);
-    friend ostream& operator<<(ostream&, const dec_t&);
-    friend ostream& operator<<(ostream&, const oct_t&);
+    friend ostream& operator<<(ostream&, const hex_t&) FL_NOEXCEPT;
+    friend ostream& operator<<(ostream&, const dec_t&) FL_NOEXCEPT;
+    friend ostream& operator<<(ostream&, const oct_t&) FL_NOEXCEPT;
 
 private:
     int mBase = 10;  // Default to decimal
@@ -103,8 +103,8 @@ inline ostream& operator<<(ostream& os, const endl_t&) FL_NOEXCEPT {
 
 // hex, dec, oct manipulator implementations
 // (declared as friend functions in ostream class, implemented in ostream.cpp)
-ostream& operator<<(ostream& os, const hex_t&);
-ostream& operator<<(ostream& os, const dec_t&);
-ostream& operator<<(ostream& os, const oct_t&);
+ostream& operator<<(ostream& os, const hex_t&) FL_NOEXCEPT;
+ostream& operator<<(ostream& os, const dec_t&) FL_NOEXCEPT;
+ostream& operator<<(ostream& os, const oct_t&) FL_NOEXCEPT;
 
 } // namespace fl

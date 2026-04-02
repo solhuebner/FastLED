@@ -187,7 +187,7 @@ public:
         return *tmp;
     }
 
-    pointer operator->() const {
+    pointer operator->() const FL_NOEXCEPT {
         Iterator tmp = current;
         --tmp;
         return &(*tmp);

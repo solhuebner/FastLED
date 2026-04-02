@@ -69,8 +69,8 @@ template <typename Base, typename Derived> struct is_base_of {
   private:
     typedef u8 yes;
     typedef u16 no;
-    static yes test(Base *); // Matches if Derived is convertible to Base*
-    static no test(...);     // Fallback if not convertible
+    static yes test(Base *) FL_NOEXCEPT; // Matches if Derived is convertible to Base*
+    static no test(...) FL_NOEXCEPT;     // Fallback if not convertible
     enum {
         kSizeDerived = sizeof(test(static_cast<Derived *>(nullptr))),
     };
@@ -846,10 +846,10 @@ template <typename T> struct has_member_swap {
     template <typename U, void (U::*M)(U &)> struct helper {};
 
     // picks this overload if helper<U, &U::swap> is valid
-    template <typename U> static yes test(helper<U, &U::swap> *);
+    template <typename U> static yes test(helper<U, &U::swap> *) FL_NOEXCEPT;
 
     // fallback otherwise
-    template <typename> static no test(...);
+    template <typename> static no test(...) FL_NOEXCEPT;
 
   public:
     static constexpr bool value = sizeof(test<T>(nullptr)) == sizeof(yes);
@@ -1020,12 +1020,12 @@ using underlying_type_t = typename underlying_type<T>::type;
     template <typename T, typename U>                                          \
     typename enable_if<                                                        \
         is_same<U, CLASS>::value && is_pod<T>::value, bool>::type             \
-    operator OP(const T &pod, const CLASS &obj) {                              \
+    operator OP(const T &pod, const CLASS &obj) FL_NOEXCEPT {                  \
         return pod OP obj;                                                     \
     }                                                                          \
     template <typename T>                                                      \
     typename enable_if<is_pod<T>::value, bool>::type operator OP(             \
-        const CLASS &obj, const T &pod) {                                      \
+        const CLASS &obj, const T &pod) FL_NOEXCEPT {                          \
         return obj OP pod;                                                     \
     }
 

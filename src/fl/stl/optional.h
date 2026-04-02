@@ -74,7 +74,7 @@ template <typename T> class Optional {
         return *this;
     }
 
-    bool operator()() const { return !empty(); }
+    bool operator()() const FL_NOEXCEPT { return !empty(); }
     bool operator!() const FL_NOEXCEPT { return empty(); }
 
     // Explicit conversion to bool for contextual boolean evaluation
@@ -105,8 +105,8 @@ template <typename T> class Optional {
     // Dereference operators for compatibility with std::optional
     T& operator*() FL_NOEXCEPT { return *ptr(); }
     const T& operator*() const FL_NOEXCEPT { return *ptr(); }
-    T* operator->() { return ptr(); }
-    const T* operator->() const { return ptr(); }
+    T* operator->() FL_NOEXCEPT { return ptr(); }
+    const T* operator->() const FL_NOEXCEPT { return ptr(); }
 
     // value() method for std::optional compatibility
     T& value() FL_NOEXCEPT { return *ptr(); }
@@ -191,7 +191,7 @@ template <typename T> class Optional<T&&> {
         return *this;
     }
 
-    bool operator()() const { return !empty(); }
+    bool operator()() const FL_NOEXCEPT { return !empty(); }
     bool operator!() const FL_NOEXCEPT { return empty(); }
 
     // Explicit conversion to bool
@@ -219,8 +219,8 @@ template <typename T> class Optional<T&&> {
     const T& get() const FL_NOEXCEPT { return *mPtr; }
 
     // Arrow operator - returns pointer for member access
-    T* operator->() { return mPtr; }
-    const T* operator->() const { return mPtr; }
+    T* operator->() FL_NOEXCEPT { return mPtr; }
+    const T* operator->() const FL_NOEXCEPT { return mPtr; }
 
     // value() method for std::optional compatibility
     T&& value() FL_NOEXCEPT { return fl::forward<T>(*mPtr); }

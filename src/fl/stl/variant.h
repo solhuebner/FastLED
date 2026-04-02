@@ -96,7 +96,7 @@ class FL_ALIGN_AS_T(max_align<Types...>::value) variant {
 
     template <typename T, typename... Args>
     typename fl::enable_if<contains_type<T, Types...>::value, T &>::type
-    emplace(Args &&...args) {
+    emplace(Args &&...args) FL_NOEXCEPT {
         reset();
         construct<T>(fl::forward<Args>(args)...);
         return ptr<T>();

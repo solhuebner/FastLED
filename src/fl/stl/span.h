@@ -37,10 +37,10 @@ class has_data_method {
     typedef fl::u16 no;
 
     template <typename C>
-    static yes test(decltype(&C::data));
+    static yes test(decltype(&C::data)) FL_NOEXCEPT;
 
     template <typename>
-    static no test(...);
+    static no test(...) FL_NOEXCEPT;
 
   public:
     static constexpr bool value = sizeof(test<T>(nullptr)) == sizeof(yes);
@@ -54,10 +54,10 @@ class has_size_method {
     typedef fl::u16 no;
 
     template <typename C>
-    static yes test(decltype(&C::size));
+    static yes test(decltype(&C::size)) FL_NOEXCEPT;
 
     template <typename>
-    static no test(...);
+    static no test(...) FL_NOEXCEPT;
 
   public:
     static constexpr bool value = sizeof(test<T>(nullptr)) == sizeof(yes);
@@ -152,7 +152,7 @@ template <typename T> class span<T, dynamic_extent> {
         !fl::is_same<typename fl::decay<Container>::type, span<T, dynamic_extent>>::value &&
         !fl::is_base_of<span<T, dynamic_extent>, Container>::value
     >::type* = nullptr)
-        : mData(c.data()), mSize(c.size()) {}
+ FL_NOEXCEPT : mData(c.data()), mSize(c.size()) {}
 
     // Const version for const containers
     template<typename Container>
@@ -161,7 +161,7 @@ template <typename T> class span<T, dynamic_extent> {
         !fl::is_same<typename fl::decay<Container>::type, span<T, dynamic_extent>>::value &&
         !fl::is_base_of<span<T, dynamic_extent>, Container>::value
     >::type* = nullptr)
-        : mData(c.data()), mSize(c.size()) {}
+ FL_NOEXCEPT : mData(c.data()), mSize(c.size()) {}
 
     // ======= FL::ARRAY CONVERSIONS =======
     // fl::array<T> -> span<T>
@@ -549,7 +549,7 @@ template <typename T, fl::size Extent> class span {
 // ======= BYTE VIEW CONVERSION FUNCTIONS =======
 // Convert span to read-only byte view
 template<typename T, fl::size Extent>
-span<const fl::u8, (Extent == dynamic_extent) ? dynamic_extent : (Extent * sizeof(T))>
+span<const fl::u8, (Extent == dynamic_extent) FL_NOEXCEPT ? dynamic_extent : (Extent * sizeof(T))>
 as_bytes(const span<T, Extent>& s) {
     if (Extent == dynamic_extent) {
         return span<const fl::u8, dynamic_extent>(
@@ -565,7 +565,7 @@ as_bytes(const span<T, Extent>& s) {
 
 // Convert span to writable byte view
 template<typename T, fl::size Extent>
-span<fl::u8, (Extent == dynamic_extent) ? dynamic_extent : (Extent * sizeof(T))>
+span<fl::u8, (Extent == dynamic_extent) FL_NOEXCEPT ? dynamic_extent : (Extent * sizeof(T))>
 as_writable_bytes(span<T, Extent>& s) {
     if (Extent == dynamic_extent) {
         return span<fl::u8, dynamic_extent>(
@@ -587,7 +587,7 @@ template <typename T> class MatrixSlice {
     MatrixSlice(T *data, i32 dataWidth, i32 dataHeight,
                 i32 bottomLeftX, i32 bottomLeftY, i32 topRightX,
                 i32 topRightY)
-        : mData(data), mDataWidth(dataWidth), mDataHeight(dataHeight),
+ FL_NOEXCEPT : mData(data), mDataWidth(dataWidth), mDataHeight(dataHeight),
           mBottomLeft{bottomLeftX, bottomLeftY},
           mTopRight{topRightX, topRightY} {}
 
@@ -608,7 +608,7 @@ template <typename T> class MatrixSlice {
     }
 
     // element access via (x,y)
-    T &operator()(i32 x, i32 y) { return at(x, y); }
+    T &operator()(i32 x, i32 y) FL_NOEXCEPT { return at(x, y); }
 
     // Add access like slice[y][x]
     T *operator[](i32 row) FL_NOEXCEPT {

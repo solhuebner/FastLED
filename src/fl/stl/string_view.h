@@ -168,7 +168,7 @@ class string_view {
     }
 
     int compare(fl::size pos1, fl::size count1, string_view other,
-                         fl::size pos2, fl::size count2) const {
+                         fl::size pos2, fl::size count2) const FL_NOEXCEPT {
         return substr(pos1, count1).compare(other.substr(pos2, count2));
     }
 

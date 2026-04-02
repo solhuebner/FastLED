@@ -158,7 +158,7 @@ bool operator>=(const array<T, N> &lhs, const array<T, N> &rhs) FL_NOEXCEPT {
 
 template <typename T, fl::size N>
 void swap(array<T, N> &lhs,
-          array<T, N> &rhs) noexcept(noexcept(lhs.swap(rhs))) {
+          array<T, N> &rhs) FL_NOEXCEPT {
     lhs.swap(rhs);
 }
 

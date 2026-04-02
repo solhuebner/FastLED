@@ -10,7 +10,7 @@ namespace fl {
 
 template<typename T>
 struct default_delete {
-    void operator()(T* ptr) const {
+    void operator()(T* ptr) const FL_NOEXCEPT {
         static_assert(sizeof(T) > 0,
             "Cannot delete pointer to incomplete type. "
             "Ensure the type is fully defined where unique_ptr destructor is instantiated.");
@@ -26,7 +26,7 @@ struct default_delete {
 
 template<typename T>
 struct default_delete<T[]> {
-    void operator()(T* ptr) const {
+    void operator()(T* ptr) const FL_NOEXCEPT {
         delete[] ptr;
     }
 };
@@ -257,14 +257,14 @@ bool operator!=(fl::nullptr_t, const unique_ptr<T, Deleter>& ptr) FL_NOEXCEPT {
 // make_unique function for consistency with std::make_unique
 template<typename T, typename... Args>
 typename fl::enable_if<!fl::is_array<T>::value, unique_ptr<T>>::type
-make_unique(Args&&... args) {
+make_unique(Args&&... args) FL_NOEXCEPT {
     return unique_ptr<T>(new T(fl::forward<Args>(args)...));
 }
 
 // make_unique for arrays
 template<typename T>
 typename fl::enable_if<fl::is_array<T>::value, unique_ptr<T>>::type
-make_unique(fl::size_t size) {
+make_unique(fl::size_t size) FL_NOEXCEPT {
     typedef typename fl::remove_extent<T>::type U;
     return unique_ptr<T>(new U[size]());
 }

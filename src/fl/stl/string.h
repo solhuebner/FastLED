@@ -246,7 +246,7 @@ class string : public StrN<FASTLED_STR_INLINED_SIZE> {
         return str;
     }
 
-    static int strcmp(const string& a, const string& b);
+    static int strcmp(const string& a, const string& b) FL_NOEXCEPT;
 
     // ======= CONSTRUCTORS =======
     string() FL_NOEXCEPT : StrN<FASTLED_STR_INLINED_SIZE>() {}
@@ -456,9 +456,9 @@ class string : public StrN<FASTLED_STR_INLINED_SIZE> {
         return *this;
     }
 
-    string& append(const JsonUiInternal& val);
-    string& append(const json_value& val);
-    string& append(const json& val);
+    string& append(const JsonUiInternal& val) FL_NOEXCEPT;
+    string& append(const json_value& val) FL_NOEXCEPT;
+    string& append(const json& val) FL_NOEXCEPT;
 
     template <typename T, fl::size N>
     string& append(const fl::FixedVector<T, N>& vec) FL_NOEXCEPT {
@@ -471,13 +471,13 @@ class string : public StrN<FASTLED_STR_INLINED_SIZE> {
         return *this;
     }
 
-    string& append(const CRGB& c);
-    string& appendCRGB(const CRGB& c);
+    string& append(const CRGB& c) FL_NOEXCEPT;
+    string& appendCRGB(const CRGB& c) FL_NOEXCEPT;
 
     // Any type with a to_float() method (e.g., fixed_point types)
     template <typename T>
     typename fl::enable_if<
-        fl::is_same<decltype(static_cast<const T*>(nullptr)->to_float()), float>::value
+        fl::is_same<decltype(static_cast<const T*>(nullptr)->to_float()) FL_NOEXCEPT , float>::value
         && !fl::is_floating_point<T>::value,
         string&>::type
     append(const T& val) {
@@ -485,9 +485,9 @@ class string : public StrN<FASTLED_STR_INLINED_SIZE> {
         return *this;
     }
 
-    string& append(const audio::fft::Bins& str);
-    string& append(const XYMap& map);
-    string& append(const Tile2x2_u8_wrap& tile);
+    string& append(const audio::fft::Bins& str) FL_NOEXCEPT;
+    string& append(const XYMap& map) FL_NOEXCEPT;
+    string& append(const Tile2x2_u8_wrap& tile) FL_NOEXCEPT;
 
     template <typename Key, typename Hash, typename KeyEqual>
     string& append(const HashSet<Key, Hash, KeyEqual>& set) FL_NOEXCEPT {
@@ -512,16 +512,16 @@ class string : public StrN<FASTLED_STR_INLINED_SIZE> {
         return *this;
     }
 
-    void swap(string& other);
+    void swap(string& other) FL_NOEXCEPT;
 
-    string& intern();
+    string& intern() FL_NOEXCEPT;
 
   private:
     enum {
         kStrInlineSize = FASTLED_STR_INLINED_SIZE,
     };
 
-    static void compileTimeAssertions();
+    static void compileTimeAssertions() FL_NOEXCEPT;
 };
 
 // ======= FREE FUNCTIONS =======
@@ -559,7 +559,7 @@ inline string operator+(const string& lhs, const string& rhs) FL_NOEXCEPT {
 
 template<typename T>
 inline typename fl::enable_if<!fl::is_arithmetic<T>::value, string>::type
-operator+(const char* lhs, const T& rhs) {
+operator+(const char* lhs, const T& rhs) FL_NOEXCEPT {
     string result(lhs);
     result += rhs;
     return result;
@@ -567,7 +567,7 @@ operator+(const char* lhs, const T& rhs) {
 
 template<typename T>
 inline typename fl::enable_if<!fl::is_arithmetic<T>::value, string>::type
-operator+(const T& lhs, const char* rhs) {
+operator+(const T& lhs, const char* rhs) FL_NOEXCEPT {
     string result;
     result.append(lhs);
     result += rhs;
@@ -611,7 +611,7 @@ fl::string to_hex(T value, bool uppercase, bool pad_to_width) FL_NOEXCEPT {
 // Not lexicographic — use only for associative containers (flat_map, etc.)
 // where you need fast lookup and don't care about alphabetical order.
 struct StringFastLess {
-    bool operator()(const string &a, const string &b) const {
+    bool operator()(const string &a, const string &b) const FL_NOEXCEPT {
         fl::size al = a.size(), bl = b.size();
         if (al != bl) {
             return al < bl;

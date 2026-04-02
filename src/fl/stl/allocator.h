@@ -66,33 +66,33 @@ struct allocator_traits {
 class MallocFreeHook {
 public:
     virtual ~MallocFreeHook() FL_NOEXCEPT = default;
-    virtual void onMalloc(void* ptr, fl::size size) = 0;
-    virtual void onFree(void* ptr) = 0;
+    virtual void onMalloc(void* ptr, fl::size size) FL_NOEXCEPT = 0;
+    virtual void onFree(void* ptr) FL_NOEXCEPT = 0;
 };
 
 // Set test hooks for malloc and free operations
-void SetMallocFreeHook(MallocFreeHook* hook);
+void SetMallocFreeHook(MallocFreeHook* hook) FL_NOEXCEPT;
 
 // Clear test hooks (set to nullptr)
-void ClearMallocFreeHook();
+void ClearMallocFreeHook() FL_NOEXCEPT;
 #endif
 
-void SetPSRamAllocator(void *(*alloc)(fl::size), void (*free)(void *));
-void *PSRamAllocate(fl::size size, bool zero = true);
-void PSRamDeallocate(void *ptr);
+void SetPSRamAllocator(void *(*alloc)(fl::size), void (*free)(void *)) FL_NOEXCEPT;
+void *PSRamAllocate(fl::size size, bool zero = true) FL_NOEXCEPT;
+void PSRamDeallocate(void *ptr) FL_NOEXCEPT;
 
 // Deleter for memory allocated via fl::PSRamAllocator (uses fl::PSRamDeallocate)
 template <typename T> struct PSRamDeleter {
     PSRamDeleter() FL_NOEXCEPT = default;
-    void operator()(T *ptr) {
+    void operator()(T *ptr) FL_NOEXCEPT {
         if (ptr) {
             PSRamDeallocate(ptr);
         }
     }
 };
 
-void* Malloc(fl::size size);
-void Free(void *ptr);
+void* Malloc(fl::size size) FL_NOEXCEPT;
+void Free(void *ptr) FL_NOEXCEPT;
 
 // SlabAllocator registry for cross-DLL shared slab allocators.
 // On Windows DLLs, inline functions with static locals create per-DLL copies.
@@ -100,8 +100,8 @@ void Free(void *ptr);
 // for a given (block_size, slab_size) pair, preventing cross-DLL slab
 // deallocation errors (freeing a pointer inside another DLL's slab).
 namespace detail {
-    void* slab_allocator_registry_get(fl::size block_size, fl::size slab_size);
-    void  slab_allocator_registry_set(fl::size block_size, fl::size slab_size, void* allocator);
+    void* slab_allocator_registry_get(fl::size block_size, fl::size slab_size) FL_NOEXCEPT;
+    void  slab_allocator_registry_set(fl::size block_size, fl::size slab_size, void* allocator) FL_NOEXCEPT;
 } // namespace detail
 
 #ifdef FL_IS_ESP32
@@ -1007,10 +1007,10 @@ private:
     
     // SFINAE helper to detect if base allocator has cleanup() method
     template<typename U>
-    static auto has_cleanup_impl(int) -> decltype(fl::declval<U>().cleanup(), fl::true_type{});
+    static auto has_cleanup_impl(int) FL_NOEXCEPT -> decltype(fl::declval<U>().cleanup(), fl::true_type{});
     
     template<typename U>
-    static fl::false_type has_cleanup_impl(...);
+    static fl::false_type has_cleanup_impl(...) FL_NOEXCEPT;
     
     using has_cleanup = decltype(has_cleanup_impl<BaseAllocator>(0));
     

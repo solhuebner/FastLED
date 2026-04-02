@@ -237,23 +237,23 @@ public:
     }
 
     // Type queries
-    bool is_null() const { return mValue ? mValue->is_null() : true; }
-    bool is_bool() const { return mValue && mValue->is_bool(); }
-    bool is_int() const { return mValue && (mValue->is_int() || mValue->is_bool()); }
-    bool is_float() const { return mValue && mValue->is_float(); }
-    bool is_double() const { return mValue && mValue->is_double(); }
+    bool is_null() const FL_NOEXCEPT { return mValue ? mValue->is_null() : true; }
+    bool is_bool() const FL_NOEXCEPT { return mValue && mValue->is_bool(); }
+    bool is_int() const FL_NOEXCEPT { return mValue && (mValue->is_int() || mValue->is_bool()); }
+    bool is_float() const FL_NOEXCEPT { return mValue && mValue->is_float(); }
+    bool is_double() const FL_NOEXCEPT { return mValue && mValue->is_double(); }
     // is_number() returns true if the value is any numeric type (int or float)
-    bool is_number() const { return mValue && mValue->is_number(); }
-    bool is_string() const { return mValue && mValue->is_string(); }
-    bool is_array() const { return mValue && mValue->is_array(); }
-    bool is_generic_array() const { return mValue && mValue->is_generic_array(); }
-    bool is_object() const { return mValue && mValue->is_object(); }
-    bool is_audio() const { return mValue && mValue->is_audio(); }
-    bool is_bytes() const { return mValue && mValue->is_bytes(); }
-    bool is_floats() const { return mValue && mValue->is_floats(); }
+    bool is_number() const FL_NOEXCEPT { return mValue && mValue->is_number(); }
+    bool is_string() const FL_NOEXCEPT { return mValue && mValue->is_string(); }
+    bool is_array() const FL_NOEXCEPT { return mValue && mValue->is_array(); }
+    bool is_generic_array() const FL_NOEXCEPT { return mValue && mValue->is_generic_array(); }
+    bool is_object() const FL_NOEXCEPT { return mValue && mValue->is_object(); }
+    bool is_audio() const FL_NOEXCEPT { return mValue && mValue->is_audio(); }
+    bool is_bytes() const FL_NOEXCEPT { return mValue && mValue->is_bytes(); }
+    bool is_floats() const FL_NOEXCEPT { return mValue && mValue->is_floats(); }
 
     // Safe extractors
-    fl::optional<bool> as_bool() const { return mValue ? mValue->as_bool() : fl::nullopt; }
+    fl::optional<bool> as_bool() const FL_NOEXCEPT { return mValue ? mValue->as_bool() : fl::nullopt; }
     fl::optional<i64> as_int() const FL_NOEXCEPT {
         if (!mValue) return fl::nullopt;
         return mValue->as_int(); 
@@ -286,12 +286,12 @@ public:
         return mValue->as_string(); 
     }
     // Zero-copy pointer accessors
-    const json_array*        as_array()   const { return mValue ? mValue->as_array() : nullptr; }
-    const json_object*       as_object()  const { return mValue ? mValue->as_object() : nullptr; }
+    const json_array*        as_array()   const FL_NOEXCEPT { return mValue ? mValue->as_array() : nullptr; }
+    const json_object*       as_object()  const FL_NOEXCEPT { return mValue ? mValue->as_object() : nullptr; }
 
     // Explicit copy methods - use when you need an owned copy or type conversion
-    fl::optional<json_array>        clone_array()  const { return mValue ? mValue->clone_array() : fl::nullopt; }
-    fl::optional<json_object>       clone_object() const { return mValue ? mValue->clone_object() : fl::nullopt; }
+    fl::optional<json_array>        clone_array()  const FL_NOEXCEPT { return mValue ? mValue->clone_array() : fl::nullopt; }
+    fl::optional<json_object>       clone_object() const FL_NOEXCEPT { return mValue ? mValue->clone_object() : fl::nullopt; }
 
     // Copy packed-array elements into a caller-owned span with type conversion.
     // Returns number of elements copied (min of array size and span size).
@@ -344,21 +344,21 @@ private:
     // Integer types (excluding bool)
     template<typename T>
     typename fl::enable_if<fl::is_integral<T>::value && !fl::is_same<T, bool>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         return mValue->template as_int<T>();
     }
     
     // Boolean type
     template<typename T>
     typename fl::enable_if<fl::is_same<T, bool>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         return mValue->as_bool();
     }
     
     // Floating point types
     template<typename T>
     typename fl::enable_if<fl::is_floating_point<T>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         // Force template call by explicitly using the templated method
         return mValue->template as_float<T>();
     }
@@ -366,21 +366,21 @@ private:
     // String type
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::string>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         return mValue->as_string();
     }
     
     // Array type - clone_array() provides packed-array conversion for try_as
     template<typename T>
     typename fl::enable_if<fl::is_same<T, json_array>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         return mValue->clone_array();
     }
 
     // Object type
     template<typename T>
     typename fl::enable_if<fl::is_same<T, json_object>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         auto ptr = mValue->as_object();
         return ptr ? fl::optional<T>(*ptr) : fl::nullopt;
     }
@@ -389,7 +389,7 @@ private:
     // e.g., try_as<vector<float>>() works on u8/i16/float packed arrays
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<i16>>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         if (!mValue->is_array()) return fl::nullopt;
         T result;
         size_t n = mValue->copy_to_output_iterator(fl::back_inserter(result));
@@ -398,7 +398,7 @@ private:
 
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<u8>>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         if (!mValue->is_array()) return fl::nullopt;
         T result;
         size_t n = mValue->copy_to_output_iterator(fl::back_inserter(result));
@@ -407,7 +407,7 @@ private:
 
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<float>>::value, fl::optional<T>>::type
-    as_impl() const {
+    as_impl() const FL_NOEXCEPT {
         if (!mValue->is_array()) return fl::nullopt;
         T result;
         size_t n = mValue->copy_to_output_iterator(fl::back_inserter(result));
@@ -417,55 +417,55 @@ private:
     // Helper methods for getting default values for each type
     template<typename T>
     typename fl::enable_if<fl::is_integral<T>::value && !fl::is_same<T, bool>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return T(0);  // All integer types default to 0
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, bool>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return false;  // Boolean defaults to false
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_floating_point<T>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return T(0.0);  // Floating point types default to 0.0
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::string>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return fl::string();  // String defaults to empty string
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, json_array>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return json_array();  // Array defaults to empty array
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, json_object>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return json_object();  // Object defaults to empty object
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<i16>>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return fl::vector<i16>();  // Audio vector defaults to empty
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<u8>>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return fl::vector<u8>();  // Bytes vector defaults to empty
     }
     
     template<typename T>
     typename fl::enable_if<fl::is_same<T, fl::vector<float>>::value, T>::type
-    get_default_value() const {
+    get_default_value() const FL_NOEXCEPT {
         return fl::vector<float>();  // Float vector defaults to empty
     }
 
@@ -673,7 +673,7 @@ public:
     fl::string to_string() const FL_NOEXCEPT { return to_string_native(); }
     
     // Native serialization (without external libraries)
-    fl::string to_string_native() const;
+    fl::string to_string_native() const FL_NOEXCEPT;
 
     // Parsing factory method - uses native parser
     static json parse(const fl::string &txt) FL_NOEXCEPT {
@@ -738,7 +738,7 @@ public:
         !fl::is_same<IntType, char>::value,
         void
     >::type
-    set(const fl::string& key, IntType value) {
+    set(const fl::string& key, IntType value) FL_NOEXCEPT {
         // Convert to i64 for storage
         set(key, json(static_cast<i64>(value)));
     }
@@ -777,7 +777,7 @@ public:
     fl::string serialize() const FL_NOEXCEPT { return to_string(); }
 
     // Helper function to normalize JSON string (remove whitespace)
-    static fl::string normalize_json_string(const char* jsonStr);
+    static fl::string normalize_json_string(const char* jsonStr) FL_NOEXCEPT;
     static fl::string normalizeJsonString(const char* jsonStr) FL_NOEXCEPT { return normalize_json_string(jsonStr); }
 };
 

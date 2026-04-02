@@ -13,7 +13,7 @@ namespace fl {
 class string;
 
 namespace detail {
-void to_string(const fl::u16 *bit_data, fl::u32 bit_count, string* dst);
+void to_string(const fl::u16 *bit_data, fl::u32 bit_count, string* dst) FL_NOEXCEPT;
 }
 
 /// A dynamic bitset implementation that can be resized at runtime
@@ -310,7 +310,7 @@ class bitset_dynamic {
     FL_DISABLE_WARNING_POP
 
     // Convert bitset to string representation
-    void to_string(string* dst) const;
+    void to_string(string* dst) const FL_NOEXCEPT;
 
     // Access operator
     bool operator[](fl::u32 pos) const FL_NOEXCEPT { return test(pos); }

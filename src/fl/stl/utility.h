@@ -1,5 +1,6 @@
 #pragma once
 #include "fl/stl/type_traits.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -19,7 +20,7 @@ template <typename T = void> struct less {
      * @param rhs Right-hand side argument
      * @return true if lhs < rhs, false otherwise
      */
-    constexpr bool operator()(const T &lhs, const T &rhs) const {
+    constexpr bool operator()(const T &lhs, const T &rhs) const FL_NOEXCEPT {
         return lhs < rhs;
     }
 };
@@ -41,7 +42,7 @@ template <> struct less<void> {
      * @return true if lhs < rhs, false otherwise
      */
     template <typename T, typename U>
-    constexpr auto operator()(T &&lhs, U &&rhs) const
+    constexpr auto operator()(T &&lhs, U &&rhs) const FL_NOEXCEPT
         -> decltype(fl::forward<T>(lhs) < fl::forward<U>(rhs)) {
         return fl::forward<T>(lhs) < fl::forward<U>(rhs);
     }
@@ -64,7 +65,7 @@ template <typename T = void> struct greater {
      * @param rhs Right-hand side argument
      * @return true if lhs > rhs, false otherwise
      */
-    constexpr bool operator()(const T &lhs, const T &rhs) const {
+    constexpr bool operator()(const T &lhs, const T &rhs) const FL_NOEXCEPT {
         return rhs < lhs;  // Equivalent to lhs > rhs, works with types that only have operator<
     }
 };
@@ -87,7 +88,7 @@ template <> struct greater<void> {
      * @return true if lhs > rhs, false otherwise
      */
     template <typename T, typename U>
-    constexpr auto operator()(T &&lhs, U &&rhs) const
+    constexpr auto operator()(T &&lhs, U &&rhs) const FL_NOEXCEPT
         -> decltype(fl::forward<U>(rhs) < fl::forward<T>(lhs)) {
         return fl::forward<U>(rhs) < fl::forward<T>(lhs);  // Equivalent to lhs > rhs
     }

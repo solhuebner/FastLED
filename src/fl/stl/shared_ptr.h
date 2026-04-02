@@ -37,24 +37,24 @@ struct ControlBlockBase {
     // Destructor defined out-of-line in shared_ptr.cpp.hpp to anchor vtable
     // to a single translation unit, preventing ODR violations when using shared libraries.
     virtual ~ControlBlockBase() FL_NOEXCEPT;
-    virtual void destroy_object() = 0;
-    virtual void destroy_control_block() = 0;
+    virtual void destroy_object() FL_NOEXCEPT = 0;
+    virtual void destroy_control_block() FL_NOEXCEPT = 0;
     
     // Reference counting functions - defined out-of-line in shared_ptr.cpp.hpp
     // to prevent UBSAN vptr mismatch errors when objects cross shared library boundaries.
     // When these are inline, different binaries get different vtables, and UBSAN
     // detects the mismatch when checking member access.
-    void add_shared_ref();
-    bool remove_shared_ref();
+    void add_shared_ref() FL_NOEXCEPT;
+    bool remove_shared_ref() FL_NOEXCEPT;
 
     // Check if this control block is in no-tracking mode
-    bool is_no_tracking() const;
+    bool is_no_tracking() const FL_NOEXCEPT;
 };
 
 // Default deleter implementation
 template<typename T>
 struct default_delete {
-    void operator()(T* ptr) const {
+    void operator()(T* ptr) const FL_NOEXCEPT {
         delete ptr;
     }
 };
@@ -62,7 +62,7 @@ struct default_delete {
 // Deleter that does nothing (for stack/static objects)
 template<typename T>
 struct no_op_deleter {
-    void operator()(T*) const {
+    void operator()(T*) const FL_NOEXCEPT {
         // Intentionally do nothing - object lifetime managed externally
     }
 };
@@ -70,7 +70,7 @@ struct no_op_deleter {
 // Array deleter implementation for delete[]
 template<typename T>
 struct array_delete {
-    void operator()(T* ptr) const {
+    void operator()(T* ptr) const FL_NOEXCEPT {
         delete[] ptr;
     }
 };
@@ -222,7 +222,7 @@ public:
     
     // Constructor from weak_ptr
     template<typename Y>
-    explicit shared_ptr(const weak_ptr<Y>& weak);
+    explicit shared_ptr(const weak_ptr<Y>& weak) FL_NOEXCEPT;
 
     // Aliasing constructor (C++11 standard §20.7.2.2.1)
     // Shares ownership with 'other' but stores 'ptr'

@@ -510,39 +510,39 @@ class flat_map {
 // Comparison operators
 template <typename Key, typename Value, typename Less>
 bool operator==(const flat_map<Key, Value, Less>& lhs,
-                const flat_map<Key, Value, Less>& rhs) {
+                const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return lhs.size() == rhs.size() &&
            fl::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template <typename Key, typename Value, typename Less>
 bool operator!=(const flat_map<Key, Value, Less>& lhs,
-                const flat_map<Key, Value, Less>& rhs) {
+                const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return !(lhs == rhs);
 }
 
 template <typename Key, typename Value, typename Less>
 bool operator<(const flat_map<Key, Value, Less>& lhs,
-               const flat_map<Key, Value, Less>& rhs) {
+               const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return fl::lexicographical_compare(lhs.begin(), lhs.end(),
                                        rhs.begin(), rhs.end());
 }
 
 template <typename Key, typename Value, typename Less>
 bool operator<=(const flat_map<Key, Value, Less>& lhs,
-                const flat_map<Key, Value, Less>& rhs) {
+                const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return !(rhs < lhs);
 }
 
 template <typename Key, typename Value, typename Less>
 bool operator>(const flat_map<Key, Value, Less>& lhs,
-               const flat_map<Key, Value, Less>& rhs) {
+               const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return rhs < lhs;
 }
 
 template <typename Key, typename Value, typename Less>
 bool operator>=(const flat_map<Key, Value, Less>& lhs,
-                const flat_map<Key, Value, Less>& rhs) {
+                const flat_map<Key, Value, Less>& rhs) FL_NOEXCEPT {
     return !(lhs < rhs);
 }
 

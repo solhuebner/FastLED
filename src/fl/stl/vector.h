@@ -358,7 +358,7 @@ class FL_ALIGN FixedVector {
         iterator it;
         reverse_iterator(iterator i) FL_NOEXCEPT : it(i) {}
         T &operator*() FL_NOEXCEPT { return *(it - 1); }
-        T *operator->() { return (it - 1); }
+        T *operator->() FL_NOEXCEPT { return (it - 1); }
         reverse_iterator &operator++() FL_NOEXCEPT {
             --it;
             return *this;
@@ -375,7 +375,7 @@ class FL_ALIGN FixedVector {
         const_iterator it;
         const_reverse_iterator(const_iterator i) FL_NOEXCEPT : it(i) {}
         const T &operator*() const FL_NOEXCEPT { return *(it - 1); }
-        const T *operator->() const { return (it - 1); }
+        const T *operator->() const FL_NOEXCEPT { return (it - 1); }
         const_reverse_iterator &operator++() FL_NOEXCEPT {
             --it;
             return *this;
@@ -455,7 +455,7 @@ class FL_ALIGN vector : public vector_basic {
         iterator it;
         reverse_iterator(iterator i) FL_NOEXCEPT : it(i) {}
         T &operator*() FL_NOEXCEPT { return *(it - 1); }
-        T *operator->() { return (it - 1); }
+        T *operator->() FL_NOEXCEPT { return (it - 1); }
         reverse_iterator &operator++() FL_NOEXCEPT {
             --it;
             return *this;
@@ -472,7 +472,7 @@ class FL_ALIGN vector : public vector_basic {
         const_iterator it;
         const_reverse_iterator(const_iterator i) FL_NOEXCEPT : it(i) {}
         const T &operator*() const FL_NOEXCEPT { return *(it - 1); }
-        const T *operator->() const { return (it - 1); }
+        const T *operator->() const FL_NOEXCEPT { return (it - 1); }
         const_reverse_iterator &operator++() FL_NOEXCEPT {
             --it;
             return *this;
@@ -493,18 +493,18 @@ class FL_ALIGN vector : public vector_basic {
                         vector_element_ops_for<T>()) {}
 
     // Constructor with memory resource
-    explicit vector(memory_resource* resource)
+    explicit vector(memory_resource* resource) FL_NOEXCEPT
         : vector_basic(sizeof(T), resource, vector_element_ops_for<T>()) {}
 
     // Constructor with size and value
-    vector(fl::size count, const T &value = T())
+    vector(fl::size count, const T &value = T()) FL_NOEXCEPT
         : vector_basic(sizeof(T), default_memory_resource(),
                         vector_element_ops_for<T>()) {
         resize_value_impl(count, &value);
     }
 
     // Constructor with size, value, and memory resource
-    vector(fl::size count, const T &value, memory_resource* resource)
+    vector(fl::size count, const T &value, memory_resource* resource) FL_NOEXCEPT
         : vector_basic(sizeof(T), resource, vector_element_ops_for<T>()) {
         resize_value_impl(count, &value);
     }
@@ -821,11 +821,11 @@ class FL_ALIGN vector : public vector_basic {
 
   protected:
     // For VectorN — constructor with inline buffer
-    vector(void* inlineBuffer, fl::size inlineCapacity)
+    vector(void* inlineBuffer, fl::size inlineCapacity) FL_NOEXCEPT
         : vector_basic(inlineBuffer, inlineCapacity, sizeof(T),
                         default_memory_resource(), vector_element_ops_for<T>()) {}
 
-    vector(void* inlineBuffer, fl::size inlineCapacity, memory_resource* resource)
+    vector(void* inlineBuffer, fl::size inlineCapacity, memory_resource* resource) FL_NOEXCEPT
         : vector_basic(inlineBuffer, inlineCapacity, sizeof(T),
                         resource, vector_element_ops_for<T>()) {}
 };
@@ -845,36 +845,36 @@ class FL_ALIGN VectorN : public vector<T> {
     FL_ALIGNAS(alignof(T) > alignof(fl::uptr) ? alignof(T) : alignof(fl::uptr))
     char mInlineBuffer[INLINED_SIZE * sizeof(T)] = {};
 
-    T* inline_memory() { return fl::bit_cast<T*>(mInlineBuffer); }
+    T* inline_memory() FL_NOEXCEPT { return fl::bit_cast<T*>(mInlineBuffer); }
 
   public:
     using typename vector<T>::iterator;
     using typename vector<T>::const_iterator;
     using typename vector<T>::value_type;
 
-    VectorN()
+    VectorN() FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {}
 
-    explicit VectorN(memory_resource* resource)
+    explicit VectorN(memory_resource* resource) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE, resource) {}
 
-    VectorN(fl::size count, const T& value = T())
+    VectorN(fl::size count, const T& value = T()) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {
         this->resize_value_impl(count, &value);
     }
 
-    VectorN(const VectorN& other)
+    VectorN(const VectorN& other) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {
         this->copy_from(other);
     }
 
     template <fl::size M>
-    VectorN(const VectorN<T, M>& other)
+    VectorN(const VectorN<T, M>& other) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {
         this->copy_from(other);
     }
 
-    VectorN(const vector<T>& other)
+    VectorN(const vector<T>& other) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {
         this->copy_from(other);
     }
@@ -884,7 +884,7 @@ class FL_ALIGN VectorN : public vector<T> {
         this->move_from(other);
     }
 
-    VectorN(fl::initializer_list<T> init)
+    VectorN(fl::initializer_list<T> init) FL_NOEXCEPT
         : vector<T>(mInlineBuffer, INLINED_SIZE) {
         this->reserve_impl(init.size());
         for (const auto& value : init) {
@@ -917,10 +917,10 @@ class vector_psram : public vector<T> {
     vector_psram() FL_NOEXCEPT
         : vector<T>(psram_memory_resource()) {}
 
-    vector_psram(fl::size count, const T& value = T())
+    vector_psram(fl::size count, const T& value = T()) FL_NOEXCEPT
         : vector<T>(count, value, psram_memory_resource()) {}
 
-    vector_psram(fl::initializer_list<T> init)
+    vector_psram(fl::initializer_list<T> init) FL_NOEXCEPT
         : vector<T>(psram_memory_resource()) {
         this->reserve_impl(init.size());
         for (const auto& value : init) {
@@ -931,7 +931,7 @@ class vector_psram : public vector<T> {
     // Iterator-range constructor
     template <typename InputIterator,
               typename = fl::enable_if_t<!fl::is_integral<InputIterator>::value>>
-    vector_psram(InputIterator first, InputIterator last)
+    vector_psram(InputIterator first, InputIterator last) FL_NOEXCEPT
         : vector<T>(psram_memory_resource()) {
         for (auto it = first; it != last; ++it) {
             this->push_back(*it);

@@ -339,7 +339,7 @@ inline fl::string format_float(float value, int precision) FL_NOEXCEPT {
 // Helper to convert pointer to fl::uptr (only instantiated for pointer types)
 template<typename T>
 typename fl::enable_if<fl::is_pointer<T>::value, fl::uptr>::type
-pointer_to_uptr(const T& ptr) {
+pointer_to_uptr(const T& ptr) FL_NOEXCEPT {
     const void* vptr = static_cast<const void*>(ptr);
     return reinterpret_cast<fl::uptr>(vptr); // ok reinterpret cast
 }
@@ -347,14 +347,14 @@ pointer_to_uptr(const T& ptr) {
 // Overload for non-pointer types (never called at runtime, but needed for compilation)
 template<typename T>
 typename fl::enable_if<!fl::is_pointer<T>::value, fl::uptr>::type
-pointer_to_uptr(const T&) {
+pointer_to_uptr(const T&) FL_NOEXCEPT {
     return 0; // Never executed - runtime check prevents this
 }
 
 // Format non-pointer types (d, i, u, o, x, X, f, c, s)
 template<typename T>
 typename fl::enable_if<!fl::is_pointer<T>::value>::type
-format_arg(sstream& stream, const FormatSpec& spec, const T& arg) {
+format_arg(sstream& stream, const FormatSpec& spec, const T& arg) FL_NOEXCEPT {
     fl::string result;
     bool is_numeric = false;
 
@@ -479,7 +479,7 @@ format_arg(sstream& stream, const FormatSpec& spec, const T& arg) {
 // Format pointer types (only handles 'p' format)
 template<typename T>
 typename fl::enable_if<fl::is_pointer<T>::value>::type
-format_arg(sstream& stream, const FormatSpec& spec, const T& arg) {
+format_arg(sstream& stream, const FormatSpec& spec, const T& arg) FL_NOEXCEPT {
     fl::string result;
     bool is_numeric = false;
 

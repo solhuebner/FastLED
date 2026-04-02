@@ -17,19 +17,19 @@ class memory_resource {
   public:
     virtual ~memory_resource() FL_NOEXCEPT = default;
 
-    void* allocate(fl::size bytes) {
+    void* allocate(fl::size bytes) FL_NOEXCEPT {
         if (bytes == 0) return nullptr;
         return do_allocate(bytes);
     }
 
-    void deallocate(void* p, fl::size bytes) {
+    void deallocate(void* p, fl::size bytes) FL_NOEXCEPT {
         if (!p) return;
         do_deallocate(p, bytes);
     }
 
     /// Try to resize in-place. Returns new pointer on success, nullptr on failure.
     /// On failure, caller must allocate-copy-deallocate manually.
-    void* reallocate(void* p, fl::size old_bytes, fl::size new_bytes) {
+    void* reallocate(void* p, fl::size old_bytes, fl::size new_bytes) FL_NOEXCEPT {
         if (new_bytes == 0) {
             deallocate(p, old_bytes);
             return nullptr;
@@ -43,11 +43,11 @@ class memory_resource {
     }
 
   protected:
-    virtual void* do_allocate(fl::size bytes) = 0;
-    virtual void do_deallocate(void* p, fl::size bytes) = 0;
+    virtual void* do_allocate(fl::size bytes) FL_NOEXCEPT = 0;
+    virtual void do_deallocate(void* p, fl::size bytes) FL_NOEXCEPT = 0;
 
     /// Default: returns nullptr (not supported). Override for realloc-capable resources.
-    virtual void* do_reallocate(void* p, fl::size old_bytes, fl::size new_bytes);
+    virtual void* do_reallocate(void* p, fl::size old_bytes, fl::size new_bytes) FL_NOEXCEPT;
 
     virtual bool do_is_equal(const memory_resource& other) const FL_NOEXCEPT {
         return this == &other;
@@ -58,6 +58,6 @@ class memory_resource {
 memory_resource* default_memory_resource() FL_NOEXCEPT;
 
 /// Get the PSRAM memory resource (wraps PSRamAllocate / PSRamDeallocate).
-memory_resource* psram_memory_resource();
+memory_resource* psram_memory_resource() FL_NOEXCEPT;
 
 } // namespace fl

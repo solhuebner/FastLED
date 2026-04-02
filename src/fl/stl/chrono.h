@@ -256,7 +256,7 @@ struct system_clock {
 ///     process_step();
 /// }
 /// @endcode
-fl::u32 millis();
+fl::u32 millis() FL_NOEXCEPT;
 
 /// Universal microsecond timer - returns microseconds since system startup
 ///
@@ -292,7 +292,7 @@ fl::u32 millis();
 ///     // Busy wait
 /// }
 /// @endcode
-fl::u32 micros();
+fl::u32 micros() FL_NOEXCEPT;
 
 // Now that fl::micros() is declared, implement clock::now() methods
 inline chrono::steady_clock::time_point chrono::steady_clock::now() FL_NOEXCEPT {
@@ -333,7 +333,7 @@ inline chrono::system_clock::time_point chrono::system_clock::now() FL_NOEXCEPT 
 /// fl::u64 event_time = fl::millis64();
 /// log_event("operation_complete", event_time);
 /// @endcode
-fl::u64 millis64();
+fl::u64 millis64() FL_NOEXCEPT;
 
 /// Alias for millis64() - returns 64-bit millisecond time
 ///
@@ -374,7 +374,7 @@ using time_provider_t = fl::function<fl::u32()>;
 ///
 /// fl::clear_time_provider(); // Restore normal timing
 /// @endcode
-void inject_time_provider(const time_provider_t& provider);
+void inject_time_provider(const time_provider_t& provider) FL_NOEXCEPT;
 
 /// Clear the injected time provider and restore platform default timing
 ///
@@ -384,7 +384,7 @@ void inject_time_provider(const time_provider_t& provider);
 /// @note Only available in testing builds (when FASTLED_TESTING is defined)
 /// @note Thread-safe: Uses appropriate locking in multi-threaded environments
 /// @note Safe to call multiple times or when no provider is injected
-void clear_time_provider();
+void clear_time_provider() FL_NOEXCEPT;
 
 /// Reset the millis64() internal state for testing
 ///
@@ -394,7 +394,7 @@ void clear_time_provider();
 ///
 /// @note Only available in testing builds (when FASTLED_TESTING is defined)
 /// @note Thread-safe: Uses appropriate locking in multi-threaded environments
-void millis64_reset();
+void millis64_reset() FL_NOEXCEPT;
 
 /// Mock time provider for controlled testing
 ///
@@ -421,23 +421,23 @@ class MockTimeProvider {
 public:
     /// Constructor with initial time value
     /// @param initial_time Starting time in milliseconds (default: 0)
-    explicit MockTimeProvider(fl::u32 initial_time = 0);
+    explicit MockTimeProvider(fl::u32 initial_time = 0) FL_NOEXCEPT;
 
     /// Advance the mock time by the specified amount
     /// @param milliseconds Number of milliseconds to advance
-    void advance(fl::u32 milliseconds);
+    void advance(fl::u32 milliseconds) FL_NOEXCEPT;
 
     /// Set the mock time to a specific value
     /// @param milliseconds New time value in milliseconds
-    void set_time(fl::u32 milliseconds);
+    void set_time(fl::u32 milliseconds) FL_NOEXCEPT;
 
     /// Get the current mock time
     /// @return Current time in milliseconds
-    fl::u32 current_time() const;
+    fl::u32 current_time() const FL_NOEXCEPT;
 
     /// Function call operator for use with inject_time_provider()
     /// @return Current time in milliseconds
-    fl::u32 operator()() const;
+    fl::u32 operator()() const FL_NOEXCEPT;
 
 private:
     fl::u32 mCurrentTime;

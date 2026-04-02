@@ -47,7 +47,7 @@ template <typename R, typename... Args>
 class FL_ALIGN function<R(Args...)> {
 private:
     struct CallableBase {
-        virtual R invoke(Args... args) = 0;
+        virtual R invoke(Args... args) FL_NOEXCEPT = 0;
         virtual ~CallableBase() FL_NOEXCEPT = default;
     };
 
@@ -155,7 +155,7 @@ private:
 
     // Type-erased member function callable base
     struct MemberCallableBase {
-        virtual R invoke(Args... args) const = 0;
+        virtual R invoke(Args... args) const FL_NOEXCEPT = 0;
         virtual ~MemberCallableBase() FL_NOEXCEPT = default;
     };
 
@@ -238,13 +238,13 @@ private:
     // Helper function to handle default return value for void and non-void types
     template<typename ReturnType>
     typename enable_if<!is_void<ReturnType>::value, ReturnType>::type
-    default_return_helper() const {
+    default_return_helper() const FL_NOEXCEPT {
         return ReturnType{};
     }
     
     template<typename ReturnType>
     typename enable_if<is_void<ReturnType>::value, ReturnType>::type
-    default_return_helper() const {
+    default_return_helper() const FL_NOEXCEPT {
         return;
     }
 
@@ -297,7 +297,7 @@ public:
         mStorage = ConstMemberCallable(obj, mf);
     }
     
-    R operator()(Args... args) const {
+    R operator()(Args... args) const FL_NOEXCEPT {
         // Direct dispatch using type checking - efficient and simple
         if (auto* heap_callable = mStorage.template ptr<fl::shared_ptr<CallableBase>>()) {
             return (*heap_callable)->invoke(args...);
@@ -482,7 +482,7 @@ class function_list<void(Args...)> {
         }
 
         // Sort priorities (higher priority first) - cheap since there are usually very few unique priorities
-        fl::sort(priorities.begin(), priorities.end(), [](int a, int b) { return a > b; });
+        fl::sort(priorities.begin(), priorities.end(), [](int a, int b) { return a > b; }) FL_NOEXCEPT;
 
         // Iterate through priorities (highest first), then through functions matching each priority
         for (size_t p_idx = 0; p_idx < priorities.size(); ++p_idx) {
@@ -500,7 +500,7 @@ class function_list<void(Args...)> {
     }
 
     // Call operator - syntactic sugar for invoke()
-    void operator()(Args... args) {
+    void operator()(Args... args) FL_NOEXCEPT {
         invoke(args...);
     }
 };

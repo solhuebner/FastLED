@@ -55,7 +55,7 @@ namespace fl {
 namespace detail {
     // Low-level assertion for not_null - implementation in not_null.cpp
     // Provides platform-specific failure handling without depending on assert.h
-    void not_null_assert_failed(const char* message);
+    void not_null_assert_failed(const char* message) FL_NOEXCEPT;
 } // namespace detail
 } // namespace fl
 
@@ -84,10 +84,10 @@ template<typename T>
 struct is_comparable_to_nullptr {
 private:
     template<typename U>
-    static auto test(int) -> decltype(fl::declval<U>() == nullptr, fl::true_type{});
+    static auto test(int) FL_NOEXCEPT -> decltype(fl::declval<U>() == nullptr, fl::true_type{});
 
     template<typename>
-    static fl::false_type test(...);
+    static fl::false_type test(...) FL_NOEXCEPT;
 
 public:
     enum : bool { value = decltype(test<T>(0))::value };
@@ -99,10 +99,10 @@ template<typename T>
 struct is_dereferenceable {
 private:
     template<typename U>
-    static auto test(int) -> decltype(*fl::declval<U>(), fl::true_type{});
+    static auto test(int) FL_NOEXCEPT -> decltype(*fl::declval<U>(), fl::true_type{});
 
     template<typename>
-    static fl::false_type test(...);
+    static fl::false_type test(...) FL_NOEXCEPT;
 
 public:
     enum : bool { value = decltype(test<T>(0))::value };
@@ -235,7 +235,7 @@ public:
     }
 
     // Dereference operator - returns reference to pointed-to object
-    constexpr auto operator*() const -> decltype(*fl::declval<T>()) {
+    constexpr auto operator*() const FL_NOEXCEPT -> decltype(*fl::declval<T>()) {
         return *mPtr;
     }
 
