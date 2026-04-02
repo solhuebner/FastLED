@@ -693,6 +693,7 @@ ESP32_C2_DEVKITM_1 = Board(
     real_board_name="esp32-c2-devkitm-1",
     platform="https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip",
     framework="arduino",  # IMPORTANT: Do not add "espidf" - see comment above
+    board_partitions="huge_app.csv",  # Default partition only allows 1.25MB app; Validation needs ~1.6MB
 )
 
 ESP32_C3_DEVKITM_1 = Board(
