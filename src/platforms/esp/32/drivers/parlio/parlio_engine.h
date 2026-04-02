@@ -83,6 +83,7 @@
 #include "platforms/esp/32/drivers/parlio/iparlio_peripheral.h"
 #include "fl/stl/noexcept.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
 
 namespace fl {
 namespace detail {
@@ -338,3 +339,5 @@ private:
 
 } // namespace detail
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

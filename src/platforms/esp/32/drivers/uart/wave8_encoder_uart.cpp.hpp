@@ -10,6 +10,8 @@
 #include "platforms/esp/32/drivers/uart/wave8_encoder_uart.h"
 #include "fl/stl/noexcept.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 namespace {
@@ -206,3 +208,5 @@ size_t encodeLedsToUart(const u8* input,
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

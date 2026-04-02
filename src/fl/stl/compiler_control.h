@@ -183,22 +183,17 @@
 #endif
 
 // Optimization Level O3
-// For Clang: Enable full optimization (equivalent to -O3 for wrapped code)
-//   - Tested: Simple 'optimize on' outperforms complex attribute combinations
-//   - 'optimize on' enables: aggressive inlining, vectorization, loop unrolling
-//   - Alternatives tested: hot+flatten (slower), hot-only (similar)
-// References:
-//   - https://clang.llvm.org/docs/LanguageExtensions.html#pragma-clang-optimize
-//   - https://llvm.org/docs/Vectorizers.html
-//   - https://www.incredibuild.com/blog/compiling-with-clang-optimization-flags
+// GCC: #pragma GCC optimize("O3") forces O3 regardless of command-line level.
+// Clang: Has NO equivalent pragma — #pragma clang optimize on/off only
+//   toggles between disabled and the command-line level (e.g., -O0 in debug).
+//   Instead, we push __attribute__((hot)) onto all functions in the region
+//   as a best-effort hint. For true forced optimization in -O0 builds on
+//   Clang, the build system must set per-file -O2/-O3 flags.
 #if defined(FL_IS_CLANG)
   #define FL_OPTIMIZATION_LEVEL_O3_BEGIN \
-    _Pragma("clang diagnostic push") \
-    _Pragma("clang optimize on")
-
-  #define FL_OPTIMIZATION_LEVEL_O3_END   \
-    _Pragma("clang optimize off") \
-    _Pragma("clang diagnostic pop")
+    _Pragma("clang attribute push(__attribute__((hot)), apply_to = function)")
+  #define FL_OPTIMIZATION_LEVEL_O3_END \
+    _Pragma("clang attribute pop")
 
 #elif defined(FL_IS_GCC)
   #define FL_OPTIMIZATION_LEVEL_O3_BEGIN \

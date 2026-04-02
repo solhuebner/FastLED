@@ -22,6 +22,8 @@
 #include "fl/stl/int.h"
 #include "fl/stl/noexcept.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 FL_OPTIMIZE_FUNCTION constexpr inline u64 _isqrt64_start(u64 x, u64 bit) FL_NOEXCEPT {
@@ -59,3 +61,5 @@ FL_OPTIMIZE_FUNCTION constexpr inline u32 isqrt64(u64 x) FL_NOEXCEPT {
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

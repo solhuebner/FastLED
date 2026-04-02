@@ -10,6 +10,8 @@
 #include "fl/stl/compiler_control.h"
 #include "fl/stl/isr/memcpy.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 namespace detail {
@@ -269,3 +271,5 @@ void wave3(u8 lane,
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

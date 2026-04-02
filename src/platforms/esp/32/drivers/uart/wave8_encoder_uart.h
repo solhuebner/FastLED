@@ -44,6 +44,8 @@
 #include "fl/stl/stdint.h"
 #include "fl/stl/noexcept.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 /// @brief Maximum UART baud rate supported by ESP32 variants
@@ -189,3 +191,5 @@ constexpr size_t calculateUartBufferSizeForLeds(size_t num_leds) FL_NOEXCEPT {
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

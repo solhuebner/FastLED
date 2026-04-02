@@ -5,6 +5,8 @@
 #include "fl/math/math.h"
 #include "fl/stl/vector.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 // ============================================================================
@@ -320,3 +322,5 @@ u8 SPITransposer::getLaneByte(const LaneData& lane, size_t byte_idx, size_t max_
 }
 
 }  // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

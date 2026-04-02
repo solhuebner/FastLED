@@ -47,6 +47,8 @@
 // - DMA memory: allocateDmaBuffer(), freeDmaBuffer()
 // - PARLIO operations: initialize(), enable(), transmit(), waitAllDone(), etc.
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace {
 
 
@@ -2058,5 +2060,7 @@ ParlioDebugMetrics ParlioEngine::getDebugMetrics() const FL_NOEXCEPT {
 
 } // namespace detail
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END
 
 #endif // (ESP32 && FASTLED_ESP32_HAS_PARLIO) || FASTLED_STUB_IMPL

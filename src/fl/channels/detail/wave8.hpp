@@ -11,6 +11,8 @@
 #include "fl/stl/isr/memcpy.h"
 #include "fl/stl/bit_cast.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 namespace detail {
@@ -351,3 +353,5 @@ void wave8(u8 lane,
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

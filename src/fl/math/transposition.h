@@ -28,6 +28,8 @@
 #include "fl/stl/cstring.h"
 #include "fl/stl/noexcept.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 // ============================================================================
@@ -1084,3 +1086,5 @@ FASTLED_FORCE_INLINE FL_IRAM size_t transpose_wave8byte_parlio(
 }
 
 }  // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

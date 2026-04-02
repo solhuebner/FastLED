@@ -92,9 +92,13 @@ endif
 
 # Mode-specific optimization flags
 if build_mode == 'debug'
-  # Debug mode: No optimization, full debug symbols, sanitizers
+  # Debug mode: Debug-optimized, full debug symbols, sanitizers
+  # -Og enables optimizations that don't interfere with debugging (variables
+  # remain visible, stepping works). This also allows Clang's __attribute__((hot))
+  # and #pragma clang optimize on to have meaningful effect — at -O0 these are
+  # no-ops because Clang marks every function optnone.
   base_optimization = base_common + stack_trace_flags + [
-    '-O0',                      # No optimization (fastest compilation)
+    '-Og',                      # Optimize for debugging (basic opts, good debug experience)
     '-g3',                      # Full debug symbols (variables, macros, everything)
     '-fsanitize=address',       # Address sanitizer (detect memory errors)
     '-fsanitize=undefined',     # Undefined behavior sanitizer

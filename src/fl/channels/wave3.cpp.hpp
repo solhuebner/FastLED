@@ -13,6 +13,8 @@
 #include "fl/chipsets/led_timing.h"
 #include "fl/stl/isr/memcpy.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 // ============================================================================
@@ -284,3 +286,5 @@ void wave3Untranspose_16(const u8 (&FL_RESTRICT_PARAM transposed)[16 * sizeof(Wa
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

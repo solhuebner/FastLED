@@ -10,6 +10,8 @@
 #include "fl/stl/stdint.h"
 #include "fl/stl/cstddef.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 namespace isr {
 
@@ -148,3 +150,5 @@ void memset_zero(u8* dest, size_t count) {
 
 } // namespace isr
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

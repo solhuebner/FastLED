@@ -259,9 +259,9 @@ static void fill_test_data(CRGB *pixels, int n) {
 
 template <typename Func>
 #ifdef NDEBUG
-static double bench(Func fn, int iterations, int warmup = 200) {
+__attribute__((noinline)) static double bench(Func fn, int iterations, int warmup = 200) {
 #else
-static double bench(Func fn, int iterations, int warmup = 5) {
+__attribute__((noinline)) static double bench(Func fn, int iterations, int warmup = 2) {
 #endif
     for (int i = 0; i < warmup; ++i)
         fn();
@@ -274,9 +274,9 @@ static double bench(Func fn, int iterations, int warmup = 5) {
 }
 
 template <int R, int W, int H>
-static void run_benchmark(const char *label, int iters) {
+__attribute__((noinline)) static void run_benchmark(const char *label, int iters) {
     constexpr int N = W * H;
-    CRGB px[N];
+    static CRGB px[N]; // static to avoid stack overflow with ASAN
 
     auto t = bench(
         [&]() {
@@ -293,9 +293,9 @@ static void run_benchmark(const char *label, int iters) {
 }
 
 template <int R, int W, int H>
-static void run_benchmark_blur_only(const char *label, int iters) {
+__attribute__((noinline)) static void run_benchmark_blur_only(const char *label, int iters) {
     constexpr int N = W * H;
-    CRGB px[N];
+    static CRGB px[N]; // static to avoid stack overflow with ASAN
     fill_test_data(px, N); // fill once before benchmark
 
     auto t = bench(
@@ -312,7 +312,8 @@ static void run_benchmark_blur_only(const char *label, int iters) {
 }
 
 FL_TEST_CASE("blur benchmark") {
-    // Use fewer iterations in debug/quick builds (-O0) to avoid watchdog timeout.
+    // Debug builds use -Og (optimized for debugging) which provides enough
+    // optimization for benchmarks to complete within the 20s CI watchdog.
 #ifdef NDEBUG
     const int ITERS = 5000;
 #else
@@ -365,7 +366,7 @@ FL_TEST_CASE("blur benchmark") {
     // Horizontal only (hR=R, vR=0)
     {
         constexpr int N = 64*64;
-        CRGB px[N];
+        static CRGB px[N];
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 64, 64);
@@ -378,7 +379,7 @@ FL_TEST_CASE("blur benchmark") {
     // Vertical only (hR=0, vR=1)
     {
         constexpr int N = 64*64;
-        CRGB px[N];
+        static CRGB px[N];
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 64, 64);
@@ -391,7 +392,7 @@ FL_TEST_CASE("blur benchmark") {
     // H+V R1
     {
         constexpr int N = 64*64;
-        CRGB px[N];
+        static CRGB px[N];
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 64, 64);
@@ -405,7 +406,7 @@ FL_TEST_CASE("blur benchmark") {
     // H-only and V-only R=2 (64x64)
     {
         constexpr int N = 64*64;
-        CRGB px[N];
+        static CRGB px[N];
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 64, 64);
@@ -417,7 +418,7 @@ FL_TEST_CASE("blur benchmark") {
     }
     {
         constexpr int N = 64*64;
-        CRGB px[N];
+        static CRGB px[N];
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 64, 64);
@@ -430,7 +431,7 @@ FL_TEST_CASE("blur benchmark") {
     // H-only and V-only R=2 (256x256)
     {
         constexpr int N = 256*256;
-        CRGB px[N];
+        static CRGB px[N]; // static to avoid stack overflow with ASAN
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 256, 256);
@@ -442,7 +443,7 @@ FL_TEST_CASE("blur benchmark") {
     }
     {
         constexpr int N = 256*256;
-        CRGB px[N];
+        static CRGB px[N]; // static to avoid stack overflow with ASAN
         fill_test_data(px, N);
         auto t = bench([&]() {
             gfx::Canvas<CRGB> c(fl::span<CRGB>(px, N), 256, 256);

@@ -3,6 +3,8 @@
 #include "fl/math/ease.h"
 #include "fl/fastled.h"
 
+FL_OPTIMIZATION_LEVEL_O3_BEGIN
+
 namespace fl {
 
 namespace {
@@ -177,3 +179,5 @@ void five_bit_hd_gamma_bitshift(
 }
 
 } // namespace fl
+
+FL_OPTIMIZATION_LEVEL_O3_END

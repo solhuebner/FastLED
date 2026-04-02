@@ -35,10 +35,23 @@ static float fast_math_multiply(float a, float b) {
 }
 FL_FAST_MATH_END
 
-// Test helper: O3 optimized function
+// Test helper: O3 optimized functions (macros are file-scope only on Clang)
 FL_OPTIMIZATION_LEVEL_O3_BEGIN
 static int o3_sum(int a, int b) {
     return a + b;
+}
+static int o3_loop_sum() {
+    int sum = 0;
+    for (int i = 0; i < 10; i++) {
+        sum += i;
+    }
+    return sum;
+}
+static int o3_multiply(int a, int b) {
+    return a * b;
+}
+static float o3_fast_multiply(float a, float b) {
+    return a * b;
 }
 FL_OPTIMIZATION_LEVEL_O3_END
 
@@ -273,12 +286,9 @@ FL_TEST_CASE("FL_FAST_MATH macros") {
 }
 
 FL_TEST_CASE("FL_OPTIMIZATION_LEVEL_O3 macros") {
-    FL_SUBCASE("O3 optimization macros are defined") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        int result = 5 + 10;
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(result == 15);
-    }
+    // O3 macros wrap function definitions at file scope (not in-function).
+    // On GCC: #pragma GCC optimize("O3") forces O3 per-region.
+    // On Clang: #pragma clang attribute push applies __attribute__((hot)).
 
     FL_SUBCASE("O3 optimized function compiles and executes") {
         int result = o3_sum(100, 200);
@@ -286,22 +296,15 @@ FL_TEST_CASE("FL_OPTIMIZATION_LEVEL_O3 macros") {
     }
 
     FL_SUBCASE("O3 with loop optimization") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        int sum = 0;
-        for (int i = 0; i < 10; i++) {
-            sum += i;
-        }
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(sum == 45);
+        FL_CHECK(o3_loop_sum() == 45);
     }
 
-    FL_SUBCASE("nested O3 blocks") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        int result = 7 * 8;
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(result == 56);
+    FL_SUBCASE("O3 multiply") {
+        FL_CHECK(o3_multiply(7, 8) == 56);
+    }
+
+    FL_SUBCASE("O3 float multiply") {
+        FL_CHECK(o3_fast_multiply(3.0f, 4.0f) == 12.0f);
     }
 }
 
@@ -338,26 +341,13 @@ FL_TEST_CASE("FL_OPTIMIZATION_LEVEL_O0 macros") {
 }
 
 FL_TEST_CASE("mixed optimization levels") {
-    FL_SUBCASE("O3 followed by O0") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        int a = 10 * 2;
-        FL_OPTIMIZATION_LEVEL_O3_END
-
-        FL_OPTIMIZATION_LEVEL_O0_BEGIN
-        int b = 5 + 3;
-        FL_OPTIMIZATION_LEVEL_O0_END
-
-        FL_CHECK(a == 20);
-        FL_CHECK(b == 8);
+    FL_SUBCASE("O3 and O0 functions both work") {
+        FL_CHECK(o3_multiply(10, 2) == 20);
+        FL_CHECK(o0_sum(5, 3) == 8);
     }
 
     FL_SUBCASE("fast math with O3") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        FL_FAST_MATH_BEGIN
-        float result = 3.0f * 4.0f;
-        FL_FAST_MATH_END
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(result == 12.0f);
+        FL_CHECK(o3_fast_multiply(3.0f, 4.0f) == 12.0f);
     }
 
     FL_SUBCASE("O0 with warning suppression") {
@@ -460,14 +450,13 @@ FL_TEST_CASE("macro combinations and interactions") {
     }
 
     FL_SUBCASE("all optimization macros together") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
+        // O3 is tested via file-scope function; fast math + warnings are in-function safe
         FL_FAST_MATH_BEGIN
         FL_DISABLE_WARNING_PUSH
         FL_DISABLE_WARNING_FLOAT_CONVERSION
         float result = 2.5f * 4.0f;
         FL_DISABLE_WARNING_POP
         FL_FAST_MATH_END
-        FL_OPTIMIZATION_LEVEL_O3_END
         FL_CHECK(result == 10.0f);
     }
 
@@ -491,10 +480,9 @@ FL_TEST_CASE("macro edge cases") {
         FL_CHECK(true);
     }
 
-    FL_SUBCASE("empty O3 block") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(true);
+    FL_SUBCASE("O3 file-scope function works") {
+        // O3 macros are file-scope only (clang attribute push on Clang)
+        FL_CHECK(o3_sum(1, 2) == 3);
     }
 
     FL_SUBCASE("empty O0 block") {
@@ -509,7 +497,6 @@ FL_TEST_CASE("macro edge cases") {
     }
 
     FL_SUBCASE("deeply nested macros") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
         FL_FAST_MATH_BEGIN
         FL_DISABLE_WARNING_PUSH
         FL_DISABLE_WARNING_PUSH
@@ -519,7 +506,6 @@ FL_TEST_CASE("macro edge cases") {
         FL_DISABLE_WARNING_POP
         FL_DISABLE_WARNING_POP
         FL_FAST_MATH_END
-        FL_OPTIMIZATION_LEVEL_O3_END
         FL_CHECK(result == 6);
     }
 }
@@ -585,13 +571,8 @@ FL_TEST_CASE("practical usage scenarios") {
     }
 
     FL_SUBCASE("optimized hot path with O3") {
-        FL_OPTIMIZATION_LEVEL_O3_BEGIN
-        int product = 1;
-        for (int i = 1; i <= 5; i++) {
-            product *= i;
-        }
-        FL_OPTIMIZATION_LEVEL_O3_END
-        FL_CHECK(product == 120);  // 5! = 120
+        // O3 functions defined at file scope; test via call
+        FL_CHECK(o3_loop_sum() == 45);
     }
 
     FL_SUBCASE("C API wrapper") {
