@@ -139,30 +139,36 @@ jobs:
         if: always()
         working-directory: trusted
         run: |
-          echo "############################################"
-          echo "Last 100 lines of build.log (most recent output)"
-          echo "############################################"
-          tail -n 100 build.log || true
+          SUMMARY_FILE="build-summary.txt"
+          {
+            echo "############################################"
+            echo "Last 100 lines of build.log (most recent output)"
+            echo "############################################"
+            tail -n 100 build.log 2>/dev/null || true
 
-          echo ""
-          echo "############################################"
-          echo "Failure logs (if any)"
-          echo "############################################"
+            echo ""
+            echo "############################################"
+            echo "Failure logs (if any)"
+            echo "############################################"
+            fail_dir="failures"
+            if [ -d "$fail_dir" ] && ls "$fail_dir"/*.log >/dev/null 2>&1; then
+              for f in "$fail_dir"/*.log; do
+                echo "----------------------"
+                echo "$(basename "$f")"
+                echo "----------------------"
+                cat "$f"
+                echo ""
+              done
+              echo "BUILD FAILED: See failure logs above"
+            else
+              echo "ALL EXAMPLES SUCCESSFULLY COMPILED"
+            fi
+          } | tee "$SUMMARY_FILE"
+
+          # Exit with error if failures exist
           fail_dir="failures"
           if [ -d "$fail_dir" ] && ls "$fail_dir"/*.log >/dev/null 2>&1; then
-            # Failures exist - print them and exit with error
-            for f in "$fail_dir"/*.log; do
-              echo "----------------------"
-              echo "$(basename "$f")"
-              echo "----------------------"
-              # Print the failure log content
-              cat "$f"
-              echo ""
-            done
-            echo "BUILD FAILED: See failure logs above"
             exit 1
-          else
-            echo "ALL EXAMPLES SUCCESSFULLY COMPILED"
           fi
         shell: bash
 
@@ -329,6 +335,7 @@ jobs:
           uv run ci/optimization_report.py --first
 
       - name: Generate timestamp and random hex
+        if: always()
         id: generate_id
         run: |
           echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
@@ -348,6 +355,13 @@ jobs:
           name: build-log-${{ steps.generate_id.outputs.timestamp }}-${{ github.sha }}-${{ steps.generate_id.outputs.random_hex }}
           path: trusted/build.log
 
+      - name: Upload build summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-summary-${{ steps.generate_id.outputs.timestamp }}-${{ github.sha }}-${{ steps.generate_id.outputs.random_hex }}
+          path: trusted/build-summary.txt
+          if-no-files-found: ignore
 
       - name: Check build status
         if: failure()

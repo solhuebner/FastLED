@@ -15,7 +15,8 @@ uv run ci/tools/gh_debug.py $ARGUMENTS
 ```
 
 This script:
-- Streams logs instead of downloading full files (avoids 55MB+ downloads)
+- **Tries build-summary artifacts first** (small, focused files uploaded by CI — much faster)
+- Falls back to streaming full logs if no summary artifact is available
 - Filters for errors in real-time
 - Stops after finding 10 errors (configurable with --max-errors)
 - Shows context around each error (5 lines before/after, configurable with --context)

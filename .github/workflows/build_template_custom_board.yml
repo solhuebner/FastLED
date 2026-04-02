@@ -85,6 +85,19 @@ jobs:
           ./compile --no-interactive --max-failures 3 ${{ inputs.args }} | tee build.log
         shell: bash
 
+      - name: Build summary and failure logs
+        if: always()
+        working-directory: trusted
+        run: |
+          SUMMARY_FILE="build-summary.txt"
+          {
+            echo "############################################"
+            echo "Last 100 lines of build.log (most recent output)"
+            echo "############################################"
+            tail -n 100 build.log 2>/dev/null || true
+          } | tee "$SUMMARY_FILE"
+        shell: bash
+
       - name: Print out build_info files
         working-directory: trusted
         run: |
@@ -119,6 +132,7 @@ jobs:
         shell: bash
 
       - name: Generate timestamp and random hex
+        if: always()
         id: generate_id
         run: |
           echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
@@ -138,6 +152,14 @@ jobs:
         with:
           name: build-log-${{ steps.generate_id.outputs.timestamp }}-${{ github.sha }}-${{ steps.generate_id.outputs.random_hex }}
           path: trusted/build.log
+
+      - name: Upload build summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-summary-${{ steps.generate_id.outputs.timestamp }}-${{ github.sha }}-${{ steps.generate_id.outputs.random_hex }}
+          path: trusted/build-summary.txt
+          if-no-files-found: ignore
 
       - name: Check build status
         if: failure()

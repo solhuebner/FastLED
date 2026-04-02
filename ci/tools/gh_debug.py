@@ -163,6 +163,96 @@ class GitHubDebugger:
             print(f"Error getting failed jobs: {e}", file=sys.stderr)
             return []
 
+    def try_download_build_summary(self) -> Optional[Path]:
+        """Try to download build-summary artifacts for faster analysis.
+
+        Build-summary artifacts are small, focused files uploaded by CI
+        containing just the error output. Much faster than downloading full logs.
+
+        Returns:
+            Path to combined summary file, or None if not available
+        """
+        try:
+            # List artifacts for this run
+            result = subprocess.run(
+                [
+                    "gh",
+                    "api",
+                    f"repos/{self.repo}/actions/runs/{self.run_id}/artifacts",
+                    "--jq",
+                    '.artifacts[] | select(.name | startswith("build-summary")) | .name',
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=15,
+            )
+
+            artifact_names = [
+                n.strip() for n in result.stdout.strip().split("\n") if n.strip()
+            ]
+            if not artifact_names:
+                print("No build-summary artifacts found for this run")
+                return None
+
+            print(f"Found {len(artifact_names)} build-summary artifact(s)")
+
+            # Download artifacts
+            download_dir = Path(".logs/gh/summaries") / f"run_{self.run_id}"
+            download_dir.mkdir(parents=True, exist_ok=True)
+
+            for name in artifact_names:
+                try:
+                    subprocess.run(
+                        [
+                            "gh",
+                            "run",
+                            "download",
+                            self.run_id,
+                            "-n",
+                            name,
+                            "-D",
+                            str(download_dir),
+                        ],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        timeout=30,
+                    )
+                except KeyboardInterrupt as ki:
+                    handle_keyboard_interrupt(ki)
+                    raise
+                except Exception:
+                    continue
+
+            # Find all downloaded summary files
+            summary_files = list(download_dir.rglob("build-summary.txt"))
+            if not summary_files:
+                return None
+
+            # Concatenate all summaries into one file
+            combined = download_dir / "combined-summary.txt"
+            with open(combined, "w", encoding="utf-8") as out:
+                for sf in sorted(summary_files):
+                    job_name = sf.parent.name
+                    out.write(f"\n{'=' * 80}\n")
+                    out.write(f"Job: {job_name}\n")
+                    out.write(f"{'=' * 80}\n")
+                    with open(sf, "r", encoding="utf-8") as f:
+                        out.write(f.read())
+                    out.write("\n")
+
+            size = combined.stat().st_size
+            print(f"Build summary downloaded ({size} bytes)\n")
+            return combined
+
+        except KeyboardInterrupt as ki:
+            handle_keyboard_interrupt(ki)
+            raise
+        except Exception as e:
+            print(f"Build summary not available, will try full logs: {e}")
+            return None
+
     def download_logs(self) -> Optional[Path]:
         """Download logs to .logs/gh/ directory for analysis.
 
@@ -399,9 +489,15 @@ class GitHubDebugger:
         for job in failed_jobs:
             print(f"  - {job['name']} ({job['conclusion']})")
 
-        # Download logs
+        # Try build summary artifact first (much faster than full logs)
         print()
-        log_file = self.download_logs()
+        log_file = self.try_download_build_summary()
+        if log_file:
+            print("Using build summary artifact (faster than full logs)")
+        else:
+            # Fall back to full log download
+            log_file = self.download_logs()
+
         if not log_file:
             print("Failed to download logs. Cannot continue analysis.", file=sys.stderr)
             return
@@ -459,8 +555,6 @@ Examples:
     except KeyboardInterrupt as ki:
         handle_keyboard_interrupt(ki)
         raise
-        print("\n\nInterrupted by user")
-        sys.exit(1)
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)

@@ -13,7 +13,8 @@ uv run ci/tools/gh_debug.py ${1:-}
 ```
 
 This script:
-- Streams logs instead of downloading full files (avoids 55MB+ downloads)
+- **Tries build-summary artifacts first** (small, focused files uploaded by CI — much faster)
+- Falls back to streaming full logs if no summary artifact is available
 - Filters for errors in real-time
 - Stops after finding 10 errors (configurable with --max-errors)
 - Shows context around each error (5 lines before/after, configurable with --context)
@@ -27,11 +28,15 @@ This script:
    - This shows only logs from failed steps (much smaller)
    - Parse output to identify which jobs and steps failed
 
-2. **For each failed step, use targeted log extraction**:
+2. **Try downloading build-summary artifacts first**:
+   - Use `gh api repos/{owner}/{repo}/actions/runs/{run_id}/artifacts --jq '.artifacts[] | select(.name | startswith("build-summary")) | .name'`
+   - If found, download with `gh run download {run_id} -n {artifact_name}` — these are small, focused files
+   - Only fall back to full logs if no summary artifact exists
+
+3. **For each failed step, use targeted log extraction** (fallback):
    - **IMPORTANT**: Filter BEFORE limiting to avoid processing huge logs
    - Use `gh api /repos/FastLED/FastLED/actions/jobs/{job_id}/logs | grep -E "(error:|FAILED|Assertion|undefined reference|Error compiling|Test.*failed)" -A 10 -B 5 | tail -n 500`
    - This filters first (fast), then limits output (avoids timeout)
-   - Prioritize steps named "Build summary and failure logs" as they contain consolidated error info
    - Use timeout of 3 minutes for log fetching commands
 
 3. **Parse logs to identify**:
