@@ -40,7 +40,7 @@
 
 // Compile for platforms with sufficient memory OR stub platform (includes tests)
 // STUB_PLATFORM now always gets real ISR implementations instead of stubs
-#if SKETCH_HAS_LOTS_OF_MEMORY || defined(STUB_PLATFORM)
+#if SKETCH_HAS_LARGE_MEMORY || defined(STUB_PLATFORM)
 
 #include "fl/stl/stdint.h"
 #include "fl/stl/compiler_control.h"
@@ -225,4 +225,4 @@ FL_IRAM void fl_parallel_spi_isr(void) {
 FL_EXTERN_C_END
 
 
-#endif  // SKETCH_HAS_LOTS_OF_MEMORY && (!defined(STUB_PLATFORM) || defined(FASTLED_SPI_HOST_SIMULATION))
+#endif  // SKETCH_HAS_LARGE_MEMORY && (!defined(STUB_PLATFORM) || defined(FASTLED_SPI_HOST_SIMULATION))

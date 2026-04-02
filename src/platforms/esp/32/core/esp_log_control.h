@@ -12,7 +12,7 @@
 //
 // Logging behavior:
 // - DISABLED by default on all ESP32 platforms to reduce binary size
-// - ENABLED automatically if SKETCH_HAS_LOTS_OF_MEMORY is true (ESP32 platforms)
+// - ENABLED automatically if SKETCH_HAS_LARGE_MEMORY is true (ESP32 platforms)
 // - Can be explicitly ENABLED by defining FASTLED_ESP32_ENABLE_LOGGING=1
 // - Can be explicitly DISABLED by defining FASTLED_ESP32_ENABLE_LOGGING=0
 //
@@ -22,7 +22,7 @@
 
 #ifndef FASTLED_ESP32_ENABLE_LOGGING
     // Default behavior: Enable logging only if we have lots of memory
-    #if SKETCH_HAS_LOTS_OF_MEMORY
+    #if SKETCH_HAS_LARGE_MEMORY
         #define FASTLED_ESP32_ENABLE_LOGGING 1
     #else
         #define FASTLED_ESP32_ENABLE_LOGGING 0

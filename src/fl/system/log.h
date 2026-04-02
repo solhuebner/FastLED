@@ -73,7 +73,7 @@ const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 #endif
 
 #ifndef FL_ERROR
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 // FL_ERROR: Supports both string literals and stream-style formatting with << operator
 // Uses sstream for dynamic formatting (avoids printf bloat ~40KB, adds ~3KB)
 // Includes file and line number for easier debugging
@@ -99,7 +99,7 @@ const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 #endif
 
 #ifndef FL_WARN
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 // FL_WARN: Supports both string literals and stream-style formatting with << operator
 // Uses sstream for dynamic formatting (avoids printf bloat ~40KB, adds ~3KB)
 // Includes file and line number for easier debugging
@@ -154,7 +154,7 @@ const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 #endif
 
 #ifndef FL_INFO
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 // FL_INFO: Supports both string literals and stream-style formatting with << operator
 // Uses sstream for dynamic formatting (avoids printf bloat ~40KB, adds ~3KB)
 // Includes file and line number for easier debugging
@@ -192,14 +192,14 @@ const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 // Debug printing control:
 // - FASTLED_DISABLE_DBG=1: Explicitly disable FL_DBG output (highest priority)
 // - FASTLED_FORCE_DBG: Force enable FL_DBG (auto-set for debug builds)
-// - SKETCH_HAS_LOTS_OF_MEMORY: Enable FL_DBG when platform has enough memory
+// - SKETCH_HAS_LARGE_MEMORY: Enable FL_DBG when platform has enough memory
 //
-// Priority: FASTLED_DISABLE_DBG > FASTLED_FORCE_DBG > SKETCH_HAS_LOTS_OF_MEMORY
+// Priority: FASTLED_DISABLE_DBG > FASTLED_FORCE_DBG > SKETCH_HAS_LARGE_MEMORY
 #if defined(FASTLED_DISABLE_DBG) && FASTLED_DISABLE_DBG
 // Explicit disable takes highest priority - useful for reducing serial spam
 #define FASTLED_HAS_DBG 0
 #define _FASTLED_DGB(X) FL_DBG_NO_OP(X)
-#elif !defined(FASTLED_FORCE_DBG) && !SKETCH_HAS_LOTS_OF_MEMORY
+#elif !defined(FASTLED_FORCE_DBG) && !SKETCH_HAS_LARGE_MEMORY
 // By default, debug printing is disabled to prevent memory bloat in simple applications
 #define FASTLED_HAS_DBG 0
 #define _FASTLED_DGB(X) FL_DBG_NO_OP(X)
@@ -277,7 +277,7 @@ const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 ///   FL_PRINT("Value: " << x);
 ///   FL_PRINT(ss.str());
 #ifndef FL_PRINT
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 #define FL_PRINT(X) fl::println((fl::sstream() << X).c_str())
 
 // FL_PRINT_EVERY: Rate-limited print that outputs at most once per interval

@@ -295,7 +295,7 @@ private:
     float mFluxThreshold;
     fl::array<float, 16> mPreviousMagnitudes;
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     fl::array<float, 32> mFluxHistory;      // For advanced smoothing
     fl::size mHistoryIndex;
     float calculateAdaptiveThreshold();
@@ -312,7 +312,7 @@ struct BeatDetectors {
     void setThresholds(float bassThresh, float midThresh, float trebleThresh);
     
 private:
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     SpectralFluxDetector bass;     // 20-200 Hz (bins 0-1)
     SpectralFluxDetector mid;      // 200-2000 Hz (bins 6-7)
     SpectralFluxDetector treble;   // 2000-20000 Hz (bins 14-15)
@@ -345,7 +345,7 @@ private:
         1.3f, 1.2f, 1.0f, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f
     };
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     fl::array<float, 16> mLoudnessHistory;  // For dynamic compensation
     fl::size mHistoryIndex;
 #endif

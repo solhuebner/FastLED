@@ -330,7 +330,7 @@ LIB8STATIC u8 blend8_16bit(u8 a, u8 b, u8 amountOfB) {
 
 /// Blend a variable proportion of one byte to another (C implementation for ATtiny)
 /// Automatically selects between 8-bit and 16-bit precision based on available memory
-#if (SKETCH_HAS_LOTS_OF_MEMORY)
+#if (SKETCH_HAS_LARGE_MEMORY)
 LIB8STATIC u8 blend8(u8 a, u8 b, u8 amountOfB) {
     return blend8_16bit(a, b, amountOfB);
 }

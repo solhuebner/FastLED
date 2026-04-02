@@ -11,7 +11,7 @@
 
 
 CLEDController::~CLEDController() {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Remove from draw list on destruction to prevent dangling pointers
     // Note: Not enabled on memory-constrained platforms (AVR, ESP8266, etc.)
     // because the virtual destructor adds ~600 bytes on AVR and pulling in
@@ -33,7 +33,7 @@ CLEDController::CLEDController(RegistrationMode mode) : mLeds(), mSettings() {
 
 void CLEDController::addToList() {
     // Don't add if already in list
-    #if SKETCH_HAS_LOTS_OF_MEMORY // Mostly for AVR, the isInList() check adds memory overhead on these tight platforms.
+    #if SKETCH_HAS_LARGE_MEMORY // Mostly for AVR, the isInList() check adds memory overhead on these tight platforms.
     if (isInList()) {
         return;
     }

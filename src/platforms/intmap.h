@@ -183,7 +183,7 @@ struct int_scale_impl<i16, u32> {
 template <>
 struct int_scale_impl<u16, u8> {
     FL_ALWAYS_INLINE u8 apply(u16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xff00) return 0xff;
         return u8((x + 128) >> 8);
 #else
@@ -197,7 +197,7 @@ struct int_scale_impl<u16, u8> {
 template <>
 struct int_scale_impl<i16, i8> {
     FL_ALWAYS_INLINE i8 apply(i16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7f80) return 127;
         return i8((x + 128) >> 8);
 #else
@@ -211,7 +211,7 @@ struct int_scale_impl<i16, i8> {
 template <>
 struct int_scale_impl<u16, i8> {
     FL_ALWAYS_INLINE i8 apply(u16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xff00) return 0xff;
         return i8((x + 128) >> 8);
 #else
@@ -225,7 +225,7 @@ struct int_scale_impl<u16, i8> {
 template <>
 struct int_scale_impl<i16, u8> {
     FL_ALWAYS_INLINE u8 apply(i16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7f80) return 255;
         return u8((x + 128) >> 8);
 #else
@@ -239,7 +239,7 @@ struct int_scale_impl<i16, u8> {
 template <>
 struct int_scale_impl<u32, u16> {
     FL_ALWAYS_INLINE u16 apply(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xffff0000) return 0xffff;
         return u16((x + 32768) >> 16);
 #else
@@ -253,7 +253,7 @@ struct int_scale_impl<u32, u16> {
 template <>
 struct int_scale_impl<i32, i16> {
     FL_ALWAYS_INLINE i16 apply(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7fff8000) return 32767;
         return i16((x + 32768) >> 16);
 #else
@@ -267,7 +267,7 @@ struct int_scale_impl<i32, i16> {
 template <>
 struct int_scale_impl<u32, i16> {
     FL_ALWAYS_INLINE i16 apply(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xffff0000) return 0xffff;
         return i16((x + 32768) >> 16);
 #else
@@ -281,7 +281,7 @@ struct int_scale_impl<u32, i16> {
 template <>
 struct int_scale_impl<i32, u16> {
     FL_ALWAYS_INLINE u16 apply(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7fff8000) return 0xffff;
         return u16((x + 32768) >> 16);
 #else
@@ -295,7 +295,7 @@ struct int_scale_impl<i32, u16> {
 template <>
 struct int_scale_impl<u32, u8> {
     FL_ALWAYS_INLINE u8 apply(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xFF000000) return 0xff;
         return u8((x + 0x800000) >> 24);
 #else
@@ -309,7 +309,7 @@ struct int_scale_impl<u32, u8> {
 template <>
 struct int_scale_impl<i32, i8> {
     FL_ALWAYS_INLINE i8 apply(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7F000000) return 127;
         return i8((x + 0x800000) >> 24);
 #else
@@ -323,7 +323,7 @@ struct int_scale_impl<i32, i8> {
 template <>
 struct int_scale_impl<u32, i8> {
     FL_ALWAYS_INLINE i8 apply(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0xFF000000) return 0x7f;
         return i8((x + 0x800000) >> 24);
 #else
@@ -337,7 +337,7 @@ struct int_scale_impl<u32, i8> {
 template <>
 struct int_scale_impl<i32, u8> {
     FL_ALWAYS_INLINE u8 apply(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
         if (x >= 0x7F000000) return 0xff;
         return u8((x + 0x800000) >> 24);
 #else
@@ -497,7 +497,7 @@ FL_ALWAYS_INLINE i32 smap16_to_32(i16 x) {
 ///       division while remaining integer-only. The zero case is handled naturally
 ///       by the rounding math: (0 + 128) >> 8 = 0.
 FL_ALWAYS_INLINE u8 map16_to_8(u16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices (typically with simple CPUs and no branch prediction),
     // use branched version since it's faster to skip the shift operation entirely when x >= 0xff00
     if (x >= 0xff00) {
@@ -525,7 +525,7 @@ FL_ALWAYS_INLINE u8 map16_to_8(u16 x) {
 /// @note Tested to produce results nearly identical to double-precision floating-point
 ///       division while remaining integer-only.
 FL_ALWAYS_INLINE i8 smap16_to_8(i16 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices
     if (x >= 0x7f80) {
         return 127;
@@ -555,7 +555,7 @@ FL_ALWAYS_INLINE i8 smap16_to_8(i16 x) {
 ///       division while remaining integer-only. The zero case is handled naturally
 ///       by the rounding math: (0 + 32768) >> 16 = 0.
 FL_ALWAYS_INLINE u16 map32_to_16(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices (typically with simple CPUs and no branch prediction),
     // use branched version since it's faster to skip the shift operation entirely when x >= 0xffff0000
     if (x >= 0xffff0000) {
@@ -584,7 +584,7 @@ FL_ALWAYS_INLINE u16 map32_to_16(u32 x) {
 /// @note Tested to produce results nearly identical to double-precision floating-point
 ///       division while remaining integer-only.
 FL_ALWAYS_INLINE i16 smap32_to_16(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices
     if (x >= 0x7fff8000) {
         return 32767;
@@ -614,7 +614,7 @@ FL_ALWAYS_INLINE i16 smap32_to_16(i32 x) {
 ///       division while remaining integer-only. The zero case is handled naturally
 ///       by the rounding math: (0 + 0x800000) >> 24 = 0.
 FL_ALWAYS_INLINE u8 map32_to_8(u32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices (typically with simple CPUs and no branch prediction),
     // use branched version since it's faster to skip the shift operation entirely when x >= 0xFF000000
     if (x >= 0xFF000000) {
@@ -643,7 +643,7 @@ FL_ALWAYS_INLINE u8 map32_to_8(u32 x) {
 /// @note Tested to produce results nearly identical to double-precision floating-point
 ///       division while remaining integer-only.
 FL_ALWAYS_INLINE i8 smap32_to_8(i32 x) {
-#if SKETCH_HAS_LOTS_OF_MEMORY == 0
+#if SKETCH_HAS_LARGE_MEMORY == 0
     // On memory-constrained devices
     if (x >= 0x7F000000) {
         return 127;

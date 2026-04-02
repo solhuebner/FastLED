@@ -325,7 +325,7 @@ The ESP32 platform has **two completely different SPI subsystems**:
 **Rationale**:
 - ESP-IDF's `esp_log` pulls in 10-20KB of printf/vfprintf code
 - Many sketches don't need logging (constrained flash/RAM)
-- Conditional logging: enabled only when `SKETCH_HAS_LOTS_OF_MEMORY` is true
+- Conditional logging: enabled only when `SKETCH_HAS_LARGE_MEMORY` is true
 - Minimal error handling: `FASTLED_ESP32_MINIMAL_ERROR_HANDLING` skips logging entirely
 
 ### 6. Interrupt Handlers in Separate Directory

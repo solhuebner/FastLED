@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """Audit memory classification consistency between C++ sketch_macros.h and Python boards.py.
 
-This script ensures that the Python memory_class property for each board matches
-the low-memory classification from C++ sketch_macros.h (SKETCH_HAS_LOTS_OF_MEMORY).
+Three-tier memory classification:
+  'low'  = SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
+  'high' = SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=0
+  'huge' = SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=1
 
 Source of Truth (C++ sketch_macros.h):
-  SKETCH_HAS_LOTS_OF_MEMORY = 0 for:
-  - __AVR__ (all AVR)
-  - __AVR_ATtiny85__, __AVR_ATtiny88__, __AVR_ATmega32U4__
+  SKETCH_HAS_LARGE_MEMORY = 0 for:
+  - __AVR__, __AVR_ATtiny85__, __AVR_ATtiny88__, __AVR_ATmega32U4__
   - ARDUINO_attinyxy6, ARDUINO_attinyxy4
-  - ARDUINO_TEENSYLC
-  - ARDUINO_TEENSY30, __MK20DX128__ (Teensy 3.0)
-  - __MK20DX256__ (Teensy 3.1/3.2)
-  - STM32F1
-  - ESP8266
-  - ARDUINO_ARCH_RENESAS_UNO
-  - ARDUINO_BLUEPILL_F103C8
+  - ARDUINO_TEENSYLC, ARDUINO_TEENSY30, __MK20DX128__, __MK20DX256__
+  - STM32F1, ESP8266, ARDUINO_ARCH_RENESAS_UNO, ARDUINO_BLUEPILL_F103C8
+
+  SKETCH_HAS_HUGE_MEMORY = 1 for:
+  - ESP32, FL_IS_TEENSY_35/36/4X, ARDUINO_ARCH_RP2040, PICO_RP2040/RP2350
+  - __SAMD51__, STM32F4xx, STM32H7xx, ARDUINO_GIGA
+  - FASTLED_STUB_IMPL, __EMSCRIPTEN__
 """
 
 import sys
@@ -43,44 +44,50 @@ EXPECTED_MEMORY_BY_PATTERN = {
     ("stm32f103c8", "low"),
     ("stm32f103cb", "low"),
     ("stm32f103tb", "low"),
-    ("stm32f411ce", "high"),  # STM32F4 - HIGH memory
-    # ESP variants
+    ("stm32f411ce", "huge"),  # STM32F4 - huge (matches sketch_macros.h STM32F4xx)
+    # ESP variants (all huge)
     ("esp8266", "low"),
-    ("esp32dev", "high"),
-    ("esp32s3", "high"),
-    ("esp32c3", "high"),
-    ("esp32c6", "high"),
-    ("esp32c5", "high"),
-    ("esp32c2", "high"),
-    ("esp32s2", "high"),
-    ("esp32h2", "high"),
-    ("esp32p4", "high"),
-    # Teensy high-memory (Cortex-M4)
-    ("teensy40", "high"),
-    ("teensy41", "high"),
-    # ARM Cortex boards (typically high-memory)
+    ("esp32dev", "huge"),
+    ("esp32s3", "huge"),
+    ("esp32c3", "huge"),
+    ("esp32c6", "huge"),
+    ("esp32c5", "huge"),
+    ("esp32c2", "huge"),
+    ("esp32s2", "huge"),
+    ("esp32h2", "huge"),
+    ("esp32p4", "huge"),
+    # Teensy huge-memory
+    ("teensy40", "huge"),
+    ("teensy41", "huge"),
+    # ARM Cortex boards (high tier, not huge)
     ("sam3x8e_due", "high"),
     ("samd21g18a_zero", "high"),
     (
         "samd21g18a_feather",
         "high",
-    ),  # SAMD21 with 32KB RAM - borderline but not in C++ low list
-    ("samd51j19a_feather_m4", "high"),  # SAMD51 - definitely high
-    ("samd51p20a_grandcentral", "high"),  # SAMD51 - definitely high
-    ("stm32h747xi", "high"),  # STM32H747 - definitely high
-    # RP2040
-    ("rp2040", "high"),
-    ("rp2350", "high"),
-    # NRF52
+    ),  # SAMD21 with 32KB RAM - high tier
+    (
+        "samd51j19a_feather_m4",
+        "huge",
+    ),  # SAMD51 - huge (matches sketch_macros.h __SAMD51__)
+    (
+        "samd51p20a_grandcentral",
+        "huge",
+    ),  # SAMD51 - huge (matches sketch_macros.h __SAMD51__)
+    ("stm32h747xi", "huge"),  # STM32H7 - huge (matches sketch_macros.h STM32H7xx)
+    # RP2040 (huge)
+    ("rp2040", "huge"),
+    ("rp2350", "huge"),
+    # NRF52 (high tier)
     ("nrf52840_dk", "high"),
     ("adafruit_feather_nrf52840_sense", "high"),
     ("xiaoblesense", "high"),
     # Renesas
     ("uno_r4_wifi", "low"),
     ("uno_r4_minima", "low"),
-    # Native/Other
-    ("native", "high"),
-    ("web", "high"),
+    # Native/Other (huge)
+    ("native", "huge"),
+    ("web", "huge"),
 }
 
 
@@ -180,7 +187,7 @@ def verify_sketch_macros_compliance():
     print("=" * 70)
     print()
 
-    print("C++ sketch_macros.h low-memory defines (SKETCH_HAS_LOTS_OF_MEMORY = 0):")
+    print("C++ sketch_macros.h low-memory defines (SKETCH_HAS_LARGE_MEMORY = 0):")
     print("  1. __AVR__")
     print("  2. __AVR_ATtiny85__, __AVR_ATtiny88__, __AVR_ATmega32U4__")
     print("  3. ARDUINO_attinyxy6, ARDUINO_attinyxy4")

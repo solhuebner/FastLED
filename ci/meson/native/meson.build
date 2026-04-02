@@ -25,7 +25,8 @@ base_defines = shared_defines + [
   '-DSTUB_PLATFORM',
   '-DARDUINO=10808',
   '-DFASTLED_USE_STUB_ARDUINO',
-  '-DSKETCH_HAS_LOTS_OF_MEMORY=1',
+  '-DSKETCH_HAS_LARGE_MEMORY=1',
+  '-DSKETCH_HAS_HUGE_MEMORY=1',
   '-DFASTLED_STUB_IMPL',
   '-DFASTLED_TESTING',           # CRITICAL: Controls InlinedMemoryBlock layout (adds __data pointer)
   '-DFASTLED_STUB_MAIN_FAST_EXIT',  # Fast exit from stub_main after 5 loop iterations

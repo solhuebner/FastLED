@@ -29,7 +29,7 @@ which are blended together to create complex visual effects.
 #define NUM_LEDS ((WIDTH) * (HEIGHT))  // Total number of LEDs
 #define IS_SERPINTINE true // Whether the LED strip zigzags back and forth (common in matrix layouts)
 
-#if !SKETCH_HAS_LOTS_OF_MEMORY
+#if !SKETCH_HAS_LARGE_MEMORY
 // Stub implementations for low-memory platforms
 inline void wavefx_setup() {}
 inline void wavefx_loop() {}

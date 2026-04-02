@@ -5,7 +5,7 @@
 #include "fl/system/sketch_macros.h"
 #include "fl/stl/thread.h"
 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 #include "fl/task/executor.h"
 #endif
 

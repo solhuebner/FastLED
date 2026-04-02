@@ -15,26 +15,49 @@ static void arm_compile_tests() {
 #error "FASTLED_USE_PROGMEM should be either 0 or 1 for ARM platforms"
 #endif
 
-#if !defined(SKETCH_HAS_LOTS_OF_MEMORY_OVERRIDDEN)
+#if !defined(SKETCH_HAS_LARGE_MEMORY_OVERRIDDEN)
 #if defined(FL_IS_TEENSY_30) || defined(FL_IS_TEENSY_31) || defined(FL_IS_TEENSY_32)
     // Teensy 3.0/3.1/3.2 have limited memory (16KB-64KB RAM)
-    #if SKETCH_HAS_LOTS_OF_MEMORY != 0
-    #error "SKETCH_HAS_LOTS_OF_MEMORY should be 0 for Teensy 3.0/3.1/3.2"
+    #if SKETCH_HAS_LARGE_MEMORY != 0
+    #error "SKETCH_HAS_LARGE_MEMORY should be 0 for Teensy 3.0/3.1/3.2"
+    #endif
+    #if SKETCH_HAS_HUGE_MEMORY != 0
+    #error "SKETCH_HAS_HUGE_MEMORY should be 0 for Teensy 3.0/3.1/3.2"
     #endif
 #elif defined(FL_IS_TEENSY_35) || defined(FL_IS_TEENSY_36) || defined(FL_IS_TEENSY_4X)
     // Teensy 3.5/3.6 have 256KB RAM, Teensy 4.x has 1MB RAM - plenty of memory
-    #if SKETCH_HAS_LOTS_OF_MEMORY != 1
-    #error "SKETCH_HAS_LOTS_OF_MEMORY should be 1 for Teensy 3.5/3.6/4.x"
+    #if SKETCH_HAS_LARGE_MEMORY != 1
+    #error "SKETCH_HAS_LARGE_MEMORY should be 1 for Teensy 3.5/3.6/4.x"
+    #endif
+    #if SKETCH_HAS_HUGE_MEMORY != 1
+    #error "SKETCH_HAS_HUGE_MEMORY should be 1 for Teensy 3.5/3.6/4.x"
     #endif
 #elif defined(FL_IS_TEENSY_LC) || defined(ARDUINO_ARCH_RENESAS_UNO) || defined(STM32F1)
     // Teensy LC, Renesas UNO, and STM32F1 have limited memory
-    #if SKETCH_HAS_LOTS_OF_MEMORY != 0
-    #error "SKETCH_HAS_LOTS_OF_MEMORY should be 0 for Teensy LC, Renesas UNO, and STM32F1"
+    #if SKETCH_HAS_LARGE_MEMORY != 0
+    #error "SKETCH_HAS_LARGE_MEMORY should be 0 for Teensy LC, Renesas UNO, and STM32F1"
+    #endif
+    #if SKETCH_HAS_HUGE_MEMORY != 0
+    #error "SKETCH_HAS_HUGE_MEMORY should be 0 for Teensy LC, Renesas UNO, and STM32F1"
+    #endif
+#elif defined(ARDUINO_ARCH_RP2040) || defined(PICO_RP2040) || defined(PICO_RP2350) \
+   || defined(__SAMD51__) \
+   || defined(STM32F4xx) || defined(STM32H7xx) || defined(ARDUINO_GIGA)
+    // Huge memory ARM platforms (>= 256KB RAM)
+    #if SKETCH_HAS_LARGE_MEMORY != 1
+    #error "SKETCH_HAS_LARGE_MEMORY should be 1 for huge ARM platforms"
+    #endif
+    #if SKETCH_HAS_HUGE_MEMORY != 1
+    #error "SKETCH_HAS_HUGE_MEMORY should be 1 for huge ARM platforms"
     #endif
 #else
-    // Most other ARM platforms have lots of memory
-    #if SKETCH_HAS_LOTS_OF_MEMORY != 1
-    #error "SKETCH_HAS_LOTS_OF_MEMORY should be 1 for most ARM platforms"
+    // Most other ARM platforms have large memory but are not "huge"
+    // (e.g., SAMD21, nRF52, generic Cortex-M)
+    #if SKETCH_HAS_LARGE_MEMORY != 1
+    #error "SKETCH_HAS_LARGE_MEMORY should be 1 for most ARM platforms"
+    #endif
+    #if SKETCH_HAS_HUGE_MEMORY != 0
+    #error "SKETCH_HAS_HUGE_MEMORY should be 0 for generic ARM platforms (high tier, not huge)"
     #endif
 #endif
 #endif
@@ -99,7 +122,7 @@ static void arm_compile_tests() {
     static_assert(sizeof(void*) == 4, "STM32F1 should be 32-bit platform");
     
     // Compile-time check for sketch memory usage awareness
-    #if SKETCH_HAS_LOTS_OF_MEMORY != 0
+    #if SKETCH_HAS_LARGE_MEMORY != 0
         // This helps catch cases where large data structures might be used
         #pragma message "STM32F1 Warning: Large memory structures may not fit in 20KB RAM"
     #endif

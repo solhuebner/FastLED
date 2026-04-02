@@ -13,9 +13,12 @@ void esp8266_compile_tests() {
 #error "FASTLED_USE_PROGMEM should be 0 for ESP8266"
 #endif
 
-#if !defined(SKETCH_HAS_LOTS_OF_MEMORY_OVERRIDDEN)
-#if SKETCH_HAS_LOTS_OF_MEMORY != 0
-#error "SKETCH_HAS_LOTS_OF_MEMORY should be 0 for ESP8266"
+#if !defined(SKETCH_HAS_LARGE_MEMORY_OVERRIDDEN)
+#if SKETCH_HAS_LARGE_MEMORY != 0
+#error "SKETCH_HAS_LARGE_MEMORY should be 0 for ESP8266"
+#endif
+#if SKETCH_HAS_HUGE_MEMORY != 0
+#error "SKETCH_HAS_HUGE_MEMORY should be 0 for ESP8266"
 #endif
 #endif
 
@@ -57,9 +60,12 @@ void esp32_compile_tests() {
 #error "FASTLED_USE_PROGMEM should be 0 for ESP32 platforms"
 #endif
 
-#if !defined(SKETCH_HAS_LOTS_OF_MEMORY_OVERRIDDEN)
-#if SKETCH_HAS_LOTS_OF_MEMORY != 1
-#error "SKETCH_HAS_LOTS_OF_MEMORY should be 1 for ESP32 platforms"
+#if !defined(SKETCH_HAS_LARGE_MEMORY_OVERRIDDEN)
+#if SKETCH_HAS_LARGE_MEMORY != 1
+#error "SKETCH_HAS_LARGE_MEMORY should be 1 for ESP32 platforms"
+#endif
+#if SKETCH_HAS_HUGE_MEMORY != 1
+#error "SKETCH_HAS_HUGE_MEMORY should be 1 for ESP32 platforms"
 #endif
 #endif
 

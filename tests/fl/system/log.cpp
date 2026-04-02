@@ -331,7 +331,7 @@ FL_TEST_CASE("warning macros are safe in all contexts") {
 
 FL_TEST_CASE("warning macro behavior on memory-constrained platforms") {
     FL_SUBCASE("FL_WARN compiles on constrained platforms") {
-        #if !SKETCH_HAS_LOTS_OF_MEMORY
+        #if !SKETCH_HAS_LARGE_MEMORY
         FL_WARN("This should be a no-op");
         #else
         FL_WARN("This should output");
@@ -340,7 +340,7 @@ FL_TEST_CASE("warning macro behavior on memory-constrained platforms") {
     }
 
     FL_SUBCASE("FL_WARN_IF compiles on constrained platforms") {
-        #if !SKETCH_HAS_LOTS_OF_MEMORY
+        #if !SKETCH_HAS_LARGE_MEMORY
         FL_WARN_IF(true, "This should be a no-op");
         #else
         FL_WARN_IF(true, "This should output");

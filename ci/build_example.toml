@@ -146,7 +146,8 @@ defines = [
     "ARDUINO=10808",                         # Arduino version compatibility
     "FASTLED_USE_STUB_ARDUINO",             # Use stub Arduino implementation
     "FASTLED_STUB_IMPL",                    # Enable STUB platform Arduino function implementations
-    "SKETCH_HAS_LOTS_OF_MEMORY=1",          # Enable memory-intensive features for STUB platform
+    "SKETCH_HAS_LARGE_MEMORY=1",          # Enable memory-intensive features for STUB platform
+    "SKETCH_HAS_HUGE_MEMORY=1",       # Enable very large memory features for STUB platform
     "FASTLED_HAS_ENGINE_EVENTS=1",          # Enable EngineEvents for UI components
 ]
 

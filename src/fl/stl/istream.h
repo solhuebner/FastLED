@@ -79,7 +79,7 @@ istream_real& cin_real();
 // Stub istream class that conditionally delegates to istream_real
 class istream {
 private:
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     istream_real mRealStream;
 #endif
     
@@ -88,7 +88,7 @@ public:
     
     // Check if stream is in good state
     bool good() const { 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         return mRealStream.good();
 #else
         return true; // Always good on memory-constrained platforms
@@ -96,7 +96,7 @@ public:
     }
     
     bool fail() const { 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         return mRealStream.fail();
 #else
         return false; // Never fail on memory-constrained platforms
@@ -104,7 +104,7 @@ public:
     }
     
     bool eof() const { 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         return mRealStream.eof();
 #else
         return true; // Always EOF on memory-constrained platforms
@@ -113,14 +113,14 @@ public:
     
     // Clear error state
     void clear() { 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream.clear();
 #endif
     }
     
     // Stream input operators
     istream& operator>>(string& str) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> str;
 #else
         // No-op on memory-constrained platforms
@@ -130,7 +130,7 @@ public:
     }
     
     istream& operator>>(char& c) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> c;
 #else
         // No-op on memory-constrained platforms
@@ -140,7 +140,7 @@ public:
     }
     
     istream& operator>>(fl::i8& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -150,7 +150,7 @@ public:
     }
     
     istream& operator>>(fl::u8& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -160,7 +160,7 @@ public:
     }
     
     istream& operator>>(fl::i16& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -170,7 +170,7 @@ public:
     }
     
     istream& operator>>(fl::i32& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -180,7 +180,7 @@ public:
     }
     
     istream& operator>>(fl::u32& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -190,7 +190,7 @@ public:
     }
     
     istream& operator>>(float& f) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> f;
 #else
         // No-op on memory-constrained platforms
@@ -200,7 +200,7 @@ public:
     }
     
     istream& operator>>(double& d) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> d;
 #else
         // No-op on memory-constrained platforms
@@ -216,7 +216,7 @@ public:
         fl::is_same<T, fl::u16>::value,
         istream&
     >::type operator>>(T& n) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream >> n;
 #else
         // No-op on memory-constrained platforms
@@ -227,7 +227,7 @@ public:
     
     // Get a line from input
     istream& getline(string& str) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream.getline(str);
 #else
         // No-op on memory-constrained platforms
@@ -238,7 +238,7 @@ public:
     
     // Get next character
     int get() {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         return mRealStream.get();
 #else
         // No-op on memory-constrained platforms
@@ -248,7 +248,7 @@ public:
     
     // Put back a character
     istream& putback(char c) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         mRealStream.putback(c);
 #endif
         return *this;
@@ -256,7 +256,7 @@ public:
     
     // Peek at next character without consuming it
     int peek() {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
         return mRealStream.peek();
 #else
         // No-op on memory-constrained platforms

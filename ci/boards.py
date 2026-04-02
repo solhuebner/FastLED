@@ -226,10 +226,12 @@ class Board:
 
     @property
     def memory_class(self) -> str:
-        """Return memory classification: 'low' or 'high'.
+        """Return memory classification: 'low', 'high', or 'huge'.
 
-        Based on sketch_macros.h SKETCH_HAS_LOTS_OF_MEMORY definitions.
-        Low-memory boards include AVR, Teensy LC/3.0/3.1, STM32F1, ESP8266, Renesas UNO R4.
+        Three-tier system matching sketch_macros.h:
+        - 'low':  SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
+        - 'high': SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=0
+        - 'huge': SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=1
         """
         # Low-memory board list (matches sketch_macros.h)
         low_memory_boards = {
@@ -261,15 +263,48 @@ class Board:
             "renesas-ra",  # Renesas (UNO R4)
         }
 
-        # Check board name first
+        # Check low-memory first
         if self.board_name in low_memory_boards:
             return "low"
-
-        # Check platform
         if self.platform and self.platform in low_memory_platforms:
             return "low"
 
-        # Default to high memory
+        # Huge-memory boards (>= 256KB RAM, >= 512KB flash)
+        # Matches sketch_macros.h SKETCH_HAS_HUGE_MEMORY=1 platforms
+        huge_memory_boards = {
+            "teensy35",
+            "teensy36",
+            "teensy40",
+            "teensy41",
+            "native",
+            "web",
+        }
+
+        if self.board_name in huge_memory_boards:
+            return "huge"
+
+        # Huge-memory platform families
+        pf = self.platform_family
+        if pf in {"esp32", "native"}:
+            return "huge"
+
+        # Check for specific huge platforms by platform URL/name
+        if self.platform:
+            platform_lower = self.platform.lower()
+            if "raspberrypi" in platform_lower or "rp2040" in platform_lower:
+                return "huge"
+
+        # Check board name patterns for SAMD51, STM32F4+/H7, GIGA
+        # (matches sketch_macros.h: __SAMD51__, STM32F4xx, STM32H7xx, ARDUINO_GIGA)
+        board_lower = self.board_name.lower()
+        if "samd51" in board_lower:
+            return "huge"
+        if "stm32f4" in board_lower or "stm32h7" in board_lower:
+            return "huge"
+        if "giga" in board_lower:
+            return "huge"
+
+        # Default to high memory (Apollo3, nRF52, SAMD21, generic ARM)
         return "high"
 
     @property

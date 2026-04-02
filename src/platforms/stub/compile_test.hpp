@@ -10,9 +10,12 @@ static void stub_compile_tests() {
 #error "FASTLED_USE_PROGMEM should be 0 for stub platforms"
 #endif
 
-#if !defined(SKETCH_HAS_LOTS_OF_MEMORY_OVERRIDDEN)
-#if SKETCH_HAS_LOTS_OF_MEMORY != 1
-#error "SKETCH_HAS_LOTS_OF_MEMORY should be 1 for stub platforms"
+#if !defined(SKETCH_HAS_LARGE_MEMORY_OVERRIDDEN)
+#if SKETCH_HAS_LARGE_MEMORY != 1
+#error "SKETCH_HAS_LARGE_MEMORY should be 1 for stub platforms"
+#endif
+#if SKETCH_HAS_HUGE_MEMORY != 1
+#error "SKETCH_HAS_HUGE_MEMORY should be 1 for stub platforms"
 #endif
 #endif
 

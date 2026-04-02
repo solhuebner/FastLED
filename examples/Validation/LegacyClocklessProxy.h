@@ -19,7 +19,7 @@
 /// the corresponding template instantiation, enabling validation testing of the
 /// full legacy code path.
 ///
-/// Destructor deletes the controller, which on ESP32 (SKETCH_HAS_LOTS_OF_MEMORY)
+/// Destructor deletes the controller, which on ESP32 (SKETCH_HAS_LARGE_MEMORY)
 /// automatically calls removeFromDrawList() via ~CLEDController().
 class LegacyClocklessProxy {
     fl::unique_ptr<CLEDController> mController;

@@ -179,6 +179,7 @@ FastLED now supports flexible `@filter` directives in `.ino` sketch files for co
 **One-liner format** (compact, flexible):
 ```cpp
 // @filter (memory is high) and (platform is esp32s3)
+// @filter (memory is huge) and (platform is esp32)
 // @filter (mem is high) and (plat is esp32*)
 // @filter (mem: high) and (plat: esp32)
 // @filter (mem=high) and (plat=esp32)
@@ -210,9 +211,15 @@ FastLED now supports flexible `@filter` directives in `.ino` sketch files for co
 
 **Logical operators:** `and`, `or`
 
+**Memory tiers** (ordered: low < high < huge):
+- `(memory is high)` — matches high AND huge boards
+- `(memory is huge)` — matches only huge boards (ESP32, Teensy 4.x, RP2040, native)
+- `(memory is low)` — matches all boards (every board is >= low)
+
 **Examples:**
 ```cpp
 // @filter (platform is esp32*)
+// @filter (memory is huge)
 // @filter (memory is not low)
 // @filter (target is -D__AVR__) or (board is uno)
 ```

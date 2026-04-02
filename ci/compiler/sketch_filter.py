@@ -5,12 +5,17 @@ from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
 This module provides parsing and evaluation of @filter blocks in .ino files.
 
+Memory tiers (ordered: low < high < huge):
+    - (memory is high) matches boards with 'high' or 'huge' memory
+    - (memory is huge) matches only boards with 'huge' memory
+    - (memory is low)  matches all boards (everything is >= low)
+
 Supports multiple syntaxes:
 
 YAML-style (multi-line):
     // @filter
     // require:
-    //   - memory: high
+    //   - memory: huge
     //   - platform: esp32
     // exclude:
     //   - target: esp32p4
@@ -18,21 +23,20 @@ YAML-style (multi-line):
 
 One-liner (compact) - Natural language styles:
     // @filter (memory is high) and (platform is esp32s3)
+    // @filter (memory is huge) and (platform is esp32)
     // @filter (mem is high) and (plat is esp32*)
-    // @filter (memory: high) and (platform: esp32)
     // @filter (mem=high) and (plat=esp32)
-    // @filter (mem:high) and (plat:esp32)
     // @filter (target is -D__AVR__) or (board is uno)
 
 Optional colon after @filter - all styles work:
     // @filter: (mem is high)
     // @filter (mem is high)
-    // @filter: (mem=high)
-    // @filter (mem=high)
+    // @filter: (mem=huge)
+    // @filter (mem=huge)
 
 One-liner operators:
-- is          : exact match (supports wildcards with *)
-- is not      : negation
+- is          : exact match (supports wildcards with *); ordered for memory
+- is not      : negation (exact match on exclude)
 - =           : exact match (shorthand for 'is')
 - :           : exact match (shorthand for 'is')
 - matches     : regex/glob pattern match
@@ -276,7 +280,7 @@ def should_skip_sketch(
     if sketch_filter is None or sketch_filter.is_empty():
         return False, ""
 
-    # Check exclude conditions (skip if ANY match)
+    # Check exclude conditions (skip if ANY match, exact match)
     for key, values in sketch_filter.exclude.items():
         board_value = _get_board_property(board, key)
         if board_value and _value_matches(board_value, values):
@@ -285,10 +289,47 @@ def should_skip_sketch(
     # Check require conditions (skip if ALL don't match)
     for key, values in sketch_filter.require.items():
         board_value = _get_board_property(board, key)
-        if not board_value or not _value_matches(board_value, values):
+        if not board_value:
+            return True, f"doesn't match required {key}={','.join(values)}"
+        # Memory uses ordered comparison (>= tier)
+        if key == "memory":
+            if not _memory_tier_matches(board_value, values):
+                return True, f"doesn't match required {key}={','.join(values)}"
+        elif not _value_matches(board_value, values):
             return True, f"doesn't match required {key}={','.join(values)}"
 
     return False, ""
+
+
+# Ordered memory tiers: low < high < huge.
+# (memory is high) matches boards with "high" or "huge" memory.
+# (memory is huge) matches only boards with "huge" memory.
+MEMORY_TIERS: dict[str, int] = {"low": 0, "high": 1, "huge": 2}
+
+
+def _memory_tier_matches(board_memory: str, filter_values: list[str]) -> bool:
+    """Check if board memory tier meets the required minimum tier.
+
+    Uses ordered comparison: (memory is high) matches high AND huge boards.
+
+    Args:
+        board_memory: Board's memory class ("low", "high", or "huge")
+        filter_values: Required memory values (OR logic)
+
+    Returns:
+        True if board memory tier >= any required tier
+    """
+    board_tier = MEMORY_TIERS.get(board_memory.lower(), 1)
+    for val in filter_values:
+        required_tier = MEMORY_TIERS.get(val.lower().strip())
+        if required_tier is not None:
+            if board_tier >= required_tier:
+                return True
+        else:
+            # Fall back to exact match for non-standard values
+            if board_memory.lower() == val.lower().strip():
+                return True
+    return False
 
 
 def _get_board_property(board: Board, key: str) -> Optional[str]:

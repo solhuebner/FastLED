@@ -8,7 +8,7 @@ This script analyzes existing C++ guards in .ino files and generates appropriate
 @filter/@end-filter blocks. The user can review and commit the generated changes.
 
 Supported guard patterns:
-- #if !SKETCH_HAS_LOTS_OF_MEMORY / #if SKETCH_HAS_LOTS_OF_MEMORY
+- #if !SKETCH_HAS_LARGE_MEMORY / #if SKETCH_HAS_LARGE_MEMORY
 - #ifdef ESP32, #ifdef ESP8266, etc. / #ifndef variant guards
 - #if defined(CONFIG_IDF_TARGET_ESP32S3) etc.
 """
@@ -27,16 +27,16 @@ def extract_guard_filters(content: str) -> Optional[str]:
     Returns:
         Filter block string (without surrounding comments) or None if no guards found
     """
-    # Pattern 1: SKETCH_HAS_LOTS_OF_MEMORY guards
-    if re.search(r"#if\s+!SKETCH_HAS_LOTS_OF_MEMORY", content, re.MULTILINE):
-        # #if !SKETCH_HAS_LOTS_OF_MEMORY means compile only if high memory
+    # Pattern 1: SKETCH_HAS_LARGE_MEMORY guards
+    if re.search(r"#if\s+!SKETCH_HAS_LARGE_MEMORY", content, re.MULTILINE):
+        # #if !SKETCH_HAS_LARGE_MEMORY means compile only if high memory
         return "require:\n   - memory: high"
     elif re.search(
-        r"#if\s+SKETCH_HAS_LOTS_OF_MEMORY\s*\n.*?#else\s*\n.*?#include.*?sketch_fake",
+        r"#if\s+SKETCH_HAS_LARGE_MEMORY\s*\n.*?#else\s*\n.*?#include.*?sketch_fake",
         content,
         re.MULTILINE | re.DOTALL,
     ):
-        # Pattern: #if SKETCH_HAS_LOTS_OF_MEMORY ... real code ... #else ... sketch_fake
+        # Pattern: #if SKETCH_HAS_LARGE_MEMORY ... real code ... #else ... sketch_fake
         return "require:\n   - memory: high"
 
     # Pattern 2: Platform-specific guards

@@ -353,18 +353,29 @@ class TestShouldSkipSketch:
 
     @pytest.fixture
     def esp32_board(self) -> Board:
-        """Create a mock ESP32 board."""
+        """Create a mock ESP32 board (huge memory)."""
         from unittest.mock import MagicMock
 
         board = MagicMock()
         board.platform_family = "esp32"
-        board.memory_class = "high"
+        board.memory_class = "huge"
         board.get_mcu_target = MagicMock(return_value="ESP32")
         return board
 
     @pytest.fixture
+    def apollo3_board(self) -> Board:
+        """Create a mock Apollo3 board (high memory, not huge)."""
+        from unittest.mock import MagicMock
+
+        board = MagicMock()
+        board.platform_family = "apollo3"
+        board.memory_class = "high"
+        board.get_mcu_target = MagicMock(return_value="Apollo3")
+        return board
+
+    @pytest.fixture
     def avr_board(self) -> Board:
-        """Create a mock AVR board (Arduino Uno)."""
+        """Create a mock AVR board (Arduino Uno, low memory)."""
         from unittest.mock import MagicMock
 
         board = MagicMock()
@@ -387,7 +398,7 @@ class TestShouldSkipSketch:
         assert reason == ""
 
     def test_require_high_memory_on_esp32(self, esp32_board: Board) -> None:
-        """ESP32 (high memory) should not be skipped for high memory requirement."""
+        """ESP32 (huge memory) should not be skipped for high memory requirement."""
         filter_obj = SketchFilter(require={"memory": ["high"]})
         should_skip, reason = should_skip_sketch(esp32_board, filter_obj)
         assert not should_skip
@@ -397,7 +408,7 @@ class TestShouldSkipSketch:
         filter_obj = SketchFilter(require={"memory": ["high"]})
         should_skip, reason = should_skip_sketch(avr_board, filter_obj)
         assert should_skip
-        assert "high memory" in reason or "memory" in reason
+        assert "memory" in reason
 
     def test_require_platform_esp32(self, esp32_board: Board, avr_board: Board) -> None:
         """ESP32 should compile, AVR should skip."""
@@ -632,6 +643,127 @@ class TestPintestFilter:
             f"atmega8a should be skipped for Pintest (reason: {reason})"
         )
         assert "atmega8" in reason.lower() or "board" in reason.lower()
+
+
+class TestMemoryTierMatching:
+    """Test three-tier memory classification: low < high < huge."""
+
+    @pytest.fixture
+    def huge_board(self) -> Board:
+        """ESP32 board with huge memory."""
+        from unittest.mock import MagicMock
+
+        board = MagicMock()
+        board.platform_family = "esp32"
+        board.memory_class = "huge"
+        board.get_mcu_target = MagicMock(return_value="ESP32")
+        board.board_name = "esp32dev"
+        return board
+
+    @pytest.fixture
+    def high_board(self) -> Board:
+        """Apollo3 board with high (but not huge) memory."""
+        from unittest.mock import MagicMock
+
+        board = MagicMock()
+        board.platform_family = "apollo3"
+        board.memory_class = "high"
+        board.get_mcu_target = MagicMock(return_value="Apollo3")
+        board.board_name = "apollo3_red_board"
+        return board
+
+    @pytest.fixture
+    def low_board(self) -> Board:
+        """AVR board with low memory."""
+        from unittest.mock import MagicMock
+
+        board = MagicMock()
+        board.platform_family = "avr"
+        board.memory_class = "low"
+        board.get_mcu_target = MagicMock(return_value="ATmega328P")
+        board.board_name = "uno"
+        return board
+
+    def test_require_high_matches_huge(self, huge_board: Board) -> None:
+        """(memory is high) should match huge boards (ordered comparison)."""
+        filter_obj = SketchFilter(require={"memory": ["high"]})
+        skip, _ = should_skip_sketch(huge_board, filter_obj)
+        assert not skip
+
+    def test_require_high_matches_high(self, high_board: Board) -> None:
+        """(memory is high) should match high boards."""
+        filter_obj = SketchFilter(require={"memory": ["high"]})
+        skip, _ = should_skip_sketch(high_board, filter_obj)
+        assert not skip
+
+    def test_require_high_skips_low(self, low_board: Board) -> None:
+        """(memory is high) should skip low boards."""
+        filter_obj = SketchFilter(require={"memory": ["high"]})
+        skip, _ = should_skip_sketch(low_board, filter_obj)
+        assert skip
+
+    def test_require_huge_matches_huge(self, huge_board: Board) -> None:
+        """(memory is huge) should match huge boards."""
+        filter_obj = SketchFilter(require={"memory": ["huge"]})
+        skip, _ = should_skip_sketch(huge_board, filter_obj)
+        assert not skip
+
+    def test_require_huge_skips_high(self, high_board: Board) -> None:
+        """(memory is huge) should skip high boards (huge is stricter)."""
+        filter_obj = SketchFilter(require={"memory": ["huge"]})
+        skip, _ = should_skip_sketch(high_board, filter_obj)
+        assert skip
+
+    def test_require_huge_skips_low(self, low_board: Board) -> None:
+        """(memory is huge) should skip low boards."""
+        filter_obj = SketchFilter(require={"memory": ["huge"]})
+        skip, _ = should_skip_sketch(low_board, filter_obj)
+        assert skip
+
+    def test_require_low_matches_all(
+        self, low_board: Board, high_board: Board, huge_board: Board
+    ) -> None:
+        """(memory is low) should match all boards (every board is >= low)."""
+        filter_obj = SketchFilter(require={"memory": ["low"]})
+        for board in [low_board, high_board, huge_board]:
+            skip, _ = should_skip_sketch(board, filter_obj)
+            assert not skip
+
+    def test_exclude_low_skips_low_only(
+        self, low_board: Board, high_board: Board, huge_board: Board
+    ) -> None:
+        """Exclude memory=low should skip only low boards (exact match)."""
+        filter_obj = SketchFilter(exclude={"memory": ["low"]})
+        skip_low, _ = should_skip_sketch(low_board, filter_obj)
+        skip_high, _ = should_skip_sketch(high_board, filter_obj)
+        skip_huge, _ = should_skip_sketch(huge_board, filter_obj)
+        assert skip_low
+        assert not skip_high
+        assert not skip_huge
+
+    def test_exclude_huge_skips_huge_only(
+        self, low_board: Board, high_board: Board, huge_board: Board
+    ) -> None:
+        """Exclude memory=huge should skip only huge boards (exact match)."""
+        filter_obj = SketchFilter(exclude={"memory": ["huge"]})
+        skip_low, _ = should_skip_sketch(low_board, filter_obj)
+        skip_high, _ = should_skip_sketch(high_board, filter_obj)
+        skip_huge, _ = should_skip_sketch(huge_board, filter_obj)
+        assert not skip_low
+        assert not skip_high
+        assert skip_huge
+
+    def test_oneliner_huge_filter(self) -> None:
+        """Test parsing (memory is huge) one-liner."""
+        result = parse_oneline_filter("(memory is huge)")
+        assert result is not None
+        assert result.require == {"memory": ["huge"]}
+
+    def test_oneliner_huge_with_platform(self) -> None:
+        """Test parsing compound filter with huge memory."""
+        result = parse_oneline_filter("(memory is huge) and (platform is esp32)")
+        assert result is not None
+        assert result.require == {"memory": ["huge"], "platform": ["esp32"]}
 
 
 if __name__ == "__main__":

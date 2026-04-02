@@ -112,7 +112,7 @@ Additional I2S defines and guidance:
   - **`FASTLED_ESP32_I2S_NUM_DMA_BUFFERS`**: Number of I2S DMA buffers (2–16). Default `2`. Increasing to `4` often mitigates flicker during heavy interrupt activity. See `clockless_i2s_esp32.h` and `i2s/i2s_esp32dev.h`.
 
 - **Logging / binary size**
-  - **`FASTLED_ESP32_ENABLE_LOGGING`**: Controls inclusion/level of `esp_log` macros via `esp_log_control.h`. Default: enabled only when `SKETCH_HAS_LOTS_OF_MEMORY` is true; otherwise disabled to avoid pulling in heavy printf/vfprintf.
+  - **`FASTLED_ESP32_ENABLE_LOGGING`**: Controls inclusion/level of `esp_log` macros via `esp_log_control.h`. Default: enabled only when `SKETCH_HAS_LARGE_MEMORY` is true; otherwise disabled to avoid pulling in heavy printf/vfprintf.
   - **`FASTLED_ESP32_MINIMAL_ERROR_HANDLING`**: When defined and logging is disabled, overrides `ESP_ERROR_CHECK` to abort without logging to keep binary size low.
 
 - **Clock source override**

@@ -83,7 +83,7 @@ template<cycle_t CYCLES> inline void delaycycles_min1() FL_NOEXCEPT {
 
 /// Delay for a given number of milliseconds with optional async task pumping
 /// @param ms Milliseconds to delay
-/// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LOTS_OF_MEMORY==1)
+/// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LARGE_MEMORY==1)
 void delay(u32 ms, bool run_async = true) FL_NOEXCEPT;
 
 /// Template overload for all arithmetic types - coexists with Arduino's extern "C" delay()
@@ -122,7 +122,7 @@ inline void delayUs(u32 us) FL_NOEXCEPT {
 
 /// Shorter alias for delay with optional async task pumping
 /// @param ms Milliseconds to delay
-/// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LOTS_OF_MEMORY==1)
+/// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LARGE_MEMORY==1)
 inline void delayMs(u32 ms, bool run_async = true) FL_NOEXCEPT {
   delay(ms, run_async);
 }

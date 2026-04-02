@@ -670,7 +670,7 @@ float Reactive::computeRMS(const fl::vector<fl::i16>& samples) {
 // SpectralFluxDetector implementation
 SpectralFluxDetector::SpectralFluxDetector() 
     : mFluxThreshold(0.1f)
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     , mHistoryIndex(0)
 #endif
 {
@@ -679,7 +679,7 @@ SpectralFluxDetector::SpectralFluxDetector()
         mPreviousMagnitudes[i] = 0.0f;
     }
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Initialize flux history to zero
     for (fl::size i = 0; i < mFluxHistory.size(); ++i) {
         mFluxHistory[i] = 0.0f;
@@ -694,7 +694,7 @@ void SpectralFluxDetector::reset() {
         mPreviousMagnitudes[i] = 0.0f;
     }
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     for (fl::size i = 0; i < mFluxHistory.size(); ++i) {
         mFluxHistory[i] = 0.0f;
     }
@@ -705,7 +705,7 @@ void SpectralFluxDetector::reset() {
 bool SpectralFluxDetector::detectOnset(const float* currentBins, const float* /* previousBins */) {
     float flux = calculateSpectralFlux(currentBins, mPreviousMagnitudes.data());
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Store flux in history for adaptive threshold calculation
     mFluxHistory[mHistoryIndex] = flux;
     mHistoryIndex = (mHistoryIndex + 1) % mFluxHistory.size();
@@ -745,7 +745,7 @@ float SpectralFluxDetector::getThreshold() const {
     return mFluxThreshold;
 }
 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 float SpectralFluxDetector::calculateAdaptiveThreshold() {
     // Calculate moving average of flux history
     float sum = 0.0f;
@@ -769,7 +769,7 @@ BeatDetectors::BeatDetectors()
 BeatDetectors::~BeatDetectors() FL_NOEXCEPT = default;
 
 void BeatDetectors::reset() {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     bass.reset();
     mid.reset(); 
     treble.reset();
@@ -791,7 +791,7 @@ void BeatDetectors::detectBeats(const float* frequencyBins, Data& audioData) {
     mMidEnergy = (frequencyBins[6] + frequencyBins[7]) / 2.0f;
     mTrebleEnergy = (frequencyBins[14] + frequencyBins[15]) / 2.0f;
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Use separate detector for each band
     audioData.bassBeatDetected = bass.detectOnset(&mBassEnergy, &mPreviousBassEnergy);
     audioData.midBeatDetected = mid.detectOnset(&mMidEnergy, &mPreviousMidEnergy);
@@ -810,7 +810,7 @@ void BeatDetectors::detectBeats(const float* frequencyBins, Data& audioData) {
 }
 
 void BeatDetectors::setThresholds(float bassThresh, float midThresh, float trebleThresh) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     bass.setThreshold(bassThresh);
     mid.setThreshold(midThresh);
     treble.setThreshold(trebleThresh);
@@ -821,11 +821,11 @@ void BeatDetectors::setThresholds(float bassThresh, float midThresh, float trebl
 
 // PerceptualWeighting implementation
 PerceptualWeighting::PerceptualWeighting()
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     : mHistoryIndex(0)
 #endif
 {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Initialize loudness history to zero
     for (fl::size i = 0; i < mLoudnessHistory.size(); ++i) {
         mLoudnessHistory[i] = 0.0f;
@@ -863,7 +863,7 @@ void PerceptualWeighting::applyLoudnessCompensation(Data& data, float referenceL
         data.frequencyBins[i] *= compensationFactor;
     }
     
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
     // Store in history for future adaptive compensation (not implemented yet)
     // This would be used for more sophisticated dynamic range compensation
 #endif

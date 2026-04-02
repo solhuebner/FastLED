@@ -19,7 +19,7 @@
 #include "platforms/time_platform.h"
 #include "platforms/coroutine_runtime.h"
 
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 #include "fl/task/executor.h"
 #endif
 
@@ -173,7 +173,7 @@ template<> void delaycycles<50>() { delaycycles<40>(); delaycycles<10>(); }
 // ============================================================================
 
 void delay(u32 ms, bool run_async) {
-#if SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
   // Check if delay override is active (for fast testing with stub platform)
   // When override is active, skip async pumping and use platform delay directly
 #if defined(FASTLED_STUB_IMPL) && (!defined(ARDUINO) || defined(FASTLED_USE_STUB_ARDUINO))

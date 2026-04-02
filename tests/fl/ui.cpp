@@ -411,7 +411,7 @@ FL_TEST_CASE("complex ui element serialization") {
     // Clean up components (they are automatically removed via their destructors when they go out of scope)
 }
 
-#ifdef SKETCH_HAS_LOTS_OF_MEMORY
+#if SKETCH_HAS_LARGE_MEMORY
 FL_TEST_CASE("JsonConsole destructor cleanup") {
     // Mock callback functions for testing
     fl::string capturedOutput;
@@ -731,7 +731,7 @@ FL_TEST_CASE("JsonSlider step output behavior", fl::test::skip()) {
     }
 }
 
-#endif // SKETCH_HAS_LOTS_OF_MEMORY
+#endif // SKETCH_HAS_LARGE_MEMORY == 1
 
 FL_TEST_CASE("XYPath slider step serialization bug - C++ verification", fl::test::skip()) {
     // TEMP DISABLED: This test causes a segfault when extracting strings from JSON.
