@@ -27,25 +27,25 @@ class EngineEvents {
         // EngineEvents::removeListener(this).
         Listener() FL_NOEXCEPT;
         virtual ~Listener() FL_NOEXCEPT;
-        virtual void onBeginFrame() {}
-        virtual void onEndShowLeds() {}
-        virtual void onEndFrame() {}
-        virtual void onStripAdded(CLEDController *strip, fl::u32 num_leds) {
+        virtual void onBeginFrame() FL_NOEXCEPT {}
+        virtual void onEndShowLeds() FL_NOEXCEPT {}
+        virtual void onEndFrame() FL_NOEXCEPT {}
+        virtual void onStripAdded(CLEDController *strip, fl::u32 num_leds) FL_NOEXCEPT {
             (void)strip;
             (void)num_leds;
         }
         // Called to set the canvas for UI elements for a particular strip.
         virtual void onCanvasUiSet(CLEDController *strip,
-                                   const ScreenMap &screenmap) {
+                                   const ScreenMap &screenmap) FL_NOEXCEPT {
             (void)strip;
             (void)screenmap;
         }
-        virtual void onPlatformPreLoop() {}
-        virtual void onPlatformPreLoop2() {}
-        virtual void onExit() {}  // Called before engine shutdown
+        virtual void onPlatformPreLoop() FL_NOEXCEPT {}
+        virtual void onPlatformPreLoop2() FL_NOEXCEPT {}
+        virtual void onExit() FL_NOEXCEPT {}  // Called before engine shutdown
     };
 
-    static void addListener(Listener *listener, int priority = 0) {
+    static void addListener(Listener *listener, int priority = 0) FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_addListener(listener, priority);
 #else
@@ -54,7 +54,7 @@ class EngineEvents {
 #endif
     }
 
-    static void removeListener(Listener *listener) {
+    static void removeListener(Listener *listener) FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_removeListener(listener);
 #else
@@ -62,7 +62,7 @@ class EngineEvents {
 #endif
     }
 
-    static bool hasListener(Listener *listener) {
+    static bool hasListener(Listener *listener) FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         return EngineEvents::getInstance()->_hasListener(listener);
 #else
@@ -71,25 +71,25 @@ class EngineEvents {
 #endif
     }
 
-    static void onBeginFrame() {
+    static void onBeginFrame() FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onBeginFrame();
 #endif
     }
 
-    static void onEndShowLeds() {
+    static void onEndShowLeds() FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onEndShowLeds();
 #endif
     }
 
-    static void onEndFrame() {
+    static void onEndFrame() FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onEndFrame();
 #endif
     }
 
-    static void onStripAdded(CLEDController *strip, fl::u32 num_leds) {
+    static void onStripAdded(CLEDController *strip, fl::u32 num_leds) FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onStripAdded(strip, num_leds);
 #else
@@ -98,7 +98,7 @@ class EngineEvents {
 #endif
     }
 
-    static void onCanvasUiSet(CLEDController *strip, const ScreenMap &xymap) {
+    static void onCanvasUiSet(CLEDController *strip, const ScreenMap &xymap) FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onCanvasUiSet(strip, xymap);
 #else
@@ -107,13 +107,13 @@ class EngineEvents {
 #endif
     }
 
-    static void onPlatformPreLoop() {
+    static void onPlatformPreLoop() FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onPlatformPreLoop();
 #endif
     }
 
-    static void onExit() {
+    static void onExit() FL_NOEXCEPT {
 #if FASTLED_HAS_ENGINE_EVENTS
         EngineEvents::getInstance()->_onExit();
 #endif
@@ -125,23 +125,23 @@ class EngineEvents {
 
   private:
     // Safe to add a listeners during a callback.
-    void _addListener(Listener *listener, int priority);
+    void _addListener(Listener *listener, int priority) FL_NOEXCEPT;
     // Safe to remove self during a callback.
-    void _removeListener(Listener *listener);
-    void _onBeginFrame();
-    void _onEndShowLeds();
-    void _onEndFrame();
-    void _onStripAdded(CLEDController *strip, fl::u32 num_leds);
-    void _onCanvasUiSet(CLEDController *strip, const ScreenMap &xymap);
-    void _onPlatformPreLoop();
-    void _onExit();
-    bool _hasListener(Listener *listener);
+    void _removeListener(Listener *listener) FL_NOEXCEPT;
+    void _onBeginFrame() FL_NOEXCEPT;
+    void _onEndShowLeds() FL_NOEXCEPT;
+    void _onEndFrame() FL_NOEXCEPT;
+    void _onStripAdded(CLEDController *strip, fl::u32 num_leds) FL_NOEXCEPT;
+    void _onCanvasUiSet(CLEDController *strip, const ScreenMap &xymap) FL_NOEXCEPT;
+    void _onPlatformPreLoop() FL_NOEXCEPT;
+    void _onExit() FL_NOEXCEPT;
+    bool _hasListener(Listener *listener) FL_NOEXCEPT;
 #if FASTLED_HAS_ENGINE_EVENTS
     struct Pair {
         Pair() FL_NOEXCEPT = default;
         Listener *listener = nullptr;
         int priority = 0;
-        Pair(Listener *listener, int priority)
+        Pair(Listener *listener, int priority) FL_NOEXCEPT
             : listener(listener), priority(priority) {}
     };
 
@@ -149,7 +149,7 @@ class EngineEvents {
     ListenerList mListeners;
 
 
-    static EngineEvents *getInstance();
+    static EngineEvents *getInstance() FL_NOEXCEPT;
 
     friend class fl::Singleton<EngineEvents>;
 #endif  // FASTLED_HAS_ENGINE_EVENTS

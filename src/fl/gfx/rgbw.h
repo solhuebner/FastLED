@@ -28,16 +28,16 @@ struct Rgbw {
     explicit Rgbw(u16 white_color_temp = fl::kRGBWDefaultColorTemp,
                   fl::RGBW_MODE rgbw_mode = fl::RGBW_MODE::kRGBWExactColors,
                   fl::EOrderW _w_placement = EOrderW::WDefault)
-        : white_color_temp(white_color_temp), w_placement(_w_placement),
+ FL_NOEXCEPT : white_color_temp(white_color_temp), w_placement(_w_placement),
           rgbw_mode(rgbw_mode) {}
     u16 white_color_temp = kRGBWDefaultColorTemp;
     fl::EOrderW w_placement = EOrderW::WDefault;
     RGBW_MODE rgbw_mode = RGBW_MODE::kRGBWExactColors;
-    FASTLED_FORCE_INLINE bool active() const {
+    FASTLED_FORCE_INLINE bool active() const FL_NOEXCEPT {
         return rgbw_mode != RGBW_MODE::kRGBWInvalid;
     }
 
-    static u32 size_as_rgb(u32 num_of_rgbw_pixels) {
+    static u32 size_as_rgb(u32 num_of_rgbw_pixels) FL_NOEXCEPT {
         // The ObjectFLED controller expects the raw pixel byte data in
         // multiples of 3. In the case of src data not a multiple of 3, then we
         // need to add pad bytes so that the delegate controller doesn't walk
@@ -54,7 +54,7 @@ struct RgbwInvalid : public Rgbw {
         white_color_temp = kRGBWDefaultColorTemp;
         rgbw_mode = RGBW_MODE::kRGBWInvalid;
     }
-    static Rgbw value() {
+    static Rgbw value() FL_NOEXCEPT {
         RgbwInvalid invalid;
         return invalid;
     }
@@ -65,7 +65,7 @@ struct RgbwDefault : public Rgbw {
         white_color_temp = kRGBWDefaultColorTemp;
         rgbw_mode = RGBW_MODE::kRGBWExactColors;
     }
-    static Rgbw value() {
+    static Rgbw value() FL_NOEXCEPT {
         RgbwDefault _default;
         return _default;
     }
@@ -76,7 +76,7 @@ struct RgbwWhiteIsOff : public Rgbw {
         white_color_temp = kRGBWDefaultColorTemp;
         rgbw_mode = RGBW_MODE::kRGBWNullWhitePixel;
     }
-    static Rgbw value() {
+    static Rgbw value() FL_NOEXCEPT {
         RgbwWhiteIsOff _default;
         return _default;
     }
@@ -104,7 +104,7 @@ typedef void (*rgb_2_rgbw_function)(u16 w_color_temperature, u8 r,
 void rgb_2_rgbw_exact(u16 w_color_temperature, u8 r, u8 g,
                       u8 b, u8 r_scale, u8 g_scale,
                       u8 b_scale, u8 *out_r, u8 *out_g,
-                      u8 *out_b, u8 *out_w);
+                      u8 *out_b, u8 *out_w) FL_NOEXCEPT;
 
 /// The minimum brigthness of the RGB channels is used to set the W channel.
 /// This will allow the max brightness of the led chipset to be used. However
@@ -117,7 +117,7 @@ void rgb_2_rgbw_exact(u16 w_color_temperature, u8 r, u8 g,
 void rgb_2_rgbw_max_brightness(u16 w_color_temperature, u8 r,
                                u8 g, u8 b, u8 r_scale,
                                u8 g_scale, u8 b_scale, u8 *out_r,
-                               u8 *out_g, u8 *out_b, u8 *out_w);
+                               u8 *out_g, u8 *out_b, u8 *out_w) FL_NOEXCEPT;
 
 /// @brief Converts RGB to RGBW with the W channel set to black, always.
 ///
@@ -128,20 +128,20 @@ void rgb_2_rgbw_null_white_pixel(u16 w_color_temperature, u8 r,
                                  u8 g, u8 b, u8 r_scale,
                                  u8 g_scale, u8 b_scale,
                                  u8 *out_r, u8 *out_g, u8 *out_b,
-                                 u8 *out_w);
+                                 u8 *out_w) FL_NOEXCEPT;
 
 /// @brief Converts RGB to RGBW with a boosted white channel.
 void rgb_2_rgbw_white_boosted(u16 w_color_temperature, u8 r,
                               u8 g, u8 b, u8 r_scale,
                               u8 g_scale, u8 b_scale, u8 *out_r,
-                              u8 *out_g, u8 *out_b, u8 *out_w);
+                              u8 *out_g, u8 *out_b, u8 *out_w) FL_NOEXCEPT;
 
 void rgb_2_rgbw_user_function(u16 w_color_temperature, u8 r,
                               u8 g, u8 b, u8 r_scale,
                               u8 g_scale, u8 b_scale, u8 *out_r,
-                              u8 *out_g, u8 *out_b, u8 *out_w);
+                              u8 *out_g, u8 *out_b, u8 *out_w) FL_NOEXCEPT;
 
-void set_rgb_2_rgbw_function(rgb_2_rgbw_function func);
+void set_rgb_2_rgbw_function(rgb_2_rgbw_function func) FL_NOEXCEPT;
 
 /// @brief   Converts RGB to RGBW using one of the functions.
 /// @details Dynamic version of the rgb_w_rgbw function with less chance for
@@ -149,7 +149,7 @@ void set_rgb_2_rgbw_function(rgb_2_rgbw_function func);
 FASTLED_FORCE_INLINE void
 rgb_2_rgbw(RGBW_MODE mode, u16 w_color_temperature, u8 r, u8 g,
            u8 b, u8 r_scale, u8 g_scale, u8 b_scale,
-           u8 *out_r, u8 *out_g, u8 *out_b, u8 *out_w) {
+           u8 *out_r, u8 *out_g, u8 *out_b, u8 *out_w) FL_NOEXCEPT {
     switch (mode) {
     case RGBW_MODE::kRGBWInvalid:
     case RGBW_MODE::kRGBWNullWhitePixel:
@@ -183,7 +183,7 @@ template <RGBW_MODE MODE>
 FASTLED_FORCE_INLINE void
 rgb_2_rgbw(u16 w_color_temperature, u8 r, u8 g, u8 b,
            u8 r_scale, u8 g_scale, u8 b_scale, u8 *out_r,
-           u8 *out_g, u8 *out_b, u8 *out_w) {
+           u8 *out_g, u8 *out_b, u8 *out_w) FL_NOEXCEPT {
     // We trust that the compiler will inline all of this.
     rgb_2_rgbw(MODE, w_color_temperature, r, g, b, r_scale, g_scale, b_scale,
                out_r, out_g, out_b, out_w);
@@ -197,6 +197,6 @@ rgb_2_rgbw(u16 w_color_temperature, u8 r, u8 g, u8 b,
 // the correct position.
 void rgbw_partial_reorder(fl::EOrderW w_placement, u8 b0, u8 b1,
                           u8 b2, u8 w, u8 *out_b0,
-                          u8 *out_b1, u8 *out_b2, u8 *out_b3);
+                          u8 *out_b1, u8 *out_b2, u8 *out_b3) FL_NOEXCEPT;
 
 } // namespace fl

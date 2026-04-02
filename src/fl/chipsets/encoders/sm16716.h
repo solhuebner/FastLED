@@ -16,6 +16,7 @@
 #include "fl/stl/stdint.h"
 #include "fl/stl/array.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -28,7 +29,7 @@ namespace fl {
 /// @note Start bit handling is assumed to be done by SPI hardware
 /// @note SM16716 uses RGB wire order: pixel[0]=Red, pixel[1]=Green, pixel[2]=Blue
 template <typename InputIterator, typename OutputIterator>
-void encodeSM16716(InputIterator first, InputIterator last, OutputIterator out) {
+void encodeSM16716(InputIterator first, InputIterator last, OutputIterator out) FL_NOEXCEPT {
     // LED data: RGB bytes
     // (Start bit for each triplet is handled by SPI hardware layer)
     while (first != last) {

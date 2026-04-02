@@ -39,88 +39,88 @@ class ScreenMap {
   public:
     static ScreenMap Circle(int numLeds, float cm_between_leds = 1.5f,
                             float cm_led_diameter = 0.5f,
-                            float completion = 1.0f);
+                            float completion = 1.0f) FL_NOEXCEPT;
 
     static ScreenMap DefaultStrip(int numLeds, float cm_between_leds = 1.5f,
                                   float cm_led_diameter = 0.2f,
-                                  float completion = .9f);
+                                  float completion = .9f) FL_NOEXCEPT;
 
     // Constructors and destructor - implemented in .cpp for proper smart_ptr handling
     ScreenMap() FL_NOEXCEPT;
     ~ScreenMap() FL_NOEXCEPT;
 
     // is_reverse is false by default for linear layout
-    ScreenMap(u32 length, float mDiameter = -1.0f);
+    ScreenMap(u32 length, float mDiameter = -1.0f) FL_NOEXCEPT;
 
-    ScreenMap(const vec2f *lut, u32 length, float diameter = -1.0);
+    ScreenMap(const vec2f *lut, u32 length, float diameter = -1.0) FL_NOEXCEPT;
 
     template <u32 N>
-    ScreenMap(const vec2f (&lut)[N], float diameter = -1.0)
+    ScreenMap(const vec2f (&lut)[N], float diameter = -1.0) FL_NOEXCEPT
         : ScreenMap(lut, N, diameter) {}
 
     // Constructor with functor to fill in values
-    ScreenMap(int count, float diameter, fl::function<void(int, vec2f& pt_out)> func);
+    ScreenMap(int count, float diameter, fl::function<void(int, vec2f& pt_out)> func) FL_NOEXCEPT;
 
     ScreenMap(const ScreenMap &other) FL_NOEXCEPT;
     ScreenMap(ScreenMap&& other) FL_NOEXCEPT;
 
-    const vec2f &operator[](u32 x) const;
+    const vec2f &operator[](u32 x) const FL_NOEXCEPT;
 
-    void set(u16 index, const vec2f &p);
+    void set(u16 index, const vec2f &p) FL_NOEXCEPT;
 
-    void addOffset(const vec2f &p);
-    ScreenMap& addOffsetX(float x);
-    ScreenMap& addOffsetY(float y);
+    void addOffset(const vec2f &p) FL_NOEXCEPT;
+    ScreenMap& addOffsetX(float x) FL_NOEXCEPT;
+    ScreenMap& addOffsetY(float y) FL_NOEXCEPT;
 
-    vec2f &operator[](u32 x);
+    vec2f &operator[](u32 x) FL_NOEXCEPT;
 
     // TODO: change this name to setDiameterLed. Default should be .5f
     // for 5 mm ws lense.
-    void setDiameter(float diameter);
+    void setDiameter(float diameter) FL_NOEXCEPT;
 
     // define the assignment operator
     ScreenMap &operator=(const ScreenMap &other) FL_NOEXCEPT;
     ScreenMap &operator=(ScreenMap &&other) FL_NOEXCEPT;
 
-    vec2f mapToIndex(u32 x) const;
+    vec2f mapToIndex(u32 x) const FL_NOEXCEPT;
 
-    u32 getLength() const;
+    u32 getLength() const FL_NOEXCEPT;
     // The diameter each point represents.
-    float getDiameter() const;
+    float getDiameter() const FL_NOEXCEPT;
 
     // Get the bounding box of all points in the screen map
-    vec2f getBounds() const;
+    vec2f getBounds() const FL_NOEXCEPT;
 
     static bool ParseJson(const char *jsonStrScreenMap,
                           fl::flat_map<string, ScreenMap> *segmentMaps,
-                          string *err = nullptr);
+                          string *err = nullptr) FL_NOEXCEPT;
 
     static bool ParseJson(const char *jsonStrScreenMap,
                           const char *screenMapName, ScreenMap *screenmap,
-                          string *err = nullptr);
+                          string *err = nullptr) FL_NOEXCEPT;
 
     static void toJsonStr(const fl::flat_map<string, ScreenMap> &,
-                          string *jsonBuffer);
-    static void toJson(const fl::flat_map<string, ScreenMap> &, fl::json *doc);
+                          string *jsonBuffer) FL_NOEXCEPT;
+    static void toJson(const fl::flat_map<string, ScreenMap> &, fl::json *doc) FL_NOEXCEPT;
 
     /// @brief Set the source XYMap (used for pixel transformation during encoding)
     /// @param xymap Source XYMap that this ScreenMap was created from (can be nullptr)
-    void setSourceXYMap(const fl::shared_ptr<XYMap>& xymap);
+    void setSourceXYMap(const fl::shared_ptr<XYMap>& xymap) FL_NOEXCEPT;
 
     /// @brief Get the source XYMap shared pointer if available
     /// @return Shared pointer to source XYMap or nullptr if not set
-    const XYMapPtr& getSourceXYMapPtr() const;
+    const XYMapPtr& getSourceXYMapPtr() const FL_NOEXCEPT;
 
     /// @brief Get the source XYMap as a raw const pointer
     /// @return Raw const pointer to source XYMap or nullptr if not set
-    const XYMap* getXYMap() const;
+    const XYMap* getXYMap() const FL_NOEXCEPT;
 
     /// @brief Check if source XYMap is available
     /// @return true if source XYMap was stored
-    bool hasSourceXYMap() const;
+    bool hasSourceXYMap() const FL_NOEXCEPT;
 
   private:
-    static const vec2f &empty();
+    static const vec2f &empty() FL_NOEXCEPT;
     u32 length = 0;
     float mDiameter = -1.0f; // Only serialized if it's not > 0.0f.
     LUTXYFLOATPtr mLookUpTable;

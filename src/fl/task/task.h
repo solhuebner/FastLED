@@ -150,74 +150,74 @@ public:
 
     // Constructor from impl - public because ITaskImpl is only forward-declared
     // in the header, making this effectively private to external consumers
-    explicit Handle(shared_ptr<ITaskImpl> impl);
+    explicit Handle(shared_ptr<ITaskImpl> impl) FL_NOEXCEPT;
 
     // Fluent API
-    Handle& then(function<void()> on_then);
-    Handle& catch_(function<void(const Error&)> on_catch);
-    Handle& cancel();
+    Handle& then(function<void()> on_then) FL_NOEXCEPT;
+    Handle& catch_(function<void(const Error&)> on_catch) FL_NOEXCEPT;
+    Handle& cancel() FL_NOEXCEPT;
 
     // Getters
-    int id() const;
-    bool has_then() const;
-    bool has_catch() const;
-    string trace_label() const;
-    TaskType type() const;
-    int interval_ms() const;
-    void set_interval_ms(int interval_ms);
-    u32 last_run_time() const;
-    void set_last_run_time(u32 time);
-    bool ready_to_run(u32 current_time) const;
-    bool is_valid() const;
-    bool isCoroutine() const;
+    int id() const FL_NOEXCEPT;
+    bool has_then() const FL_NOEXCEPT;
+    bool has_catch() const FL_NOEXCEPT;
+    string trace_label() const FL_NOEXCEPT;
+    TaskType type() const FL_NOEXCEPT;
+    int interval_ms() const FL_NOEXCEPT;
+    void set_interval_ms(int interval_ms) FL_NOEXCEPT;
+    u32 last_run_time() const FL_NOEXCEPT;
+    void set_last_run_time(u32 time) FL_NOEXCEPT;
+    bool ready_to_run(u32 current_time) const FL_NOEXCEPT;
+    bool is_valid() const FL_NOEXCEPT;
+    bool isCoroutine() const FL_NOEXCEPT;
 
     // Coroutine control (only valid if isCoroutine() == true)
-    void stop();
-    bool isRunning() const;
+    void stop() FL_NOEXCEPT;
+    bool isRunning() const FL_NOEXCEPT;
 
 private:
     friend class Scheduler;
 
     // Internal methods for Scheduler (friend access only)
-    void _set_id(int id);
-    int _id() const;
-    bool _is_canceled() const;
-    bool _ready_to_run(u32 current_time) const;
-    bool _ready_to_run_frame_task(u32 current_time) const;
-    void _set_last_run_time(u32 time);
-    bool _has_then() const;
-    void _execute_then();
-    void _execute_catch(const Error& error);
-    TaskType _type() const;
-    string _trace_label() const;
+    void _set_id(int id) FL_NOEXCEPT;
+    int _id() const FL_NOEXCEPT;
+    bool _is_canceled() const FL_NOEXCEPT;
+    bool _ready_to_run(u32 current_time) const FL_NOEXCEPT;
+    bool _ready_to_run_frame_task(u32 current_time) const FL_NOEXCEPT;
+    void _set_last_run_time(u32 time) FL_NOEXCEPT;
+    bool _has_then() const FL_NOEXCEPT;
+    void _execute_then() FL_NOEXCEPT;
+    void _execute_catch(const Error& error) FL_NOEXCEPT;
+    TaskType _type() const FL_NOEXCEPT;
+    string _trace_label() const FL_NOEXCEPT;
 
     shared_ptr<ITaskImpl> mImpl;
 };
 
 // Free function builders (were static methods on class fl::task)
-Handle every_ms(int interval_ms);
-Handle every_ms(int interval_ms, const TracePoint& trace);
+Handle every_ms(int interval_ms) FL_NOEXCEPT;
+Handle every_ms(int interval_ms, const TracePoint& trace) FL_NOEXCEPT;
 
-Handle at_framerate(int fps);
-Handle at_framerate(int fps, const TracePoint& trace);
+Handle at_framerate(int fps) FL_NOEXCEPT;
+Handle at_framerate(int fps, const TracePoint& trace) FL_NOEXCEPT;
 
 // For most cases you want after_frame() instead of before_frame(), unless you
 // are doing operations that need to happen right before the frame is rendered.
 // Most of the time for ui stuff (button clicks, etc) you want after_frame(), so it
 // can be available for the next iteration of loop().
-Handle before_frame();
-Handle before_frame(const TracePoint& trace);
+Handle before_frame() FL_NOEXCEPT;
+Handle before_frame(const TracePoint& trace) FL_NOEXCEPT;
 
 // Example: auto t = fl::task::after_frame().then([]() {...}
-Handle after_frame();
-Handle after_frame(const TracePoint& trace);
+Handle after_frame() FL_NOEXCEPT;
+Handle after_frame(const TracePoint& trace) FL_NOEXCEPT;
 // Example: auto t = fl::task::after_frame([]() {...}
-Handle after_frame(function<void()> on_then);
-Handle after_frame(function<void()> on_then, const TracePoint& trace);
-Handle coroutine(const CoroutineConfig& config);
+Handle after_frame(function<void()> on_then) FL_NOEXCEPT;
+Handle after_frame(function<void()> on_then, const TracePoint& trace) FL_NOEXCEPT;
+Handle coroutine(const CoroutineConfig& config) FL_NOEXCEPT;
 
 // Static coroutine control
-void exit_current();
+void exit_current() FL_NOEXCEPT;
 
 /// @brief Internal RAII wrapper for OS-level tasks (implementation detail)
 /// @note Users should use fl::task::coroutine() instead of Coroutine directly

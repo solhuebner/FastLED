@@ -9,6 +9,7 @@
 
 #include "fl/stl/stdint.h"
 #include "fl/chipsets/spi_chipsets.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -40,33 +41,33 @@ struct SpiEncoder {
 
     /// @brief Create APA102 encoder configuration
     /// @param clock_hz Clock frequency (default 6MHz)
-    static inline SpiEncoder apa102(u32 clock_hz = 6000000) {
+    static inline SpiEncoder apa102(u32 clock_hz = 6000000) FL_NOEXCEPT {
         SpiEncoder config = {SpiChipset::APA102, clock_hz};
         return config;
     }
 
     /// @brief Create APA102HD encoder configuration (per-LED brightness via HD gamma)
     /// @param clock_hz Clock frequency (default 6MHz, same as APA102)
-    static inline SpiEncoder apa102HD(u32 clock_hz = 6000000) {
+    static inline SpiEncoder apa102HD(u32 clock_hz = 6000000) FL_NOEXCEPT {
         SpiEncoder config = {SpiChipset::APA102HD, clock_hz};
         return config;
     }
 
     /// @brief Create SK9822 encoder configuration
     /// @param clock_hz Clock frequency (default 12MHz)
-    static inline SpiEncoder sk9822(u32 clock_hz = 12000000) {
+    static inline SpiEncoder sk9822(u32 clock_hz = 12000000) FL_NOEXCEPT {
         SpiEncoder config = {SpiChipset::SK9822, clock_hz};
         return config;
     }
 
     /// @brief Equality operator (required for hash map key)
-    constexpr bool operator==(const SpiEncoder& other) const {
+    constexpr bool operator==(const SpiEncoder& other) const FL_NOEXCEPT {
         return chipset == other.chipset &&
                clock_hz == other.clock_hz;
     }
 
     /// @brief Inequality operator
-    constexpr bool operator!=(const SpiEncoder& other) const {
+    constexpr bool operator!=(const SpiEncoder& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 };

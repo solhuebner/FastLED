@@ -30,8 +30,8 @@ namespace fl {
 class IButtonInput {
   public:
     virtual ~IButtonInput() FL_NOEXCEPT = default;
-    virtual bool isPressed() = 0;
-    virtual bool clicked() = 0;
+    virtual bool isPressed() FL_NOEXCEPT = 0;
+    virtual bool clicked() FL_NOEXCEPT = 0;
 };
 
 // Forward declaration only - concrete type lives in fl/sensors/button.h
@@ -42,10 +42,10 @@ class UIElement {
   public:
     UIElement() FL_NOEXCEPT;
     VIRTUAL_IF_NOT_AVR ~UIElement() FL_NOEXCEPT {}
-    virtual void setGroup(const fl::string& groupName) { mGroupName = groupName; }
+    virtual void setGroup(const fl::string& groupName) FL_NOEXCEPT { mGroupName = groupName; }
 
-    fl::string getGroup() const { return mGroupName; }
-    bool hasGroup() const { return !mGroupName.empty(); }
+    fl::string getGroup() const FL_NOEXCEPT { return mGroupName; }
+    bool hasGroup() const FL_NOEXCEPT { return !mGroupName.empty(); }
 
   private:
     fl::string mGroupName;
@@ -58,9 +58,9 @@ class UISlider : public UIElement {
     FL_NO_COPY(UISlider)
     // If step is -1, it will be calculated as (max - min) / 100
     UISlider(const char *name, float value = 128.0f, float min = 1,
-             float max = 255, float step = -1.f);
-    float value() const { return mImpl.value(); }
-    float value_normalized() const {
+             float max = 255, float step = -1.f) FL_NOEXCEPT;
+    float value() const FL_NOEXCEPT { return mImpl.value(); }
+    float value_normalized() const FL_NOEXCEPT {
         float min = mImpl.getMin();
         float max = mImpl.getMax();
         if (fl::almost_equal(max, min, 0.0001f)) {
@@ -68,18 +68,18 @@ class UISlider : public UIElement {
         }
         return (value() - min) / (max - min);
     }
-    float getMax() const { return mImpl.getMax(); }
-    float getMin() const { return mImpl.getMin(); }
-    void setValue(float value);
-    operator float() const { return mImpl.value(); }
-    operator u8() const { return static_cast<u8>(mImpl.value()); }
-    operator fl::u16() const { return static_cast<fl::u16>(mImpl.value()); }
-    operator int() const { return static_cast<int>(mImpl.value()); }
-    template <typename T> T as() const {
+    float getMax() const FL_NOEXCEPT { return mImpl.getMax(); }
+    float getMin() const FL_NOEXCEPT { return mImpl.getMin(); }
+    void setValue(float value) FL_NOEXCEPT;
+    operator float() const FL_NOEXCEPT { return mImpl.value(); }
+    operator u8() const FL_NOEXCEPT { return static_cast<u8>(mImpl.value()); }
+    operator fl::u16() const FL_NOEXCEPT { return static_cast<fl::u16>(mImpl.value()); }
+    operator int() const FL_NOEXCEPT { return static_cast<int>(mImpl.value()); }
+    template <typename T> T as() const FL_NOEXCEPT {
         return static_cast<T>(mImpl.value());
     }
 
-    int as_int() const { return static_cast<int>(mImpl.value()); }
+    int as_int() const FL_NOEXCEPT { return static_cast<int>(mImpl.value()); }
 
     UISlider &operator=(float value) FL_NOEXCEPT {
         mImpl.setValue(value);
@@ -91,25 +91,25 @@ class UISlider : public UIElement {
     }
 
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
 
 
-    int onChanged(function<void(UISlider &)> callback) {
+    int onChanged(function<void(UISlider &)> callback) FL_NOEXCEPT {
         int out = mCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
         return out;
     }
-    void clearCallbacks() { mCallbacks.clear(); }
+    void clearCallbacks() FL_NOEXCEPT { mCallbacks.clear(); }
 
   protected:
     UISliderImpl mImpl;
 
     struct Listener : public EngineEvents::Listener {
-        Listener(UISlider *owner) : mOwner(owner) {
+        Listener(UISlider *owner) FL_NOEXCEPT : mOwner(owner) {
             
         }
         ~Listener() FL_NOEXCEPT {
@@ -117,14 +117,14 @@ class UISlider : public UIElement {
                 EngineEvents::removeListener(this);
             }
         }
-        void addToEngineEventsOnce() {
+        void addToEngineEventsOnce() FL_NOEXCEPT {
             if (added) {
                 return;
             }
             EngineEvents::addListener(this);
             added = true;
         }
-        void onBeginFrame() override;
+        void onBeginFrame() FL_NOEXCEPT override;
 
       private:
         UISlider *mOwner;
@@ -143,9 +143,9 @@ class UISlider : public UIElement {
 class UIButton : public UIElement {
   public:
     FL_NO_COPY(UIButton)
-    UIButton(const char *name);
+    UIButton(const char *name) FL_NOEXCEPT;
     ~UIButton() FL_NOEXCEPT;
-    bool isPressed() const {
+    bool isPressed() const FL_NOEXCEPT {
         if (mImpl.isPressed()) {
             return true;
         }
@@ -154,7 +154,7 @@ class UIButton : public UIElement {
         }
         return false;
     }
-    bool clicked() const {
+    bool clicked() const FL_NOEXCEPT {
         if (mImpl.clicked()) {
             return true;
         }
@@ -163,28 +163,28 @@ class UIButton : public UIElement {
         }
         return false;
     }
-    int clickedCount() const { return mImpl.clickedCount(); }
-    operator bool() const { return clicked(); }
-    bool value() const { return clicked(); }
+    int clickedCount() const FL_NOEXCEPT { return mImpl.clickedCount(); }
+    operator bool() const FL_NOEXCEPT { return clicked(); }
+    bool value() const FL_NOEXCEPT { return clicked(); }
 
-    void addRealButton(fl::shared_ptr<Button> button);
+    void addRealButton(fl::shared_ptr<Button> button) FL_NOEXCEPT;
 
-    void click() { mImpl.click(); }
+    void click() FL_NOEXCEPT { mImpl.click(); }
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
     
-    int onChanged(function<void(UIButton &)> callback) {
+    int onChanged(function<void(UIButton &)> callback) FL_NOEXCEPT {
         int id = mCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
         return id;
     }
 
-    int onClicked(function<void()> callback) {
+    int onClicked(function<void()> callback) FL_NOEXCEPT {
         int id = mCallbacks.add([callback](UIButton &btn) {
             if (btn.clicked()) {
                 callback();
@@ -194,40 +194,40 @@ class UIButton : public UIElement {
         return id;
     }
 
-    int onPressed(function<void()> callback) {
+    int onPressed(function<void()> callback) FL_NOEXCEPT {
         int id = mPressCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
         return id;
     }
 
-    int onReleased(function<void()> callback) {
+    int onReleased(function<void()> callback) FL_NOEXCEPT {
         int id = mReleaseCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
         return id;
     }
 
-    void removeCallback(int id) { mCallbacks.remove(id); }
-    void clearCallbacks() { mCallbacks.clear(); }
+    void removeCallback(int id) FL_NOEXCEPT { mCallbacks.remove(id); }
+    void clearCallbacks() FL_NOEXCEPT { mCallbacks.clear(); }
 
   protected:
     UIButtonImpl mImpl;
 
     struct Listener : public EngineEvents::Listener {
-        Listener(UIButton *owner) : mOwner(owner) {
+        Listener(UIButton *owner) FL_NOEXCEPT : mOwner(owner) {
         }
         ~Listener() FL_NOEXCEPT {
             if (added) {
                 EngineEvents::removeListener(this);
             }
         }
-        void addToEngineEventsOnce() {
+        void addToEngineEventsOnce() FL_NOEXCEPT {
             if (added) {
                 return;
             }
             EngineEvents::addListener(this);
             added = true;
         }
-        void onBeginFrame() override;
+        void onBeginFrame() FL_NOEXCEPT override;
 
       private:
         UIButton *mOwner;
@@ -247,36 +247,36 @@ class UIButton : public UIElement {
 class UICheckbox : public UIElement {
   public:
     FL_NO_COPY(UICheckbox);
-    UICheckbox(const char *name, bool value = false);
+    UICheckbox(const char *name, bool value = false) FL_NOEXCEPT;
     ~UICheckbox() FL_NOEXCEPT;
 
-    operator bool() const { return value(); }
-    explicit operator int() const { return static_cast<int>(value()); }
+    operator bool() const FL_NOEXCEPT { return value(); }
+    explicit operator int() const FL_NOEXCEPT { return static_cast<int>(value()); }
     UICheckbox &operator=(bool value) FL_NOEXCEPT {
         mImpl = value;
         return *this;
     }
-    bool value() const { return mImpl.value(); }
+    bool value() const FL_NOEXCEPT { return mImpl.value(); }
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
 
 
-    void onChanged(function<void(UICheckbox &)> callback) {
+    void onChanged(function<void(UICheckbox &)> callback) FL_NOEXCEPT {
         mCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
     }
-    void clearCallbacks() { mCallbacks.clear(); }
+    void clearCallbacks() FL_NOEXCEPT { mCallbacks.clear(); }
 
   protected:
     UICheckboxImpl mImpl;
 
     struct Listener : public EngineEvents::Listener {
-        Listener(UICheckbox *owner) : mOwner(owner) {
+        Listener(UICheckbox *owner) FL_NOEXCEPT : mOwner(owner) {
             // Don't register in constructor - prevents callbacks before owner is fully initialized
         }
         ~Listener() FL_NOEXCEPT {
@@ -284,14 +284,14 @@ class UICheckbox : public UIElement {
                 EngineEvents::removeListener(this);
             }
         }
-        void addToEngineEventsOnce() {
+        void addToEngineEventsOnce() FL_NOEXCEPT {
             if (added) {
                 return;
             }
             EngineEvents::addListener(this);
             added = true;
         }
-        void onBeginFrame() override;
+        void onBeginFrame() FL_NOEXCEPT override;
 
       private:
         UICheckbox *mOwner;
@@ -309,12 +309,12 @@ class UINumberField : public UIElement {
   public:
     FL_NO_COPY(UINumberField);
     UINumberField(const char *name, double value, double min = 0,
-                  double max = 100);
+                  double max = 100) FL_NOEXCEPT;
     ~UINumberField() FL_NOEXCEPT;
-    double value() const { return mImpl.value(); }
-    void setValue(double value) { mImpl.setValue(value); }
-    operator double() const { return mImpl.value(); }
-    operator int() const { return static_cast<int>(mImpl.value()); }
+    double value() const FL_NOEXCEPT { return mImpl.value(); }
+    void setValue(double value) FL_NOEXCEPT { mImpl.setValue(value); }
+    operator double() const FL_NOEXCEPT { return mImpl.value(); }
+    operator int() const FL_NOEXCEPT { return static_cast<int>(mImpl.value()); }
     UINumberField &operator=(double value) FL_NOEXCEPT {
         setValue(value);
         return *this;
@@ -325,25 +325,25 @@ class UINumberField : public UIElement {
     }
 
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
 
 
-    void onChanged(function<void(UINumberField &)> callback) {
+    void onChanged(function<void(UINumberField &)> callback) FL_NOEXCEPT {
         mCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
     }
-    void clearCallbacks() { mCallbacks.clear(); }
+    void clearCallbacks() FL_NOEXCEPT { mCallbacks.clear(); }
 
   protected:
     UINumberFieldImpl mImpl;
 
   private:
     struct Listener : public EngineEvents::Listener {
-        Listener(UINumberField *owner) : mOwner(owner) {
+        Listener(UINumberField *owner) FL_NOEXCEPT : mOwner(owner) {
             // Don't register in constructor - prevents callbacks before owner is fully initialized
         }
         ~Listener() FL_NOEXCEPT {
@@ -351,14 +351,14 @@ class UINumberField : public UIElement {
                 EngineEvents::removeListener(this);
             }
         }
-        void addToEngineEventsOnce() {
+        void addToEngineEventsOnce() FL_NOEXCEPT {
             if (added) {
                 return;
             }
             EngineEvents::addListener(this);
             added = true;
         }
-        void onBeginFrame() override;
+        void onBeginFrame() FL_NOEXCEPT override;
 
       private:
         UINumberField *mOwner;
@@ -374,11 +374,11 @@ class UINumberField : public UIElement {
 class UITitle : public UIElement {
   public:
     FL_NO_COPY(UITitle);
-    UITitle(const char *name);
+    UITitle(const char *name) FL_NOEXCEPT;
     ~UITitle() FL_NOEXCEPT;
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
@@ -391,11 +391,11 @@ class UITitle : public UIElement {
 class UIDescription : public UIElement {
   public:
     FL_NO_COPY(UIDescription);
-    UIDescription(const char *name);
+    UIDescription(const char *name) FL_NOEXCEPT;
     ~UIDescription() FL_NOEXCEPT;
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
@@ -408,18 +408,18 @@ class UIDescription : public UIElement {
 class UIHelp : public UIElement {
   public:
     FL_NO_COPY(UIHelp);
-    UIHelp(const char *markdownContent);
+    UIHelp(const char *markdownContent) FL_NOEXCEPT;
     ~UIHelp() FL_NOEXCEPT;
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
 
     // Access to the markdown content
-    const fl::string& markdownContent() const { return mImpl.markdownContent(); }
+    const fl::string& markdownContent() const FL_NOEXCEPT { return mImpl.markdownContent(); }
 
   protected:
     UIHelpImpl mImpl;
@@ -428,25 +428,25 @@ class UIHelp : public UIElement {
 class UIAudio : public UIElement {
   public:
     FL_NO_COPY(UIAudio)
-    UIAudio(const fl::string& name);
-    UIAudio(const fl::string& name, const fl::url& url);
-    UIAudio(const fl::string& name, const fl::audio::Config& config);
+    UIAudio(const fl::string& name) FL_NOEXCEPT;
+    UIAudio(const fl::string& name, const fl::url& url) FL_NOEXCEPT;
+    UIAudio(const fl::string& name, const fl::audio::Config& config) FL_NOEXCEPT;
     ~UIAudio() FL_NOEXCEPT;
-    audio::Sample next() { return mImpl.next(); }
-    bool hasNext() { return mImpl.hasNext(); }
+    audio::Sample next() FL_NOEXCEPT { return mImpl.next(); }
+    bool hasNext() FL_NOEXCEPT { return mImpl.hasNext(); }
 
     // Expose underlying audio input for FastLED.add() auto-pump
-    fl::shared_ptr<audio::IInput> audioInput() { return mImpl.audioInput(); }
+    fl::shared_ptr<audio::IInput> audioInput() FL_NOEXCEPT { return mImpl.audioInput(); }
 
     // Returns the hardware microphone config, if one was provided.
-    const fl::optional<audio::Config>& config() const { return mConfig; }
+    const fl::optional<audio::Config>& config() const FL_NOEXCEPT { return mConfig; }
 
     // Lazily registers with CFastLED::add() on first call and returns the
     // auto-pumped audio::Processor. Subsequent calls return the cached processor.
-    fl::shared_ptr<audio::Processor> processor();
+    fl::shared_ptr<audio::Processor> processor() FL_NOEXCEPT;
 
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override {
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName);
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
@@ -465,26 +465,26 @@ class UIDropdown : public UIElement {
     
 
     // Constructor with fl::span<fl::string> for arrays and containers.
-    UIDropdown(const char *name, fl::span<fl::string> options);
+    UIDropdown(const char *name, fl::span<fl::string> options) FL_NOEXCEPT;
 
     // Constructor with initializer_list
-    UIDropdown(const char *name, fl::initializer_list<fl::string> options);
+    UIDropdown(const char *name, fl::initializer_list<fl::string> options) FL_NOEXCEPT;
 
     ~UIDropdown() FL_NOEXCEPT;
     
-    fl::string value() const { return mImpl.value(); }
-    int as_int() const { return mImpl.value_int(); }
-    fl::string as_string() const { return value(); }
+    fl::string value() const FL_NOEXCEPT { return mImpl.value(); }
+    int as_int() const FL_NOEXCEPT { return mImpl.value_int(); }
+    fl::string as_string() const FL_NOEXCEPT { return value(); }
     
-    void setSelectedIndex(int index) { 
+    void setSelectedIndex(int index) FL_NOEXCEPT {
         mImpl.setSelectedIndex(index); 
     }
     
-    fl::size getOptionCount() const { return mImpl.getOptionCount(); }
-    fl::string getOption(fl::size index) const { return mImpl.getOption(index); }
+    fl::size getOptionCount() const FL_NOEXCEPT { return mImpl.getOptionCount(); }
+    fl::string getOption(fl::size index) const FL_NOEXCEPT { return mImpl.getOption(index); }
     
-    operator fl::string() const { return value(); }
-    operator int() const { return as_int(); }
+    operator fl::string() const FL_NOEXCEPT { return value(); }
+    operator int() const FL_NOEXCEPT { return as_int(); }
     
     UIDropdown &operator=(int index) FL_NOEXCEPT {
         setSelectedIndex(index);
@@ -492,34 +492,34 @@ class UIDropdown : public UIElement {
     }
     
     // Add a physical button that will advance to the next option when pressed
-    void addNextButton(int pin);
+    void addNextButton(int pin) FL_NOEXCEPT;
     
     // Advance to the next option (cycles back to first option after last)
-    void nextOption() {
+    void nextOption() FL_NOEXCEPT {
         int currentIndex = as_int();
         int nextIndex = (currentIndex + 1) % static_cast<int>(getOptionCount());
         setSelectedIndex(nextIndex);
     }
     
     // Override setGroup to also update the implementation
-    void setGroup(const fl::string& groupName) override { 
+    void setGroup(const fl::string& groupName) FL_NOEXCEPT override {
         UIElement::setGroup(groupName); 
         // Update the implementation's group if it has the method (WASM platforms)
         mImpl.setGroup(groupName);
     }
 
-    int onChanged(function<void(UIDropdown &)> callback) {
+    int onChanged(function<void(UIDropdown &)> callback) FL_NOEXCEPT {
         int out = mCallbacks.add(callback);
         mListener.addToEngineEventsOnce();
         return out;
     }
-    void clearCallbacks() { mCallbacks.clear(); }
+    void clearCallbacks() FL_NOEXCEPT { mCallbacks.clear(); }
 
   protected:
     UIDropdownImpl mImpl;
 
     struct Listener : public EngineEvents::Listener {
-        Listener(UIDropdown *owner) : mOwner(owner) {
+        Listener(UIDropdown *owner) FL_NOEXCEPT : mOwner(owner) {
             // Don't register in constructor - prevents callbacks before owner is fully initialized
         }
         ~Listener() FL_NOEXCEPT {
@@ -527,14 +527,14 @@ class UIDropdown : public UIElement {
                 EngineEvents::removeListener(this);
             }
         }
-        void addToEngineEventsOnce() {
+        void addToEngineEventsOnce() FL_NOEXCEPT {
             if (added) {
                 return;
             }
             EngineEvents::addListener(this);
             added = true;
         }
-        void onBeginFrame() override;
+        void onBeginFrame() FL_NOEXCEPT override;
 
       private:
         UIDropdown *mOwner;
@@ -554,11 +554,11 @@ class UIGroup {
     FL_NO_COPY(UIGroup);
 
     // Constructor takes fl::string as the only parameter for grouping name
-    UIGroup(const fl::string& groupName);
+    UIGroup(const fl::string& groupName) FL_NOEXCEPT;
 
     // Variadic template constructor: first argument is group name, remaining are UI elements
     template<typename... UIElements>
-    UIGroup(const fl::string& groupName, UIElements&... elements)
+    UIGroup(const fl::string& groupName, UIElements&... elements) FL_NOEXCEPT
         : mImpl(groupName.c_str()) {
         // Add all UI elements to this group
         add(elements...);
@@ -567,14 +567,14 @@ class UIGroup {
     ~UIGroup() FL_NOEXCEPT;
     
     // Get the group name
-    fl::string name() const { return mImpl.name(); }
+    fl::string name() const FL_NOEXCEPT { return mImpl.name(); }
     
     // Implicit conversion to string for convenience
-    operator fl::string() const { return name(); }
+    operator fl::string() const FL_NOEXCEPT { return name(); }
 
     // Add control to the group
     template<typename T>
-    void addControl(T* control) {
+    void addControl(T* control) FL_NOEXCEPT {
         control->setGroup(name());
     }
 
@@ -584,13 +584,13 @@ class UIGroup {
 private:
     // Helper method to add multiple controls using variadic templates
     template<typename T>
-    void add(T& control) {
+    void add(T& control) FL_NOEXCEPT {
         // Base case: add single control
         control.setGroup(name());
     }
     
     template<typename T, typename... Rest>
-    void add(T& control, Rest&... rest) {
+    void add(T& control, Rest&... rest) FL_NOEXCEPT {
         // Recursive case: add first control, then recurse with remaining
         control.setGroup(name());
         add(rest...);
@@ -605,10 +605,10 @@ private:
     FASTLED_DEFINE_POD_COMPARISON_OPERATOR(UI_CLASS, ==)                       \
     FASTLED_DEFINE_POD_COMPARISON_OPERATOR(UI_CLASS, !=)
 
-FASTLED_UI_DEFINE_OPERATORS(UISlider);
-FASTLED_UI_DEFINE_OPERATORS(UINumberField);
-FASTLED_UI_DEFINE_OPERATORS(UICheckbox);
-FASTLED_UI_DEFINE_OPERATORS(UIButton);
-FASTLED_UI_DEFINE_OPERATORS(UIDropdown);
+FASTLED_UI_DEFINE_OPERATORS(UISlider)
+FASTLED_UI_DEFINE_OPERATORS(UINumberField)
+FASTLED_UI_DEFINE_OPERATORS(UICheckbox)
+FASTLED_UI_DEFINE_OPERATORS(UIButton)
+FASTLED_UI_DEFINE_OPERATORS(UIDropdown)
 
 } // end namespace fl

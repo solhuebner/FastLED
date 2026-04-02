@@ -18,6 +18,7 @@
 #include "fl/stl/int.h"
 #include "fl/stl/type_traits.h"
 #include "fl/stl/undef.h"  // IWYU pragma: keep
+#include "fl/stl/noexcept.h"
 
 // ===== Constants =============================================================
 
@@ -57,7 +58,7 @@ namespace fl {
 
 // ===== Basic: min, max, abs, clamp ===========================================
 
-template <typename T> constexpr inline T abs(T value) {
+template <typename T> constexpr inline T abs(T value) FL_NOEXCEPT {
     return value < 0 ? -value : value;
 }
 
@@ -67,17 +68,17 @@ FL_DISABLE_WARNING_FLOAT_CONVERSION
 FL_DISABLE_WARNING_SIGN_CONVERSION
 FL_DISABLE_WARNING_IMPLICIT_INT_CONVERSION
 
-template <typename T, typename U> constexpr inline common_type_t<T, U> min(T a, U b) {
+template <typename T, typename U> constexpr inline common_type_t<T, U> min(T a, U b) FL_NOEXCEPT {
     return (a < b) ? a : b;
 }
 
-template <typename T, typename U> constexpr inline common_type_t<T, U> max(T a, U b) {
+template <typename T, typename U> constexpr inline common_type_t<T, U> max(T a, U b) FL_NOEXCEPT {
     return (a > b) ? a : b;
 }
 
 FL_DISABLE_WARNING_POP
 
-template <typename T> FASTLED_FORCE_INLINE T clamp(T value, T lo, T hi) {
+template <typename T> FASTLED_FORCE_INLINE T clamp(T value, T lo, T hi) FL_NOEXCEPT {
     if (value < lo) return lo;
     if (value > hi) return hi;
     return value;
@@ -86,15 +87,15 @@ template <typename T> FASTLED_FORCE_INLINE T clamp(T value, T lo, T hi) {
 // ===== Approximate equality ===================================================
 
 template <typename T, typename U>
-constexpr inline bool almost_equal(T a, T b, U tolerance) {
+constexpr inline bool almost_equal(T a, T b, U tolerance) FL_NOEXCEPT {
     return fl::abs(a - b) < tolerance;
 }
 
-inline bool almost_equal(float a, float b) {
+inline bool almost_equal(float a, float b) FL_NOEXCEPT {
     return fl::abs(a - b) < FL_EPSILON_F;
 }
 
-inline bool almost_equal(double a, double b) {
+inline bool almost_equal(double a, double b) FL_NOEXCEPT {
     return fl::abs(a - b) < FL_EPSILON_F;
 }
 
@@ -142,7 +143,7 @@ namespace map_range_detail {
 
 // Primary template for map_range_math
 template <typename T, typename U> struct map_range_math {
-    static U map(T value, T in_min, T in_max, U out_min, U out_max) {
+    static U map(T value, T in_min, T in_max, U out_min, U out_max) FL_NOEXCEPT {
         if (in_min == in_max)
             return out_min;
         return out_min +
@@ -153,25 +154,25 @@ template <typename T, typename U> struct map_range_math {
 // Specialization for u8 -> u8
 template <> struct map_range_math<u8, u8> {
     static u8 map(u8 value, u8 in_min, u8 in_max,
-                       u8 out_min, u8 out_max);
+                       u8 out_min, u8 out_max) FL_NOEXCEPT;
 };
 
 // Specialization for u16 -> u16
 template <> struct map_range_math<u16, u16> {
     static u16 map(u16 value, u16 in_min, u16 in_max,
-                        u16 out_min, u16 out_max);
+                        u16 out_min, u16 out_max) FL_NOEXCEPT;
 };
 
 // Equality comparison helpers
-template <typename T> bool equals(T a, T b) { return a == b; }
-inline bool equals(float a, float b) { return fl::almost_equal(a, b); }
-inline bool equals(double d, double d2) { return fl::almost_equal(d, d2); }
+template <typename T> bool equals(T a, T b) FL_NOEXCEPT { return a == b; }
+inline bool equals(float a, float b) FL_NOEXCEPT { return fl::almost_equal(a, b); }
+inline bool equals(double d, double d2) FL_NOEXCEPT { return fl::almost_equal(d, d2); }
 
 } // namespace map_range_detail
 
 template <typename T, typename U>
 FASTLED_FORCE_INLINE U map_range(T value, T in_min, T in_max, U out_min,
-                                 U out_max) {
+                                 U out_max) FL_NOEXCEPT {
     if (map_range_detail::equals(value, in_min)) {
         return out_min;
     }
@@ -183,7 +184,7 @@ FASTLED_FORCE_INLINE U map_range(T value, T in_min, T in_max, U out_min,
 
 template <typename T, typename U>
 FASTLED_FORCE_INLINE U map_range_clamped(T value, T in_min, T in_max, U out_min,
-                                         U out_max) {
+                                         U out_max) FL_NOEXCEPT {
     value = clamp(value, in_min, in_max);
     return map_range<T, U>(value, in_min, in_max, out_min, out_max);
 }
@@ -191,7 +192,7 @@ FASTLED_FORCE_INLINE U map_range_clamped(T value, T in_min, T in_max, U out_min,
 namespace map_range_detail {
 
 inline u8 map_range_math<u8, u8>::map(u8 value, u8 in_min, u8 in_max,
-                   u8 out_min, u8 out_max) {
+                   u8 out_min, u8 out_max) FL_NOEXCEPT {
     if (value == in_min) {
         return out_min;
     }
@@ -214,7 +215,7 @@ inline u8 map_range_math<u8, u8>::map(u8 value, u8 in_min, u8 in_max,
 }
 
 inline u16 map_range_math<u16, u16>::map(u16 value, u16 in_min, u16 in_max,
-                    u16 out_min, u16 out_max) {
+                    u16 out_min, u16 out_max) FL_NOEXCEPT {
     if (value == in_min) {
         return out_min;
     }
@@ -240,50 +241,50 @@ FL_DISABLE_WARNING_POP
 
 // ===== Forward declarations (implementations in math.cpp.hpp) ================
 
-float floor_impl_float(float value);
-double floor_impl_double(double value);
-float ceil_impl_float(float value);
-double ceil_impl_double(double value);
-float exp_impl_float(float value);
-double exp_impl_double(double value);
-float sqrt_impl_float(float value);
-double sqrt_impl_double(double value);
-float sin_impl_float(float value);
-double sin_impl_double(double value);
-float cos_impl_float(float value);
-double cos_impl_double(double value);
-float log_impl_float(float value);
-double log_impl_double(double value);
-float log10_impl_float(float value);
-double log10_impl_double(double value);
-float pow_impl_float(float base, float exponent);
-double pow_impl_double(double base, double exponent);
-float fabs_impl_float(float value);
-double fabs_impl_double(double value);
-long lround_impl_float(float value);
-long lround_impl_double(double value);
-float round_impl_float(float value);
-double round_impl_double(double value);
-float fmod_impl_float(float x, float y);
-double fmod_impl_double(double x, double y);
-float atan2_impl_float(float y, float x);
-double atan2_impl_double(double y, double x);
-float hypot_impl_float(float x, float y);
-double hypot_impl_double(double x, double y);
-float atan_impl_float(float value);
-double atan_impl_double(double value);
-float asin_impl_float(float value);
-double asin_impl_double(double value);
-float acos_impl_float(float value);
-double acos_impl_double(double value);
-float tan_impl_float(float value);
-double tan_impl_double(double value);
-float ldexp_impl_float(float value, int exp);
-double ldexp_impl_double(double value, int exp);
+float floor_impl_float(float value) FL_NOEXCEPT;
+double floor_impl_double(double value) FL_NOEXCEPT;
+float ceil_impl_float(float value) FL_NOEXCEPT;
+double ceil_impl_double(double value) FL_NOEXCEPT;
+float exp_impl_float(float value) FL_NOEXCEPT;
+double exp_impl_double(double value) FL_NOEXCEPT;
+float sqrt_impl_float(float value) FL_NOEXCEPT;
+double sqrt_impl_double(double value) FL_NOEXCEPT;
+float sin_impl_float(float value) FL_NOEXCEPT;
+double sin_impl_double(double value) FL_NOEXCEPT;
+float cos_impl_float(float value) FL_NOEXCEPT;
+double cos_impl_double(double value) FL_NOEXCEPT;
+float log_impl_float(float value) FL_NOEXCEPT;
+double log_impl_double(double value) FL_NOEXCEPT;
+float log10_impl_float(float value) FL_NOEXCEPT;
+double log10_impl_double(double value) FL_NOEXCEPT;
+float pow_impl_float(float base, float exponent) FL_NOEXCEPT;
+double pow_impl_double(double base, double exponent) FL_NOEXCEPT;
+float fabs_impl_float(float value) FL_NOEXCEPT;
+double fabs_impl_double(double value) FL_NOEXCEPT;
+long lround_impl_float(float value) FL_NOEXCEPT;
+long lround_impl_double(double value) FL_NOEXCEPT;
+float round_impl_float(float value) FL_NOEXCEPT;
+double round_impl_double(double value) FL_NOEXCEPT;
+float fmod_impl_float(float x, float y) FL_NOEXCEPT;
+double fmod_impl_double(double x, double y) FL_NOEXCEPT;
+float atan2_impl_float(float y, float x) FL_NOEXCEPT;
+double atan2_impl_double(double y, double x) FL_NOEXCEPT;
+float hypot_impl_float(float x, float y) FL_NOEXCEPT;
+double hypot_impl_double(double x, double y) FL_NOEXCEPT;
+float atan_impl_float(float value) FL_NOEXCEPT;
+double atan_impl_double(double value) FL_NOEXCEPT;
+float asin_impl_float(float value) FL_NOEXCEPT;
+double asin_impl_double(double value) FL_NOEXCEPT;
+float acos_impl_float(float value) FL_NOEXCEPT;
+double acos_impl_double(double value) FL_NOEXCEPT;
+float tan_impl_float(float value) FL_NOEXCEPT;
+double tan_impl_double(double value) FL_NOEXCEPT;
+float ldexp_impl_float(float value, int exp) FL_NOEXCEPT;
+double ldexp_impl_double(double value, int exp) FL_NOEXCEPT;
 
 // ===== Constexpr helpers =====================================================
 
-constexpr int ceil_constexpr(float value) {
+constexpr int ceil_constexpr(float value) FL_NOEXCEPT {
     return static_cast<int>((value > static_cast<float>(static_cast<int>(value)))
                                 ? static_cast<int>(value) + 1
                                 : static_cast<int>(value));
@@ -300,109 +301,109 @@ constexpr int ceil_constexpr(float value) {
 // enable_if<is_fixed_point<T>>, so there is no ambiguity.
 
 // floor
-inline float floorf(float value) { return floor_impl_float(value); }
-inline double floor(double value) { return floor_impl_double(value); }
+inline float floorf(float value) FL_NOEXCEPT { return floor_impl_float(value); }
+inline double floor(double value) FL_NOEXCEPT { return floor_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-floor(T value) { return floor_impl_float(static_cast<float>(value)); }
+floor(T value) FL_NOEXCEPT { return floor_impl_float(static_cast<float>(value)); }
 
 // ceil
-inline float ceilf(float value) { return ceil_impl_float(value); }
-inline double ceil(double value) { return ceil_impl_double(value); }
+inline float ceilf(float value) FL_NOEXCEPT { return ceil_impl_float(value); }
+inline double ceil(double value) FL_NOEXCEPT { return ceil_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-ceil(T value) { return ceil_impl_float(static_cast<float>(value)); }
+ceil(T value) FL_NOEXCEPT { return ceil_impl_float(static_cast<float>(value)); }
 
 // round — template form avoids "using fl::round" conflict with ::round
-inline float roundf(float value) { return round_impl_float(value); }
+inline float roundf(float value) FL_NOEXCEPT { return round_impl_float(value); }
 template<typename T>
 inline typename enable_if<!is_integral<T>::value, T>::type
-round(T value) {
+round(T value) FL_NOEXCEPT {
     return static_cast<T>(round_impl_float(static_cast<float>(value)));
 }
 template<>
-inline double round<double>(double value) {
+inline double round<double>(double value) FL_NOEXCEPT {
     return round_impl_double(value);
 }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-round(T value) { return static_cast<float>(value); }
+round(T value) FL_NOEXCEPT { return static_cast<float>(value); }
 
 // lround
-inline long lroundf(float value) { return lround_impl_float(value); }
-inline long lround(double value) { return lround_impl_double(value); }
+inline long lroundf(float value) FL_NOEXCEPT { return lround_impl_float(value); }
+inline long lround(double value) FL_NOEXCEPT { return lround_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, long>::type
-lround(T value) { return static_cast<long>(value); }
+lround(T value) FL_NOEXCEPT { return static_cast<long>(value); }
 
 // fmod — template form avoids "using fl::fmod" conflict with ::fmod
-inline float fmodf(float x, float y) { return fmod_impl_float(x, y); }
+inline float fmodf(float x, float y) FL_NOEXCEPT { return fmod_impl_float(x, y); }
 template<typename T>
 inline typename enable_if<!is_integral<T>::value, T>::type
-fmod(T x, T y) {
+fmod(T x, T y) FL_NOEXCEPT {
     return static_cast<T>(fmod_impl_float(static_cast<float>(x), static_cast<float>(y)));
 }
 template<>
-inline double fmod<double>(double x, double y) {
+inline double fmod<double>(double x, double y) FL_NOEXCEPT {
     return fmod_impl_double(x, y);
 }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-fmod(T x, T y) { return fmod_impl_float(static_cast<float>(x), static_cast<float>(y)); }
+fmod(T x, T y) FL_NOEXCEPT { return fmod_impl_float(static_cast<float>(x), static_cast<float>(y)); }
 
 // ===== Trigonometry ==========================================================
 
 // sin
-inline float sinf(float value) { return sin_impl_float(value); }
-inline double sin(double value) { return sin_impl_double(value); }
+inline float sinf(float value) FL_NOEXCEPT { return sin_impl_float(value); }
+inline double sin(double value) FL_NOEXCEPT { return sin_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-sin(T value) { return sin_impl_float(static_cast<float>(value)); }
+sin(T value) FL_NOEXCEPT { return sin_impl_float(static_cast<float>(value)); }
 
 // cos
-inline float cosf(float value) { return cos_impl_float(value); }
-inline double cos(double value) { return cos_impl_double(value); }
+inline float cosf(float value) FL_NOEXCEPT { return cos_impl_float(value); }
+inline double cos(double value) FL_NOEXCEPT { return cos_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-cos(T value) { return cos_impl_float(static_cast<float>(value)); }
+cos(T value) FL_NOEXCEPT { return cos_impl_float(static_cast<float>(value)); }
 
 // tan
-inline float tanf(float value) { return tan_impl_float(value); }
-inline double tan(double value) { return tan_impl_double(value); }
+inline float tanf(float value) FL_NOEXCEPT { return tan_impl_float(value); }
+inline double tan(double value) FL_NOEXCEPT { return tan_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-tan(T value) { return tan_impl_float(static_cast<float>(value)); }
+tan(T value) FL_NOEXCEPT { return tan_impl_float(static_cast<float>(value)); }
 
 // ===== Inverse trigonometry ==================================================
 
 // asin
-inline float asinf(float value) { return asin_impl_float(value); }
-inline double asin(double value) { return asin_impl_double(value); }
+inline float asinf(float value) FL_NOEXCEPT { return asin_impl_float(value); }
+inline double asin(double value) FL_NOEXCEPT { return asin_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-asin(T value) { return asin_impl_float(static_cast<float>(value)); }
+asin(T value) FL_NOEXCEPT { return asin_impl_float(static_cast<float>(value)); }
 
 // acos
-inline float acosf(float value) { return acos_impl_float(value); }
-inline double acos(double value) { return acos_impl_double(value); }
+inline float acosf(float value) FL_NOEXCEPT { return acos_impl_float(value); }
+inline double acos(double value) FL_NOEXCEPT { return acos_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-acos(T value) { return acos_impl_float(static_cast<float>(value)); }
+acos(T value) FL_NOEXCEPT { return acos_impl_float(static_cast<float>(value)); }
 
 // atan
-inline float atanf(float value) { return atan_impl_float(value); }
-inline double atan(double value) { return atan_impl_double(value); }
+inline float atanf(float value) FL_NOEXCEPT { return atan_impl_float(value); }
+inline double atan(double value) FL_NOEXCEPT { return atan_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-atan(T value) { return atan_impl_float(static_cast<float>(value)); }
+atan(T value) FL_NOEXCEPT { return atan_impl_float(static_cast<float>(value)); }
 
 // atan2
-inline float atan2f(float y, float x) { return atan2_impl_float(y, x); }
-inline double atan2(double y, double x) { return atan2_impl_double(y, x); }
+inline float atan2f(float y, float x) FL_NOEXCEPT { return atan2_impl_float(y, x); }
+inline double atan2(double y, double x) FL_NOEXCEPT { return atan2_impl_double(y, x); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-atan2(T y, T x) { return atan2_impl_float(static_cast<float>(y), static_cast<float>(x)); }
+atan2(T y, T x) FL_NOEXCEPT { return atan2_impl_float(static_cast<float>(y), static_cast<float>(x)); }
 
 // ===== Exponential / logarithmic =============================================
 
 // exp
-inline float expf(float value) { return exp_impl_float(value); }
-inline double exp(double value) { return exp_impl_double(value); }
+inline float expf(float value) FL_NOEXCEPT { return exp_impl_float(value); }
+inline double exp(double value) FL_NOEXCEPT { return exp_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-exp(T value) { return exp_impl_float(static_cast<float>(value)); }
+exp(T value) FL_NOEXCEPT { return exp_impl_float(static_cast<float>(value)); }
 
 // log (natural) - fast approximate version
 // Uses IEEE 754 bit extraction + minimax quadratic. ~1.5% max relative error.
 // ~5-10x faster than standard logf on embedded targets.
-inline float fast_logf_approx(float x) {
+inline float fast_logf_approx(float x) FL_NOEXCEPT {
     union { float f; u32 i; } u;
     u.f = x;
     i32 e = static_cast<i32>(u.i >> 23) - 127;
@@ -414,28 +415,28 @@ inline float fast_logf_approx(float x) {
 }
 
 // log (natural)
-inline float logf(float value) { return log_impl_float(value); }
-inline double log(double value) { return log_impl_double(value); }
+inline float logf(float value) FL_NOEXCEPT { return log_impl_float(value); }
+inline double log(double value) FL_NOEXCEPT { return log_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-log(T value) { return log_impl_float(static_cast<float>(value)); }
+log(T value) FL_NOEXCEPT { return log_impl_float(static_cast<float>(value)); }
 
 // log10
-inline float log10f(float value) { return log10_impl_float(value); }
-inline double log10(double value) { return log10_impl_double(value); }
+inline float log10f(float value) FL_NOEXCEPT { return log10_impl_float(value); }
+inline double log10(double value) FL_NOEXCEPT { return log10_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-log10(T value) { return log10_impl_float(static_cast<float>(value)); }
+log10(T value) FL_NOEXCEPT { return log10_impl_float(static_cast<float>(value)); }
 
 // log2
-inline float log2f(float value) { return log_impl_float(value) / log_impl_float(2.0f); }
-inline double log2(double value) { return log_impl_double(value) / log_impl_double(2.0); }
+inline float log2f(float value) FL_NOEXCEPT { return log_impl_float(value) / log_impl_float(2.0f); }
+inline double log2(double value) FL_NOEXCEPT { return log_impl_double(value) / log_impl_double(2.0); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-log2(T value) { return log_impl_float(static_cast<float>(value)) / log_impl_float(2.0f); }
+log2(T value) FL_NOEXCEPT { return log_impl_float(static_cast<float>(value)) / log_impl_float(2.0f); }
 
 // pow
-inline float powf(float base, float exponent) { return pow_impl_float(base, exponent); }
-inline double pow(double base, double exponent) { return pow_impl_double(base, exponent); }
+inline float powf(float base, float exponent) FL_NOEXCEPT { return pow_impl_float(base, exponent); }
+inline double pow(double base, double exponent) FL_NOEXCEPT { return pow_impl_double(base, exponent); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-pow(T base, T exponent) { return pow_impl_float(static_cast<float>(base), static_cast<float>(exponent)); }
+pow(T base, T exponent) FL_NOEXCEPT { return pow_impl_float(static_cast<float>(base), static_cast<float>(exponent)); }
 
 // ===== Roots / distance ======================================================
 
@@ -449,16 +450,16 @@ struct has_static_sqrt<T, decltype(static_cast<void>(T::sqrt(declval<T>())))> : 
 }
 
 // sqrt
-inline float sqrtf(float value) { return sqrt_impl_float(value); }
-inline float sqrt(float value) { return sqrt_impl_float(value); }
-inline double sqrt(double value) { return sqrt_impl_double(value); }
+inline float sqrtf(float value) FL_NOEXCEPT { return sqrt_impl_float(value); }
+inline float sqrt(float value) FL_NOEXCEPT { return sqrt_impl_float(value); }
+inline double sqrt(double value) FL_NOEXCEPT { return sqrt_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-sqrt(T value) { return sqrt_impl_float(static_cast<float>(value)); }
+sqrt(T value) FL_NOEXCEPT { return sqrt_impl_float(static_cast<float>(value)); }
 
 // Generic sqrt that auto-binds to types with static sqrt method
 // If T doesn't have a static sqrt, this overload is discarded (SFINAE)
 template<typename T>
-inline typename enable_if<sqrt_detail::has_static_sqrt<T>::value, decltype(T::sqrt(declval<T>()))>::type
+inline typename enable_if<sqrt_detail::has_static_sqrt<T>::value, decltype(T::sqrt(declval<T>())) FL_NOEXCEPT >::type
 sqrt(T value) {
     return T::sqrt(value);
 }
@@ -474,7 +475,7 @@ struct has_static_floor<T, decltype(static_cast<void>(T::floor(declval<T>())))> 
 
 // Generic floor that auto-binds to types with static floor method
 template<typename T>
-inline typename enable_if<floor_detail::has_static_floor<T>::value, decltype(T::floor(declval<T>()))>::type
+inline typename enable_if<floor_detail::has_static_floor<T>::value, decltype(T::floor(declval<T>())) FL_NOEXCEPT >::type
 floor(T value) {
     return T::floor(value);
 }
@@ -490,40 +491,40 @@ struct has_static_ceil<T, decltype(static_cast<void>(T::ceil(declval<T>())))> : 
 
 // Generic ceil that auto-binds to types with static ceil method
 template<typename T>
-inline typename enable_if<ceil_detail::has_static_ceil<T>::value, decltype(T::ceil(declval<T>()))>::type
+inline typename enable_if<ceil_detail::has_static_ceil<T>::value, decltype(T::ceil(declval<T>())) FL_NOEXCEPT >::type
 ceil(T value) {
     return T::ceil(value);
 }
 
 // hypot
-inline float hypotf(float x, float y) { return hypot_impl_float(x, y); }
-inline double hypot(double x, double y) { return hypot_impl_double(x, y); }
+inline float hypotf(float x, float y) FL_NOEXCEPT { return hypot_impl_float(x, y); }
+inline double hypot(double x, double y) FL_NOEXCEPT { return hypot_impl_double(x, y); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-hypot(T x, T y) { return hypot_impl_float(static_cast<float>(x), static_cast<float>(y)); }
+hypot(T x, T y) FL_NOEXCEPT { return hypot_impl_float(static_cast<float>(x), static_cast<float>(y)); }
 
 // ===== Floating-point utilities ==============================================
 
 // fabs
-inline float fabsf(float value) { return fabs_impl_float(value); }
-inline double fabs(double value) { return fabs_impl_double(value); }
+inline float fabsf(float value) FL_NOEXCEPT { return fabs_impl_float(value); }
+inline double fabs(double value) FL_NOEXCEPT { return fabs_impl_double(value); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-fabs(T value) { return fabs_impl_float(static_cast<float>(value)); }
+fabs(T value) FL_NOEXCEPT { return fabs_impl_float(static_cast<float>(value)); }
 
 // ldexp — multiply by power of 2: value * 2^exp
-inline float ldexpf(float value, int exp) { return ldexp_impl_float(value, exp); }
-inline double ldexp(double value, int exp) { return ldexp_impl_double(value, exp); }
+inline float ldexpf(float value, int exp) FL_NOEXCEPT { return ldexp_impl_float(value, exp); }
+inline double ldexp(double value, int exp) FL_NOEXCEPT { return ldexp_impl_double(value, exp); }
 template<typename T> inline typename enable_if<is_integral<T>::value, float>::type
-ldexp(T value, int exp) { return ldexp_impl_float(static_cast<float>(value), exp); }
+ldexp(T value, int exp) FL_NOEXCEPT { return ldexp_impl_float(static_cast<float>(value), exp); }
 
 // ===== Angle conversion ======================================================
 
 template<typename T>
-constexpr inline T radians(T deg) {
+constexpr inline T radians(T deg) FL_NOEXCEPT {
     return deg * static_cast<T>(0.017453292519943295); // PI / 180
 }
 
 template<typename T>
-constexpr inline T degrees(T rad) {
+constexpr inline T degrees(T rad) FL_NOEXCEPT {
     return rad * static_cast<T>(57.29577951308232); // 180 / PI
 }
 
@@ -532,7 +533,7 @@ constexpr inline T degrees(T rad) {
 // sincos(angle, &out_sin, &out_cos) for floating-point types
 template <typename T>
 inline typename enable_if<is_floating_point<T>::value>::type
-sincos(T angle, T& out_sin, T& out_cos) {
+sincos(T angle, T& out_sin, T& out_cos) FL_NOEXCEPT {
     out_sin = static_cast<T>(fl::sinf(static_cast<float>(angle)));
     out_cos = static_cast<T>(fl::cosf(static_cast<float>(angle)));
 }
@@ -540,7 +541,7 @@ sincos(T angle, T& out_sin, T& out_cos) {
 // sincos(angle, &out_sin, &out_cos) for integral types
 template <typename T>
 inline typename enable_if<is_integral<T>::value>::type
-sincos(T angle, float& out_sin, float& out_cos) {
+sincos(T angle, float& out_sin, float& out_cos) FL_NOEXCEPT {
     out_sin = fl::sinf(static_cast<float>(angle));
     out_cos = fl::cosf(static_cast<float>(angle));
 }

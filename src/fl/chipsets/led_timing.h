@@ -19,6 +19,7 @@
 #pragma once
 
 #include "fl/stl/stdint.h"
+#include "fl/stl/noexcept.h"
 
 // ============================================================================
 // Overclock Factor Configuration
@@ -140,7 +141,7 @@ struct TIMING_WS2812_800KHZ {
         T3 = FASTLED_WS2812_T3,
         RESET = 280
     };
-    static constexpr const char* name() { return "WS2812_800KHZ"; }
+    static constexpr const char* name() FL_NOEXCEPT { return "WS2812_800KHZ"; }
 };
 
 /// Convenience alias for WS2812 timing (commonly used name)
@@ -528,35 +529,35 @@ struct TIMING_UCS7604_8BIT_800KHZ {
 /// @tparam TIMING Timing type with enum-based T1, T2, T3, RESET values
 /// @return Runtime ChipsetTiming struct initialized from timing type
 template <typename TIMING>
-constexpr ChipsetTiming to_runtime_timing() {
+constexpr ChipsetTiming to_runtime_timing() FL_NOEXCEPT {
     return {TIMING::T1, TIMING::T2, TIMING::T3, TIMING::RESET, "timing"};
 }
 
 /// @brief Get total bit period (T1 + T2 + T3) in nanoseconds
 /// @param timing Chipset timing structure
 /// @return Total bit period in nanoseconds
-constexpr u32 get_bit_period_ns(const ChipsetTiming& timing) {
+constexpr u32 get_bit_period_ns(const ChipsetTiming& timing) FL_NOEXCEPT {
     return timing.T1 + timing.T2 + timing.T3;
 }
 
 /// @brief Extract T1 (high time for bit 0) from timing constant
 /// @param timing Chipset timing structure
 /// @return T1 value in nanoseconds
-constexpr u32 get_timing_t1(const ChipsetTiming& timing) {
+constexpr u32 get_timing_t1(const ChipsetTiming& timing) FL_NOEXCEPT {
     return timing.T1;
 }
 
 /// @brief Extract T2 (additional high time for bit 1) from timing constant
 /// @param timing Chipset timing structure
 /// @return T2 value in nanoseconds
-constexpr u32 get_timing_t2(const ChipsetTiming& timing) {
+constexpr u32 get_timing_t2(const ChipsetTiming& timing) FL_NOEXCEPT {
     return timing.T2;
 }
 
 /// @brief Extract T3 (low tail duration) from timing constant
 /// @param timing Chipset timing structure
 /// @return T3 value in nanoseconds
-constexpr u32 get_timing_t3(const ChipsetTiming& timing) {
+constexpr u32 get_timing_t3(const ChipsetTiming& timing) FL_NOEXCEPT {
     return timing.T3;
 }
 
@@ -564,6 +565,6 @@ constexpr u32 get_timing_t3(const ChipsetTiming& timing) {
 /// @param name Chipset name string
 /// @return Pointer to ChipsetTiming or nullptr if not found
 /// Note: This is a runtime function and should only be used during initialization
-const ChipsetTiming* get_timing_by_name(const char* name);
+const ChipsetTiming* get_timing_by_name(const char* name) FL_NOEXCEPT;
 
 }  // namespace fl

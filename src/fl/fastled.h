@@ -103,6 +103,7 @@
 /// Color utilities and palettes
 #include "colorutils.h"  // IWYU pragma: keep
 #include "colorpalettes.h"  // IWYU pragma: keep
+#include "fl/stl/noexcept.h"
 
 // ============================================================================
 // INTERNAL UTILITY DECLARATIONS
@@ -110,6 +111,6 @@
 
 namespace fl {
 /// Get the size of the CLEDController object for introspection
-u16 cled_contoller_size();
+u16 cled_contoller_size() FL_NOEXCEPT;
 }  // namespace fl
 

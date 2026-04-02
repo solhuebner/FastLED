@@ -43,7 +43,7 @@ public:
 
     /// @brief Construct from PixelIterator
     /// @param pixels Pointer to PixelIterator (must outlive this adapter)
-    explicit ScaledPixelIteratorRGB(PixelIterator* pixels)
+    explicit ScaledPixelIteratorRGB(PixelIterator* pixels) FL_NOEXCEPT
         : mPixels(pixels), mCurrent(), mHasValue(false) {
         advance();  // Preload first pixel
     }
@@ -54,26 +54,26 @@ public:
 
     /// @brief Dereference operator
     /// @return Current pixel value (3 bytes in wire order)
-    const array<u8, 3>& operator*() const {
+    const array<u8, 3>& operator*() const FL_NOEXCEPT {
         return mCurrent;
     }
 
     /// @brief Arrow operator
     /// @return Pointer to current pixel
-    const array<u8, 3>* operator->() const {
+    const array<u8, 3>* operator->() const FL_NOEXCEPT {
         return &mCurrent;
     }
 
     /// @brief Pre-increment operator
     /// @return Reference to this iterator after advancing
-    ScaledPixelIteratorRGB& operator++() {
+    ScaledPixelIteratorRGB& operator++() FL_NOEXCEPT {
         advance();
         return *this;
     }
 
     /// @brief Post-increment operator
     /// @return Copy of iterator before advancing
-    ScaledPixelIteratorRGB operator++(int) {
+    ScaledPixelIteratorRGB operator++(int) FL_NOEXCEPT {
         ScaledPixelIteratorRGB tmp = *this;
         advance();
         return tmp;
@@ -82,7 +82,7 @@ public:
     /// @brief Equality comparison
     /// @param other Iterator to compare with
     /// @return true if both iterators are at the end or both valid
-    bool operator==(const ScaledPixelIteratorRGB& other) const {
+    bool operator==(const ScaledPixelIteratorRGB& other) const FL_NOEXCEPT {
         // Two end iterators are equal
         if (!mHasValue && !other.mHasValue) {
             return true;
@@ -98,13 +98,13 @@ public:
     /// @brief Inequality comparison
     /// @param other Iterator to compare with
     /// @return true if iterators are not equal
-    bool operator!=(const ScaledPixelIteratorRGB& other) const {
+    bool operator!=(const ScaledPixelIteratorRGB& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 
 private:
     /// @brief Advance to next pixel (or mark as end)
-    void advance();
+    void advance() FL_NOEXCEPT;
 
     PixelIterator* mPixels;      ///< Underlying PixelIterator
     array<u8, 3> mCurrent;       ///< Current pixel value (cached, wire order)
@@ -127,7 +127,7 @@ public:
 
     /// @brief Construct from PixelIterator
     /// @param pixels Pointer to PixelIterator (must outlive this adapter)
-    explicit ScaledPixelIteratorRGBW(PixelIterator* pixels)
+    explicit ScaledPixelIteratorRGBW(PixelIterator* pixels) FL_NOEXCEPT
         : mPixels(pixels), mCurrent(), mHasValue(false) {
         advance();  // Preload first pixel
     }
@@ -138,31 +138,31 @@ public:
 
     /// @brief Dereference operator
     /// @return Current pixel value (4 bytes in wire order)
-    const array<u8, 4>& operator*() const {
+    const array<u8, 4>& operator*() const FL_NOEXCEPT {
         return mCurrent;
     }
 
     /// @brief Arrow operator
     /// @return Pointer to current pixel
-    const array<u8, 4>* operator->() const {
+    const array<u8, 4>* operator->() const FL_NOEXCEPT {
         return &mCurrent;
     }
 
     /// @brief Pre-increment operator
-    ScaledPixelIteratorRGBW& operator++() {
+    ScaledPixelIteratorRGBW& operator++() FL_NOEXCEPT {
         advance();
         return *this;
     }
 
     /// @brief Post-increment operator
-    ScaledPixelIteratorRGBW operator++(int) {
+    ScaledPixelIteratorRGBW operator++(int) FL_NOEXCEPT {
         ScaledPixelIteratorRGBW tmp = *this;
         advance();
         return tmp;
     }
 
     /// @brief Equality comparison
-    bool operator==(const ScaledPixelIteratorRGBW& other) const {
+    bool operator==(const ScaledPixelIteratorRGBW& other) const FL_NOEXCEPT {
         if (!mHasValue && !other.mHasValue) {
             return true;
         }
@@ -173,13 +173,13 @@ public:
     }
 
     /// @brief Inequality comparison
-    bool operator!=(const ScaledPixelIteratorRGBW& other) const {
+    bool operator!=(const ScaledPixelIteratorRGBW& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 
 private:
     /// @brief Advance to next pixel (or mark as end)
-    void advance();
+    void advance() FL_NOEXCEPT;
 
     PixelIterator* mPixels;      ///< Underlying PixelIterator
     array<u8, 4> mCurrent;       ///< Current pixel value (cached, wire order)
@@ -200,7 +200,7 @@ public:
 
     /// @brief Construct from PixelIterator
     /// @param pixels Pointer to PixelIterator (must outlive this adapter)
-    explicit ScaledPixelIteratorBrightness(PixelIterator* pixels)
+    explicit ScaledPixelIteratorBrightness(PixelIterator* pixels) FL_NOEXCEPT
         : mPixels(pixels), mCurrent(0), mHasValue(false) {
         advance();  // Preload first brightness
     }
@@ -210,25 +210,25 @@ public:
         : mPixels(nullptr), mCurrent(0), mHasValue(false) {}
 
     /// @brief Dereference operator
-    u8 operator*() const {
+    u8 operator*() const FL_NOEXCEPT {
         return mCurrent;
     }
 
     /// @brief Pre-increment operator
-    ScaledPixelIteratorBrightness& operator++() {
+    ScaledPixelIteratorBrightness& operator++() FL_NOEXCEPT {
         advance();
         return *this;
     }
 
     /// @brief Post-increment operator
-    ScaledPixelIteratorBrightness operator++(int) {
+    ScaledPixelIteratorBrightness operator++(int) FL_NOEXCEPT {
         ScaledPixelIteratorBrightness tmp = *this;
         advance();
         return tmp;
     }
 
     /// @brief Equality comparison
-    bool operator==(const ScaledPixelIteratorBrightness& other) const {
+    bool operator==(const ScaledPixelIteratorBrightness& other) const FL_NOEXCEPT {
         if (!mHasValue && !other.mHasValue) {
             return true;
         }
@@ -239,13 +239,13 @@ public:
     }
 
     /// @brief Inequality comparison
-    bool operator!=(const ScaledPixelIteratorBrightness& other) const {
+    bool operator!=(const ScaledPixelIteratorBrightness& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 
 private:
     /// @brief Advance to next brightness value (or mark as end)
-    void advance();
+    void advance() FL_NOEXCEPT;
 
     PixelIterator* mPixels;  ///< Underlying PixelIterator
     u8 mCurrent;             ///< Current brightness value (cached)
@@ -270,7 +270,7 @@ public:
 
     /// @brief Construct from PixelIterator
     /// @param pixels Pointer to PixelIterator (must outlive this adapter)
-    explicit ScaledPixelIteratorRGB16(PixelIterator* pixels)
+    explicit ScaledPixelIteratorRGB16(PixelIterator* pixels) FL_NOEXCEPT
         : mPixels(pixels), mCurrent(), mHasValue(false) {
         advance();  // Preload first pixel
     }
@@ -281,26 +281,26 @@ public:
 
     /// @brief Dereference operator
     /// @return Current pixel value (3x 16-bit channels in wire order)
-    const array<u16, 3>& operator*() const {
+    const array<u16, 3>& operator*() const FL_NOEXCEPT {
         return mCurrent;
     }
 
     /// @brief Arrow operator
     /// @return Pointer to current pixel
-    const array<u16, 3>* operator->() const {
+    const array<u16, 3>* operator->() const FL_NOEXCEPT {
         return &mCurrent;
     }
 
     /// @brief Pre-increment operator
     /// @return Reference to this iterator after advancing
-    ScaledPixelIteratorRGB16& operator++() {
+    ScaledPixelIteratorRGB16& operator++() FL_NOEXCEPT {
         advance();
         return *this;
     }
 
     /// @brief Post-increment operator
     /// @return Copy of iterator before advancing
-    ScaledPixelIteratorRGB16 operator++(int) {
+    ScaledPixelIteratorRGB16 operator++(int) FL_NOEXCEPT {
         ScaledPixelIteratorRGB16 tmp = *this;
         advance();
         return tmp;
@@ -309,7 +309,7 @@ public:
     /// @brief Equality comparison
     /// @param other Iterator to compare with
     /// @return true if both iterators are at the end or both valid
-    bool operator==(const ScaledPixelIteratorRGB16& other) const {
+    bool operator==(const ScaledPixelIteratorRGB16& other) const FL_NOEXCEPT {
         // Two end iterators are equal
         if (!mHasValue && !other.mHasValue) {
             return true;
@@ -325,13 +325,13 @@ public:
     /// @brief Inequality comparison
     /// @param other Iterator to compare with
     /// @return true if iterators are not equal
-    bool operator!=(const ScaledPixelIteratorRGB16& other) const {
+    bool operator!=(const ScaledPixelIteratorRGB16& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 
 private:
     /// @brief Advance to next pixel (or mark as end)
-    void advance();
+    void advance() FL_NOEXCEPT;
 
     PixelIterator* mPixels;      ///< Underlying PixelIterator
     array<u16, 3> mCurrent;      ///< Current pixel value (cached, wire order, 16-bit)
@@ -344,7 +344,7 @@ private:
 /// @param pixels PixelIterator to wrap
 /// @return Pair of begin/end iterators
 inline pair<detail::ScaledPixelIteratorRGB, detail::ScaledPixelIteratorRGB>
-makeScaledPixelRangeRGB(PixelIterator* pixels) {
+makeScaledPixelRangeRGB(PixelIterator* pixels) FL_NOEXCEPT {
     return make_pair(
         detail::ScaledPixelIteratorRGB(pixels),
         detail::ScaledPixelIteratorRGB()  // End sentinel
@@ -355,7 +355,7 @@ makeScaledPixelRangeRGB(PixelIterator* pixels) {
 /// @param pixels PixelIterator to wrap
 /// @return Pair of begin/end iterators
 inline pair<detail::ScaledPixelIteratorRGBW, detail::ScaledPixelIteratorRGBW>
-makeScaledPixelRangeRGBW(PixelIterator* pixels) {
+makeScaledPixelRangeRGBW(PixelIterator* pixels) FL_NOEXCEPT {
     return make_pair(
         detail::ScaledPixelIteratorRGBW(pixels),
         detail::ScaledPixelIteratorRGBW()  // End sentinel
@@ -366,7 +366,7 @@ makeScaledPixelRangeRGBW(PixelIterator* pixels) {
 /// @param pixels PixelIterator to wrap
 /// @return Pair of begin/end iterators
 inline pair<detail::ScaledPixelIteratorBrightness, detail::ScaledPixelIteratorBrightness>
-makeScaledBrightnessRange(PixelIterator* pixels) {
+makeScaledBrightnessRange(PixelIterator* pixels) FL_NOEXCEPT {
     return make_pair(
         detail::ScaledPixelIteratorBrightness(pixels),
         detail::ScaledPixelIteratorBrightness()  // End sentinel
@@ -377,7 +377,7 @@ makeScaledBrightnessRange(PixelIterator* pixels) {
 /// @param pixels PixelIterator to wrap
 /// @return Pair of begin/end iterators
 inline pair<detail::ScaledPixelIteratorRGB16, detail::ScaledPixelIteratorRGB16>
-makeScaledPixelRangeRGB16(PixelIterator* pixels) {
+makeScaledPixelRangeRGB16(PixelIterator* pixels) FL_NOEXCEPT {
     return make_pair(
         detail::ScaledPixelIteratorRGB16(pixels),
         detail::ScaledPixelIteratorRGB16()  // End sentinel

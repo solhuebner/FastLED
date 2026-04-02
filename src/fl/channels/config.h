@@ -27,7 +27,7 @@ struct ClocklessChipset {
     ChipsetTimingConfig timing;     ///< T1/T2/T3 timing parameters
 
     /// @brief Constructor
-    ClocklessChipset(int pin, const ChipsetTimingConfig& timing)
+    ClocklessChipset(int pin, const ChipsetTimingConfig& timing) FL_NOEXCEPT
         : pin(pin), timing(timing) {}
 
     /// @brief Default constructor
@@ -46,7 +46,7 @@ struct ClocklessChipset {
     ClocklessChipset& operator=(ClocklessChipset&&) FL_NOEXCEPT = default;
 
     /// @brief Equality operator
-    bool operator==(const ClocklessChipset& other) const {
+    bool operator==(const ClocklessChipset& other) const FL_NOEXCEPT {
         return pin == other.pin &&
                timing.t1_ns == other.timing.t1_ns &&
                timing.t2_ns == other.timing.t2_ns &&
@@ -55,7 +55,7 @@ struct ClocklessChipset {
     }
 
     /// @brief Inequality operator
-    bool operator!=(const ClocklessChipset& other) const {
+    bool operator!=(const ClocklessChipset& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 };
@@ -70,7 +70,7 @@ struct SpiChipsetConfig {
     SpiEncoder timing;              ///< SPI encoder configuration
 
     /// @brief Constructor
-    SpiChipsetConfig(int dataPin, int clockPin, const SpiEncoder& timing)
+    SpiChipsetConfig(int dataPin, int clockPin, const SpiEncoder& timing) FL_NOEXCEPT
         : dataPin(dataPin), clockPin(clockPin), timing(timing) {}
 
     /// @brief Default constructor (requires explicit protocol specification)
@@ -90,14 +90,14 @@ struct SpiChipsetConfig {
     SpiChipsetConfig& operator=(SpiChipsetConfig&&) FL_NOEXCEPT = default;
 
     /// @brief Equality operator
-    bool operator==(const SpiChipsetConfig& other) const {
+    bool operator==(const SpiChipsetConfig& other) const FL_NOEXCEPT {
         return dataPin == other.dataPin &&
                clockPin == other.clockPin &&
                timing == other.timing;
     }
 
     /// @brief Inequality operator
-    bool operator!=(const SpiChipsetConfig& other) const {
+    bool operator!=(const SpiChipsetConfig& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 };
@@ -136,7 +136,7 @@ struct ChannelConfig {
     /// @param rgbOrder RGB channel ordering
     /// @param options Channel options (correction, temperature, dither, affinity)
     ChannelConfig(const fl::string& name, const ChipsetVariant& chipset, fl::span<CRGB> leds,
-                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions());
+                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions()) FL_NOEXCEPT;
 
     /// @brief Primary constructor with chipset variant
     /// @param chipset Chipset configuration (clockless or SPI)
@@ -144,7 +144,7 @@ struct ChannelConfig {
     /// @param rgbOrder RGB channel ordering
     /// @param options Channel options (correction, temperature, dither, affinity)
     ChannelConfig(const ChipsetVariant& chipset, fl::span<CRGB> leds,
-                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions());
+                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions()) FL_NOEXCEPT;
 
     /// @brief Constructor with clockless chipset
     /// @param clockless Clockless chipset configuration
@@ -152,7 +152,7 @@ struct ChannelConfig {
     /// @param rgbOrder RGB channel ordering
     /// @param options Channel options
     ChannelConfig(const ClocklessChipset& clockless, fl::span<CRGB> leds,
-                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions());
+                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions()) FL_NOEXCEPT;
 
     /// @brief Constructor with SPI chipset
     /// @param spi SPI chipset configuration
@@ -160,7 +160,7 @@ struct ChannelConfig {
     /// @param rgbOrder RGB channel ordering
     /// @param options Channel options
     ChannelConfig(const SpiChipsetConfig& spi, fl::span<CRGB> leds,
-                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions());
+                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions()) FL_NOEXCEPT;
 
     // ========== Backwards-Compatible Constructors (Deprecated) ==========
 
@@ -170,13 +170,13 @@ struct ChannelConfig {
     template<typename TIMING>
     ChannelConfig(int pin, fl::span<CRGB> leds, EOrder rgbOrder = RGB,
                   const ChannelOptions& options = ChannelOptions())
-        : ChannelConfig(ClocklessChipset(pin, makeTimingConfig<TIMING>()), leds, rgbOrder, options) {}
+ FL_NOEXCEPT : ChannelConfig(ClocklessChipset(pin, makeTimingConfig<TIMING>()), leds, rgbOrder, options) {}
 
     /// @brief Basic constructor with timing (backwards compatibility)
     /// @deprecated Use ClocklessChipset constructor instead
     /// @note This constructor creates a ClocklessChipset internally
     ChannelConfig(int pin, const ChipsetTimingConfig& timing, fl::span<CRGB> leds,
-                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions());
+                  EOrder rgbOrder = RGB, const ChannelOptions& options = ChannelOptions()) FL_NOEXCEPT;
 
     // Copy constructor (needed because of variant)
     ChannelConfig(const ChannelConfig& other) FL_NOEXCEPT;
@@ -191,37 +191,37 @@ struct ChannelConfig {
     // ========== Accessors ==========
 
     /// @brief Get the chipset configuration variant
-    const ChipsetVariant& getChipset() const { return chipset; }
+    const ChipsetVariant& getChipset() const FL_NOEXCEPT { return chipset; }
 
     /// @brief Check if this is a clockless chipset
-    bool isClockless() const { return chipset.is<ClocklessChipset>(); }
+    bool isClockless() const FL_NOEXCEPT { return chipset.is<ClocklessChipset>(); }
 
     /// @brief Check if this is an SPI chipset
-    bool isSpi() const { return chipset.is<SpiChipsetConfig>(); }
+    bool isSpi() const FL_NOEXCEPT { return chipset.is<SpiChipsetConfig>(); }
 
     /// @brief Get clockless chipset (returns nullptr if not clockless)
-    const ClocklessChipset* getClocklessChipset() const { return chipset.ptr<ClocklessChipset>(); }
+    const ClocklessChipset* getClocklessChipset() const FL_NOEXCEPT { return chipset.ptr<ClocklessChipset>(); }
 
     /// @brief Get SPI chipset (returns nullptr if not SPI)
-    const SpiChipsetConfig* getSpiChipset() const { return chipset.ptr<SpiChipsetConfig>(); }
+    const SpiChipsetConfig* getSpiChipset() const FL_NOEXCEPT { return chipset.ptr<SpiChipsetConfig>(); }
 
     /// @brief Get data pin (works for both clockless and SPI)
-    int getDataPin() const;
+    int getDataPin() const FL_NOEXCEPT;
 
     /// @brief Get clock pin (returns -1 for clockless chipsets)
-    int getClockPin() const;
+    int getClockPin() const FL_NOEXCEPT;
 
     /// @brief Set screen map for JS canvas visualization
     /// @param map ScreenMap with LED positions
-    void setScreenMap(const fl::ScreenMap& map) { mScreenMap = map; }
+    void setScreenMap(const fl::ScreenMap& map) FL_NOEXCEPT { mScreenMap = map; }
 
     /// @brief Get screen map for JS canvas visualization
     /// @return Reference to current screen map
-    const fl::ScreenMap& getScreenMap() const { return mScreenMap; }
+    const fl::ScreenMap& getScreenMap() const FL_NOEXCEPT { return mScreenMap; }
 
     /// @brief Check if screen map is configured
     /// @return true if screen map has been set with LEDs
-    bool hasScreenMap() const { return mScreenMap.getLength() > 0; }
+    bool hasScreenMap() const FL_NOEXCEPT { return mScreenMap.getLength() > 0; }
 
     // ========== Data Members ==========
 
@@ -263,16 +263,16 @@ struct MultiChannelConfig {
     MultiChannelConfig(const MultiChannelConfig&) FL_NOEXCEPT = default;
     MultiChannelConfig(MultiChannelConfig&&) FL_NOEXCEPT = default;
 
-    MultiChannelConfig(fl::span<ChannelConfigPtr> channels) : mChannels(channels.begin(), channels.end()) {}
-    MultiChannelConfig(fl::initializer_list<ChannelConfigPtr> channels) : mChannels(channels.begin(), channels.end()) {}
+    MultiChannelConfig(fl::span<ChannelConfigPtr> channels) FL_NOEXCEPT : mChannels(channels.begin(), channels.end()) {}
+    MultiChannelConfig(fl::initializer_list<ChannelConfigPtr> channels) FL_NOEXCEPT : mChannels(channels.begin(), channels.end()) {}
 
     /// @brief Construct from span of ChannelConfig (copies to shared_ptr internally)
     /// @param channels Span of ChannelConfig objects to copy
-    MultiChannelConfig(fl::span<ChannelConfig> channels);
+    MultiChannelConfig(fl::span<ChannelConfig> channels) FL_NOEXCEPT;
 
     /// @brief Construct from initializer list of ChannelConfig (copies to shared_ptr internally)
     /// @param channels Initializer list of ChannelConfig objects to copy
-    MultiChannelConfig(fl::initializer_list<ChannelConfig> channels);
+    MultiChannelConfig(fl::initializer_list<ChannelConfig> channels) FL_NOEXCEPT;
 
     MultiChannelConfig& operator=(const MultiChannelConfig&) FL_NOEXCEPT = default;
     MultiChannelConfig& operator=(MultiChannelConfig&&) FL_NOEXCEPT = default;
@@ -281,7 +281,7 @@ struct MultiChannelConfig {
     /// Add a channel configuration to the multi-channel config
     /// @param channel shared pointer to the channel configuration to add
     /// @returns reference to this object for method chaining
-    MultiChannelConfig& add(ChannelConfigPtr channel);
+    MultiChannelConfig& add(ChannelConfigPtr channel) FL_NOEXCEPT;
 
     /// Vector of shared pointers to channel configurations
     fl::vector<ChannelConfigPtr> mChannels;

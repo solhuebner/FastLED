@@ -18,6 +18,7 @@
 #include "fl/stl/array.h"
 #include "fl/chipsets/encoders/encoder_utils.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -29,7 +30,7 @@ namespace fl {
 /// @param out Output iterator for encoded bytes
 /// @note LPD8806 uses GRB wire order: pixel[0]=Green, pixel[1]=Red, pixel[2]=Blue
 template <typename InputIterator, typename OutputIterator>
-void encodeLPD8806(InputIterator first, InputIterator last, OutputIterator out) {
+void encodeLPD8806(InputIterator first, InputIterator last, OutputIterator out) FL_NOEXCEPT {
     // LED data: GRB with MSB set (count as we go)
     size_t num_leds = 0;
     while (first != last) {

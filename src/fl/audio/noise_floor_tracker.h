@@ -70,32 +70,32 @@ struct NoiseFloorTrackerConfig {
 class NoiseFloorTracker {
 public:
     NoiseFloorTracker() FL_NOEXCEPT;
-    explicit NoiseFloorTracker(const NoiseFloorTrackerConfig& config);
+    explicit NoiseFloorTracker(const NoiseFloorTrackerConfig& config) FL_NOEXCEPT;
     ~NoiseFloorTracker() FL_NOEXCEPT;
 
     /// Configure the noise floor tracker
-    void configure(const NoiseFloorTrackerConfig& config);
+    void configure(const NoiseFloorTrackerConfig& config) FL_NOEXCEPT;
 
     /// Update noise floor estimate with new observation
     /// @param timedomainLevel Time-domain metric (e.g., RMS, peak)
     /// @param frequencydomainLevel Optional frequency-domain metric (e.g., spectral energy)
-    void update(float timedomainLevel, float frequencydomainLevel = -1.0f);
+    void update(float timedomainLevel, float frequencydomainLevel = -1.0f) FL_NOEXCEPT;
 
     /// Get current noise floor estimate
-    float getFloor() const { return mCurrentFloor; }
+    float getFloor() const FL_NOEXCEPT { return mCurrentFloor; }
 
     /// Normalize signal by removing noise floor
     /// @param level Signal level to normalize
     /// @return Normalized level (clamped to >= 0)
-    float normalize(float level) const;
+    float normalize(float level) const FL_NOEXCEPT;
 
     /// Check if signal is above noise floor + margin
     /// @param level Signal level to check
     /// @return True if signal exceeds floor + hysteresis margin
-    bool isAboveFloor(float level) const;
+    bool isAboveFloor(float level) const FL_NOEXCEPT;
 
     /// Reset noise floor to initial state
-    void reset();
+    void reset() FL_NOEXCEPT;
 
     /// Get current statistics (for monitoring/debugging)
     struct Stats {
@@ -106,18 +106,18 @@ public:
         bool inHysteresis = false;        // Whether hysteresis is active
     };
 
-    const Stats& getStats() const { return mStats; }
+    const Stats& getStats() const FL_NOEXCEPT { return mStats; }
 
 private:
     /// Update floor estimate based on current observation
     /// @param level Observed signal level
-    void updateFloor(float level);
+    void updateFloor(float level) FL_NOEXCEPT;
 
     /// Calculate combined metric from time and frequency domains
     /// @param timeLevel Time-domain level
     /// @param freqLevel Frequency-domain level
     /// @return Weighted combination
-    float combineDomains(float timeLevel, float freqLevel) const;
+    float combineDomains(float timeLevel, float freqLevel) const FL_NOEXCEPT;
 
     NoiseFloorTrackerConfig mConfig;
     Stats mStats;

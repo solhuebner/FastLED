@@ -19,6 +19,7 @@
 #include "fl/stl/array.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
 #include "fl/gfx/rgbw.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -30,7 +31,7 @@ namespace fl {
 /// @param out Output iterator for encoded bytes
 /// @note Writes 3 bytes per pixel in whatever color order they're already in
 template <typename InputIterator, typename OutputIterator>
-void encodeWS2812_RGB(InputIterator first, InputIterator last, OutputIterator out) {
+void encodeWS2812_RGB(InputIterator first, InputIterator last, OutputIterator out) FL_NOEXCEPT {
     while (first != last) {
         const fl::array<u8, BYTES_PER_PIXEL_RGB>& pixel = *first;
         *out++ = pixel[0];  // First byte
@@ -48,7 +49,7 @@ void encodeWS2812_RGB(InputIterator first, InputIterator last, OutputIterator ou
 /// @param out Output iterator for encoded bytes
 /// @note Writes 4 bytes per pixel in whatever color order they're already in
 template <typename InputIterator, typename OutputIterator>
-void encodeWS2812_RGBW(InputIterator first, InputIterator last, OutputIterator out) {
+void encodeWS2812_RGBW(InputIterator first, InputIterator last, OutputIterator out) FL_NOEXCEPT {
     while (first != last) {
         const fl::array<u8, BYTES_PER_PIXEL_RGBW>& pixel = *first;
         *out++ = pixel[0];  // First byte
@@ -68,7 +69,7 @@ void encodeWS2812_RGBW(InputIterator first, InputIterator last, OutputIterator o
 /// @param rgbw Rgbw configuration (if active, uses RGBW mode)
 /// @note Dispatches to RGB or RGBW encoder based on rgbw.active()
 template <typename InputIterator, typename OutputIterator>
-void encodeWS2812(InputIterator first, InputIterator last, OutputIterator out, const Rgbw& rgbw) {
+void encodeWS2812(InputIterator first, InputIterator last, OutputIterator out, const Rgbw& rgbw) FL_NOEXCEPT {
     if (rgbw.active()) {
         encodeWS2812_RGBW(first, last, out);
     } else {

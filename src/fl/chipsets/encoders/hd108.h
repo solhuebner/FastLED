@@ -21,6 +21,7 @@
 #include "fl/stl/array.h"
 #include "fl/chipsets/encoders/encoder_utils.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -35,7 +36,7 @@ namespace fl {
 /// @note HD108 uses RGB wire order: pixel[0]=Red, pixel[1]=Green, pixel[2]=Blue
 template <typename InputIterator, typename OutputIterator>
 void encodeHD108(InputIterator first, InputIterator last, OutputIterator out,
-                 u8 global_brightness = 255) {
+                 u8 global_brightness = 255) FL_NOEXCEPT {
     // Start frame: 64 bits (8 bytes) of 0x00
     for (int i = 0; i < 8; i++) {
         *out++ = 0x00;
@@ -87,7 +88,7 @@ void encodeHD108(InputIterator first, InputIterator last, OutputIterator out,
 /// @note HD108 uses RGB wire order: pixel[0]=Red, pixel[1]=Green, pixel[2]=Blue
 template <typename InputIterator, typename BrightnessIterator, typename OutputIterator>
 void encodeHD108_HD(InputIterator first, InputIterator last,
-                    BrightnessIterator brightness_first, OutputIterator out) {
+                    BrightnessIterator brightness_first, OutputIterator out) FL_NOEXCEPT {
     // Start frame: 64 bits (8 bytes) of 0x00
     for (int i = 0; i < 8; i++) {
         *out++ = 0x00;

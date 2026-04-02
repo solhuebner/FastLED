@@ -9,6 +9,7 @@
 #pragma once
 
 #include "fl/stl/int.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -71,7 +72,7 @@ struct CustomTimingTraits {
 inline void convert_fastled_timings_to_timedeltas(u16 T1, u16 T2,
                                                   u16 T3, u16 *T0H,
                                                   u16 *T0L, u16 *T1H,
-                                                  u16 *T1L) {
+                                                  u16 *T1L) FL_NOEXCEPT {
     *T0H = T1;
     *T0L = T2 + T3;
     *T1H = T1 + T2;

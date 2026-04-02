@@ -61,7 +61,7 @@ public:
     /// @brief Construct and push function name onto stack
     /// @param function Function name (must be string literal or have static lifetime)
     /// @param line Line number (from __LINE__)
-    explicit ScopedTrace(const char* function, int line);
+    explicit ScopedTrace(const char* function, int line) FL_NOEXCEPT;
 
     /// @brief Destructor - automatically pops from stack
     ~ScopedTrace() FL_NOEXCEPT;
@@ -75,25 +75,25 @@ public:
     /// @brief Push a function name onto the call stack
     /// @param function Function name (must be string literal or have static lifetime)
     /// @param line Line number (from __LINE__)
-    static void push(const char* function, int line);
+    static void push(const char* function, int line) FL_NOEXCEPT;
 
     /// @brief Pop the most recent function from the call stack
-    static void pop();
+    static void pop() FL_NOEXCEPT;
 
     /// @brief Get the current stack depth
     /// @return Number of valid entries in the stack (may exceed storage capacity)
-    static fl::size depth();
+    static fl::size depth() FL_NOEXCEPT;
 
     /// @brief Dump the current call stack to a string
     /// @return String representation of the stack trace
-    static fl::string dump();
+    static fl::string dump() FL_NOEXCEPT;
 
     /// @brief Dump the current call stack to an inlined vector of TracePoints
     /// @param out Pointer to vector to receive the stack trace entries
-    static void dump(fl::vector<TracePoint>* out);
+    static void dump(fl::vector<TracePoint>* out) FL_NOEXCEPT;
 
     /// @brief Clear the entire call stack (primarily for testing)
-    static void clear();
+    static void clear() FL_NOEXCEPT;
 };
 
 } // namespace fl

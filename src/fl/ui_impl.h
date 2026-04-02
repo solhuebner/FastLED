@@ -367,11 +367,11 @@ class UIDropdownImpl {
 
 class UIGroupImpl {
   public:
-    UIGroupImpl(const char *name) : mGroupName(name) { 
+    UIGroupImpl(const char *name) FL_NOEXCEPT : mGroupName(name) {
         FASTLED_UNUSED(name); 
     }
     ~UIGroupImpl() FL_NOEXCEPT {}
-    fl::string name() const { return mGroupName; }
+    fl::string name() const FL_NOEXCEPT { return mGroupName; }
 
   private:
     fl::string mGroupName;

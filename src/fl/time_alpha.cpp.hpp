@@ -2,10 +2,11 @@
 #include "fl/time_alpha.h"
 #include "fl/system/log.h"
 #include "fl/math/math.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
-u8 time_alpha8(u32 now, u32 start, u32 end) {
+u8 time_alpha8(u32 now, u32 start, u32 end) FL_NOEXCEPT {
     if (now < start) {
         return 0;
     }
@@ -21,7 +22,7 @@ u8 time_alpha8(u32 now, u32 start, u32 end) {
     return static_cast<u8>(out);
 }
 
-u16 time_alpha16(u32 now, u32 start, u32 end) {
+u16 time_alpha16(u32 now, u32 start, u32 end) FL_NOEXCEPT {
     if (now < start) {
         return 0;
     }
@@ -37,10 +38,10 @@ u16 time_alpha16(u32 now, u32 start, u32 end) {
     return static_cast<u16>(out);
 }
 
-TimeRamp::TimeRamp(u32 risingTime, u32 latchMs, u32 fallingTime)
+TimeRamp::TimeRamp(u32 risingTime, u32 latchMs, u32 fallingTime) FL_NOEXCEPT
     : mLatchMs(latchMs), mRisingTime(risingTime), mFallingTime(fallingTime) {}
 
-bool TimeRamp::isActive(u32 now) const {
+bool TimeRamp::isActive(u32 now) const FL_NOEXCEPT {
 
     bool not_started = (mFinishedRisingTime == 0) &&
                        (mFinishedPlateauTime == 0) &&
@@ -63,7 +64,7 @@ bool TimeRamp::isActive(u32 now) const {
     return true;
 }
 
-RampPhase TimeRamp::getCurrentPhase(u32 now) const {
+RampPhase TimeRamp::getCurrentPhase(u32 now) const FL_NOEXCEPT {
     if (!isActive(now)) {
         return RampPhase::Inactive;
     }
@@ -79,7 +80,7 @@ RampPhase TimeRamp::getCurrentPhase(u32 now) const {
     return RampPhase::Inactive;
 }
 
-void TimeRamp::trigger(u32 now) {
+void TimeRamp::trigger(u32 now) FL_NOEXCEPT {
     RampPhase phase = getCurrentPhase(now);
 
     switch (phase) {
@@ -114,7 +115,7 @@ void TimeRamp::trigger(u32 now) {
     }
 }
 
-u8 TimeRamp::update8(u32 now) {
+u8 TimeRamp::update8(u32 now) FL_NOEXCEPT {
     if (!isActive(now)) {
         return 0;
     }

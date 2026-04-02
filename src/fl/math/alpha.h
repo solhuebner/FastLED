@@ -46,32 +46,32 @@ struct alpha8 {
 
     // Accept any non-bool integer type (signed or unsigned, any width).
     template <typename IntT, alpha_detail::enable_if_integer_t<IntT> = 0>
-    constexpr alpha8(IntT v) : value(static_cast<unsigned char>(v)) {}  // NOLINT — implicit by design
+    constexpr alpha8(IntT v) FL_NOEXCEPT : value(static_cast<unsigned char>(v)) {}  // NOLINT — implicit by design
 
-    explicit constexpr alpha8(float f) : value(_clamp(f)) {}
-    explicit constexpr alpha8(double f) : value(_clamp(static_cast<float>(f))) {}
-    constexpr operator unsigned char() const { return value; }
+    explicit constexpr alpha8(float f) FL_NOEXCEPT : value(_clamp(f)) {}
+    explicit constexpr alpha8(double f) FL_NOEXCEPT : value(_clamp(static_cast<float>(f))) {}
+    constexpr operator unsigned char() const FL_NOEXCEPT { return value; }
 
-    constexpr unsigned char raw() const { return value; }
-    constexpr float to_float() const { return value / 255.0f; }
+    constexpr unsigned char raw() const FL_NOEXCEPT { return value; }
+    constexpr float to_float() const FL_NOEXCEPT { return value / 255.0f; }
 
-    static constexpr alpha8 from_float(float f) {
+    static constexpr alpha8 from_float(float f) FL_NOEXCEPT {
         return alpha8(static_cast<unsigned char>(_clamp(f)));
     }
 
-    alpha8& operator+=(unsigned char rhs) { value += rhs; return *this; }
-    alpha8& operator-=(unsigned char rhs) { value -= rhs; return *this; }
-    alpha8& operator*=(unsigned char rhs) { value *= rhs; return *this; }
-    alpha8& operator/=(unsigned char rhs) { value /= rhs; return *this; }
-    alpha8& operator>>=(int rhs) { value >>= rhs; return *this; }
-    alpha8& operator<<=(int rhs) { value <<= rhs; return *this; }
-    alpha8& operator++() { ++value; return *this; }
-    alpha8 operator++(int) { alpha8 t = *this; ++value; return t; }
-    alpha8& operator--() { --value; return *this; }
-    alpha8 operator--(int) { alpha8 t = *this; --value; return t; }
+    alpha8& operator+=(unsigned char rhs) FL_NOEXCEPT { value += rhs; return *this; }
+    alpha8& operator-=(unsigned char rhs) FL_NOEXCEPT { value -= rhs; return *this; }
+    alpha8& operator*=(unsigned char rhs) FL_NOEXCEPT { value *= rhs; return *this; }
+    alpha8& operator/=(unsigned char rhs) FL_NOEXCEPT { value /= rhs; return *this; }
+    alpha8& operator>>=(int rhs) FL_NOEXCEPT { value >>= rhs; return *this; }
+    alpha8& operator<<=(int rhs) FL_NOEXCEPT { value <<= rhs; return *this; }
+    alpha8& operator++() FL_NOEXCEPT { ++value; return *this; }
+    alpha8 operator++(int) FL_NOEXCEPT { alpha8 t = *this; ++value; return t; }
+    alpha8& operator--() FL_NOEXCEPT { --value; return *this; }
+    alpha8 operator--(int) FL_NOEXCEPT { alpha8 t = *this; --value; return t; }
 
   private:
-    static constexpr unsigned char _clamp(float f) {
+    static constexpr unsigned char _clamp(float f) FL_NOEXCEPT {
         return static_cast<unsigned char>(
             f <= 0.0f ? 0 : (f >= 1.0f ? 255 : static_cast<unsigned char>(f * 255.0f + 0.5f)));
     }
@@ -91,43 +91,43 @@ struct alpha16 {
 
     // Accept any non-bool integer type (signed or unsigned, any width).
     template <typename IntT, alpha_detail::enable_if_integer_t<IntT> = 0>
-    constexpr alpha16(IntT v) : value(static_cast<unsigned short>(v)) {}  // NOLINT — implicit by design
+    constexpr alpha16(IntT v) FL_NOEXCEPT : value(static_cast<unsigned short>(v)) {}  // NOLINT — implicit by design
 
-    explicit constexpr alpha16(float f) : value(_clamp(f)) {}
-    explicit constexpr alpha16(double f) : value(_clamp(static_cast<float>(f))) {}
-    constexpr operator unsigned short() const { return value; }
+    explicit constexpr alpha16(float f) FL_NOEXCEPT : value(_clamp(f)) {}
+    explicit constexpr alpha16(double f) FL_NOEXCEPT : value(_clamp(static_cast<float>(f))) {}
+    constexpr operator unsigned short() const FL_NOEXCEPT { return value; }
 
-    constexpr unsigned short raw() const { return value; }
-    constexpr float to_float() const { return value / 65535.0f; }
+    constexpr unsigned short raw() const FL_NOEXCEPT { return value; }
+    constexpr float to_float() const FL_NOEXCEPT { return value / 65535.0f; }
 
-    static constexpr alpha16 from_float(float f) {
+    static constexpr alpha16 from_float(float f) FL_NOEXCEPT {
         return alpha16(static_cast<unsigned short>(_clamp(f)));
     }
 
-    alpha16& operator+=(unsigned short rhs) { value += rhs; return *this; }
-    alpha16& operator-=(unsigned short rhs) { value -= rhs; return *this; }
-    alpha16& operator*=(unsigned short rhs) { value *= rhs; return *this; }
-    alpha16& operator/=(unsigned short rhs) { value /= rhs; return *this; }
-    alpha16& operator>>=(int rhs) { value >>= rhs; return *this; }
-    alpha16& operator<<=(int rhs) { value <<= rhs; return *this; }
-    alpha16& operator++() { ++value; return *this; }
-    alpha16 operator++(int) { alpha16 t = *this; ++value; return t; }
-    alpha16& operator--() { --value; return *this; }
-    alpha16 operator--(int) { alpha16 t = *this; --value; return t; }
+    alpha16& operator+=(unsigned short rhs) FL_NOEXCEPT { value += rhs; return *this; }
+    alpha16& operator-=(unsigned short rhs) FL_NOEXCEPT { value -= rhs; return *this; }
+    alpha16& operator*=(unsigned short rhs) FL_NOEXCEPT { value *= rhs; return *this; }
+    alpha16& operator/=(unsigned short rhs) FL_NOEXCEPT { value /= rhs; return *this; }
+    alpha16& operator>>=(int rhs) FL_NOEXCEPT { value >>= rhs; return *this; }
+    alpha16& operator<<=(int rhs) FL_NOEXCEPT { value <<= rhs; return *this; }
+    alpha16& operator++() FL_NOEXCEPT { ++value; return *this; }
+    alpha16 operator++(int) FL_NOEXCEPT { alpha16 t = *this; ++value; return t; }
+    alpha16& operator--() FL_NOEXCEPT { --value; return *this; }
+    alpha16 operator--(int) FL_NOEXCEPT { alpha16 t = *this; --value; return t; }
 
     /// Scale a signed integer by this alpha (UNORM16 semantics).
     /// result = (v * (raw + 1)) >> 16
     /// Identity: scale_signed(x) == x when raw == 65535
     /// Zero:     scale_signed(x) == 0 when raw == 0 and |x| < 65536
     template <typename T>
-    constexpr T scale_signed(T v) const {
+    constexpr T scale_signed(T v) const FL_NOEXCEPT {
         return static_cast<T>(
             (static_cast<long long>(v) *
              static_cast<long long>(static_cast<unsigned int>(value) + 1u)) >> 16);
     }
 
   private:
-    static constexpr unsigned short _clamp(float f) {
+    static constexpr unsigned short _clamp(float f) FL_NOEXCEPT {
         return static_cast<unsigned short>(
             f <= 0.0f ? 0 : (f >= 1.0f ? 65535 : static_cast<unsigned short>(f * 65535.0f + 0.5f)));
     }

@@ -18,6 +18,7 @@
 #include "fl/stl/stdint.h"
 #include "fl/stl/array.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -37,7 +38,7 @@ namespace fl {
 /// @note Writes 3 bytes per pixel in wire order
 /// @note WS2801 uses RGB wire order: pixel[0]=Red, pixel[1]=Green, pixel[2]=Blue
 template <typename InputIterator, typename OutputIterator>
-void encodeWS2801(InputIterator first, InputIterator last, OutputIterator out) {
+void encodeWS2801(InputIterator first, InputIterator last, OutputIterator out) FL_NOEXCEPT {
     while (first != last) {
         const array<u8, BYTES_PER_PIXEL_RGB>& pixel = *first;
         *out++ = pixel[0];  // Index 0 (RGB order: Red)

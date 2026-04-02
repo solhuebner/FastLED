@@ -49,13 +49,13 @@ struct hsv8 {
     /// Array access operator to index into the hsv8 object
     /// @param x the index to retrieve (0-2)
     /// @returns the hsv8::raw value for the given index
-    FASTLED_FORCE_INLINE fl::u8& operator[] (fl::u8 x)
+    FASTLED_FORCE_INLINE fl::u8& operator[] (fl::u8 x) FL_NOEXCEPT
     {
         return raw[x];
     }
 
     /// @copydoc operator[]
-    FASTLED_FORCE_INLINE const fl::u8& operator[] (fl::u8 x) const
+    FASTLED_FORCE_INLINE const fl::u8& operator[] (fl::u8 x) const FL_NOEXCEPT
     {
         return raw[x];
     }
@@ -68,7 +68,7 @@ struct hsv8 {
     /// @param ih input hue
     /// @param is input saturation
     /// @param iv input value
-    constexpr hsv8( fl::u8 ih, fl::u8 is, fl::u8 iv)
+    constexpr hsv8( fl::u8 ih, fl::u8 is, fl::u8 iv) FL_NOEXCEPT
         : h(ih), s(is), v(iv)
     {
     }
@@ -84,7 +84,7 @@ struct hsv8 {
     /// @param is input saturation
     /// @param iv input value
     /// @returns reference to the hsv8 object
-    FASTLED_FORCE_INLINE hsv8& setHSV(fl::u8 ih, fl::u8 is, fl::u8 iv)
+    FASTLED_FORCE_INLINE hsv8& setHSV(fl::u8 ih, fl::u8 is, fl::u8 iv) FL_NOEXCEPT
     {
         h = ih;
         s = is;

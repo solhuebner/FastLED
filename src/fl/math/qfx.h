@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fl/stl/stdint.h"
+#include "fl/stl/noexcept.h"
 namespace fl {
 /// @addtogroup FractionalTypes
 /// @{
@@ -14,28 +15,28 @@ template<class T, int F, int I> class qfx {
     T f:F;  ///< Fractional value of number
 public:
     /// Constructor, storing a float as a fractional int
-    qfx(float fx) { i = fx; f = (fx-i) * (1<<F); }
+    qfx(float fx) FL_NOEXCEPT { i = fx; f = (fx-i) * (1<<F); }
     /// Constructor, storing a fractional int directly
-    qfx(u8 _i, u8 _f) {i=_i; f=_f; }
+    qfx(u8 _i, u8 _f) FL_NOEXCEPT {i=_i; f=_f; }
 
     /// Multiply the fractional int by a value
-    u32 operator*(u32 v) { return (v*i) + ((v*f)>>F); }
+    u32 operator*(u32 v) FL_NOEXCEPT { return (v*i) + ((v*f)>>F); }
     /// @copydoc operator*(uint32_t)
-    u16 operator*(u16 v) { return (v*i) + ((v*f)>>F); }
+    u16 operator*(u16 v) FL_NOEXCEPT { return (v*i) + ((v*f)>>F); }
     /// @copydoc operator*(uint32_t)
-    i32 operator*(i32 v) { return (v*i) + ((v*f)>>F); }
+    i32 operator*(i32 v) FL_NOEXCEPT { return (v*i) + ((v*f)>>F); }
     /// @copydoc operator*(uint32_t)
-    i16 operator*(i16 v) { return (v*i) + ((v*f)>>F); }
+    i16 operator*(i16 v) FL_NOEXCEPT { return (v*i) + ((v*f)>>F); }
 #if defined(FL_IS_ARM) | defined(FASTLED_RISCV) | defined(FASTLED_APOLLO3)
     /// @copydoc operator*(uint32_t)
     int operator*(int v) { return (v*i) + ((v*f)>>F); }
 #endif
 };
 
-template<class T, int F, int I> static u32 operator*(u32 v, qfx<T,F,I> & q) { return q * v; }
-template<class T, int F, int I> static u16 operator*(u16 v, qfx<T,F,I> & q) { return q * v; }
-template<class T, int F, int I> static i32 operator*(i32 v, qfx<T,F,I> & q) { return q * v; }
-template<class T, int F, int I> static i16 operator*(i16 v, qfx<T,F,I> & q) { return q * v; }
+template<class T, int F, int I> static u32 operator*(u32 v, qfx<T,F,I> & q) FL_NOEXCEPT { return q * v; }
+template<class T, int F, int I> static u16 operator*(u16 v, qfx<T,F,I> & q) FL_NOEXCEPT { return q * v; }
+template<class T, int F, int I> static i32 operator*(i32 v, qfx<T,F,I> & q) FL_NOEXCEPT { return q * v; }
+template<class T, int F, int I> static i16 operator*(i16 v, qfx<T,F,I> & q) FL_NOEXCEPT { return q * v; }
 #if defined(FL_IS_ARM) | defined(FASTLED_RISCV) | defined(FASTLED_APOLLO3)
 template<class T, int F, int I> static int operator*(int v, qfx<T,F,I> & q) { return q * v; }
 #endif

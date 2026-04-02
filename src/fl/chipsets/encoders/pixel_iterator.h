@@ -25,6 +25,7 @@
 // This provides the full definitions of ScaledPixelIterator* classes
 // and makeScaledPixelRange* helper functions
 #include "fl/chipsets/encoders/pixel_iterator_adapters.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -40,12 +41,12 @@ class PixelIterator;
 // vtable. The PixelControllerVtable is cheaper than doing fl::function<>.
 template<typename PixelControllerT>
 struct PixelControllerVtable {
-  static void loadAndScaleRGBW(void* pixel_controller, Rgbw rgbw, u8* b0_out, u8* b1_out, u8* b2_out, u8* b3_out) {
+  static void loadAndScaleRGBW(void* pixel_controller, Rgbw rgbw, u8* b0_out, u8* b1_out, u8* b2_out, u8* b3_out) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     pc->loadAndScaleRGBW(rgbw, b0_out, b1_out, b2_out, b3_out);
   }
 
-  static void loadAndScaleRGB(void* pixel_controller, u8* r_out, u8* g_out, u8* b_out) {
+  static void loadAndScaleRGB(void* pixel_controller, u8* r_out, u8* g_out, u8* b_out) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     pc->loadAndScaleRGB(r_out, g_out, b_out);
   }
@@ -53,34 +54,34 @@ struct PixelControllerVtable {
   // NOTE: loadAndScale_APA102_HD() removed - use fl::loadAndScale_APA102_HD<RGB_ORDER>() from apa102.h encoder
   // NOTE: loadAndScale_WS2816_HD() removed - use fl::loadAndScale_WS2816_HD<RGB_ORDER>() from ws2816.h encoder
 
-  static void stepDithering(void* pixel_controller) {
+  static void stepDithering(void* pixel_controller) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     pc->stepDithering();
   }
 
-  static void advanceData(void* pixel_controller) {
+  static void advanceData(void* pixel_controller) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     pc->advanceData();
   }
 
-  static int size(void* pixel_controller) {
+  static int size(void* pixel_controller) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     return pc->size();
   }
-  static bool has(void* pixel_controller, int n) {
+  static bool has(void* pixel_controller, int n) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     return pc->has(n);
   }
 
   // function for loadRGBScaleAndBrightness
   #if FASTLED_HD_COLOR_MIXING
-  static void loadRGBScaleAndBrightness(void* pixel_controller, u8* c0, u8* c1, u8* c2, u8* brightness) {
+  static void loadRGBScaleAndBrightness(void* pixel_controller, u8* c0, u8* c1, u8* c2, u8* brightness) FL_NOEXCEPT {
     PixelControllerT* pc = static_cast<PixelControllerT*>(pixel_controller);
     pc->loadRGBScaleAndBrightness(c0, c1, c2, brightness);
   }
 
   // Deprecated: for backwards compatibility
-  static void getHdScale(void* pixel_controller, u8* c0, u8* c1, u8* c2, u8* brightness) {
+  static void getHdScale(void* pixel_controller, u8* c0, u8* c1, u8* c2, u8* brightness) FL_NOEXCEPT {
     loadRGBScaleAndBrightness(pixel_controller, c0, c1, c2, brightness);
   }
   #endif
@@ -108,7 +109,7 @@ typedef void (*getHdScaleFunction)(void* pixel_controller, u8* c0, u8* c1, u8* c
 class PixelIterator {
   public:
     template<typename PixelControllerT>
-    PixelIterator(PixelControllerT* pc, Rgbw rgbw)
+    PixelIterator(PixelControllerT* pc, Rgbw rgbw) FL_NOEXCEPT
          : mPixelController(pc), mRgbw(rgbw) {
       // Manually build up a vtable.
       // Wait... what? Stupid nerds trying to show off how smart they are...
@@ -149,35 +150,35 @@ class PixelIterator {
       #endif
     }
 
-    bool has(int n) { return mHas(mPixelController, n); }
-    void loadAndScaleRGBW(u8 *b0_out, u8 *b1_out, u8 *b2_out, u8 *w_out) {
+    bool has(int n) FL_NOEXCEPT { return mHas(mPixelController, n); }
+    void loadAndScaleRGBW(u8 *b0_out, u8 *b1_out, u8 *b2_out, u8 *w_out) FL_NOEXCEPT {
       mLoadAndScaleRGBW(mPixelController, mRgbw, b0_out, b1_out, b2_out, w_out);
     }
-    void loadAndScaleRGB(u8 *r_out, u8 *g_out, u8 *b_out) {
+    void loadAndScaleRGB(u8 *r_out, u8 *g_out, u8 *b_out) FL_NOEXCEPT {
       mLoadAndScaleRGB(mPixelController, r_out, g_out, b_out);
     }
     // NOTE: loadAndScale_APA102_HD() removed - use fl::loadAndScale_APA102_HD<RGB_ORDER>() from apa102.h encoder
     // NOTE: loadAndScale_WS2816_HD() removed - use fl::loadAndScale_WS2816_HD<RGB_ORDER>() from ws2816.h encoder
-    void stepDithering() { mStepDithering(mPixelController); }
-    void advanceData() { mAdvanceData(mPixelController); }
-    int size() { return mSize(mPixelController); }
+    void stepDithering() FL_NOEXCEPT { mStepDithering(mPixelController); }
+    void advanceData() FL_NOEXCEPT { mAdvanceData(mPixelController); }
+    int size() FL_NOEXCEPT { return mSize(mPixelController); }
 
-    void set_rgbw(Rgbw rgbw) { mRgbw = rgbw; }
-    Rgbw get_rgbw() const { return mRgbw; }
+    void set_rgbw(Rgbw rgbw) FL_NOEXCEPT { mRgbw = rgbw; }
+    Rgbw get_rgbw() const FL_NOEXCEPT { return mRgbw; }
 
     #if FASTLED_HD_COLOR_MIXING
-    void loadRGBScaleAndBrightness(u8* c0, u8* c1, u8* c2, u8* brightness) {
+    void loadRGBScaleAndBrightness(u8* c0, u8* c1, u8* c2, u8* brightness) FL_NOEXCEPT {
       mLoadRGBScaleAndBrightness(mPixelController, c0, c1, c2, brightness);
     }
 
-    FL_DEPRECATED("Use loadRGBScaleAndBrightness() instead")
+    FL_DEPRECATED("Use loadRGBScaleAndBrightness() instead") FL_NOEXCEPT
     void getHdScale(u8* c0, u8* c1, u8* c2, u8* brightness) {
       loadRGBScaleAndBrightness(c0, c1, c2, brightness);
     }
     #endif
 
     template <typename CONTAINER_UIN8_T>
-    void writeWS2812(CONTAINER_UIN8_T* out) {
+    void writeWS2812(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         if (mRgbw.active()) {
             auto range = makeScaledPixelRangeRGBW(this);
@@ -193,7 +194,7 @@ class PixelIterator {
     /// @param hd_gamma Enable high-definition gamma correction (per-LED brightness)
     /// @note Protocol: [Start:32b 0x00][LED:[0xE0|bri5][B][G][R]]×N[End:⌈N/32⌉×32b 0xFF]
     template <typename CONTAINER_UIN8_T>
-    void writeAPA102(CONTAINER_UIN8_T* out, bool hd_gamma = false) {
+    void writeAPA102(CONTAINER_UIN8_T* out, bool hd_gamma = false) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
 
         #if FASTLED_HD_COLOR_MIXING
@@ -225,7 +226,7 @@ class PixelIterator {
     /// @param hd_gamma Enable high-definition gamma correction (per-LED brightness)
     /// @note Protocol: Same as APA102 but end frame uses 0x00 instead of 0xFF
     template <typename CONTAINER_UIN8_T>
-    void writeSK9822(CONTAINER_UIN8_T* out, bool hd_gamma = false) {
+    void writeSK9822(CONTAINER_UIN8_T* out, bool hd_gamma = false) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
 
         #if FASTLED_HD_COLOR_MIXING
@@ -260,7 +261,7 @@ class PixelIterator {
     /// @note Protocol: Simple RGB bytes, no frame overhead
     /// @note Uses unified encoder: src/fl/chipsets/encoders/ws2801.h
     template <typename CONTAINER_UIN8_T>
-    void writeWS2801(CONTAINER_UIN8_T* out) {
+    void writeWS2801(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeWS2801(pixel_range.first, pixel_range.second, back_ins);
@@ -271,7 +272,7 @@ class PixelIterator {
     /// @note Protocol: Identical to WS2801
     /// @note Uses unified encoder: src/fl/chipsets/encoders/ws2803.h
     template <typename CONTAINER_UIN8_T>
-    void writeWS2803(CONTAINER_UIN8_T* out) {
+    void writeWS2803(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeWS2803(pixel_range.first, pixel_range.second, back_ins);
@@ -281,7 +282,7 @@ class PixelIterator {
     /// @param out Output buffer to write encoded bytes
     /// @note Protocol: [Boundary:4B][LED:flag+BGR]×N[Boundary:4B]
     template <typename CONTAINER_UIN8_T>
-    void writeP9813(CONTAINER_UIN8_T* out) {
+    void writeP9813(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeP9813(pixel_range.first, pixel_range.second, back_ins);
@@ -291,7 +292,7 @@ class PixelIterator {
     /// @param out Output buffer to write encoded bytes
     /// @note Protocol: GRB with MSB set + latch bytes
     template <typename CONTAINER_UIN8_T>
-    void writeLPD8806(CONTAINER_UIN8_T* out) {
+    void writeLPD8806(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeLPD8806(pixel_range.first, pixel_range.second, back_ins);
@@ -301,7 +302,7 @@ class PixelIterator {
     /// @param out Output buffer to write encoded bytes
     /// @note Protocol: 16-bit per LED (1 bit marker + 5-5-5 RGB)
     template <typename CONTAINER_UIN8_T>
-    void writeLPD6803(CONTAINER_UIN8_T* out) {
+    void writeLPD6803(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeLPD6803(pixel_range.first, pixel_range.second, back_ins);
@@ -311,7 +312,7 @@ class PixelIterator {
     /// @param out Output buffer to write encoded bytes
     /// @note Protocol: RGB with start bit for each triplet
     template <typename CONTAINER_UIN8_T>
-    void writeSM16716(CONTAINER_UIN8_T* out) {
+    void writeSM16716(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
         auto pixel_range = makeScaledPixelRangeRGB(this);
         encodeSM16716(pixel_range.first, pixel_range.second, back_ins);
@@ -321,7 +322,7 @@ class PixelIterator {
     /// @param out Output buffer to write encoded bytes
     /// @note Protocol: 16-bit RGB with gamma correction and brightness control
     template <typename CONTAINER_UIN8_T>
-    void writeHD108(CONTAINER_UIN8_T* out) {
+    void writeHD108(CONTAINER_UIN8_T* out) FL_NOEXCEPT {
         auto back_ins = fl::back_inserter(*out);
 
         #if FASTLED_HD_COLOR_MIXING
@@ -366,7 +367,7 @@ class PixelIterator {
 namespace detail {
 
 // ScaledPixelIteratorRGB implementation
-inline void ScaledPixelIteratorRGB::advance() {
+inline void ScaledPixelIteratorRGB::advance() FL_NOEXCEPT {
     if (!mPixels) {
         mHasValue = false;
         return;
@@ -385,7 +386,7 @@ inline void ScaledPixelIteratorRGB::advance() {
 }
 
 // ScaledPixelIteratorRGBW implementation
-inline void ScaledPixelIteratorRGBW::advance() {
+inline void ScaledPixelIteratorRGBW::advance() FL_NOEXCEPT {
     if (!mPixels) {
         mHasValue = false;
         return;
@@ -404,7 +405,7 @@ inline void ScaledPixelIteratorRGBW::advance() {
 }
 
 // ScaledPixelIteratorBrightness implementation
-inline void ScaledPixelIteratorBrightness::advance() {
+inline void ScaledPixelIteratorBrightness::advance() FL_NOEXCEPT {
     if (!mPixels) {
         mHasValue = false;
         return;
@@ -432,7 +433,7 @@ inline void ScaledPixelIteratorBrightness::advance() {
 }
 
 // ScaledPixelIteratorRGB16 implementation
-inline void ScaledPixelIteratorRGB16::advance() {
+inline void ScaledPixelIteratorRGB16::advance() FL_NOEXCEPT {
     if (!mPixels) {
         mHasValue = false;
         return;

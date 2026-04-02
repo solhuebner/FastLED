@@ -7,6 +7,7 @@
 // Conditional include for async logger functions (only when logging features are enabled)
 #if defined(FASTLED_LOG_SPI_ENABLED) || defined(FASTLED_LOG_RMT_ENABLED) || defined(FASTLED_LOG_PARLIO_ENABLED) || defined(FASTLED_LOG_AUDIO_ENABLED) || defined(FASTLED_LOG_INTERRUPT_ENABLED)
     #include "fl/detail/async_logger.h"  // IWYU pragma: keep - Required by FL_LOG_*_ASYNC_* macros
+#include "fl/stl/noexcept.h"
 #endif
 
 // =============================================================================
@@ -18,7 +19,7 @@
 #ifndef FL_PRINTLN_DECLARED
 #define FL_PRINTLN_DECLARED
 namespace fl {
-    void println(const char* str);
+    void println(const char* str) FL_NOEXCEPT;
 }
 #endif
 
@@ -29,7 +30,7 @@ namespace fl {
 namespace fl {
 // ".build/src/fl/dbg.h" -> "src/fl/dbg.h"
 // "blah/blah/blah.h" -> "blah.h"
-const char *fastled_file_offset(const char *file);
+const char *fastled_file_offset(const char *file) FL_NOEXCEPT;
 } // namespace fl
 
 // =============================================================================
@@ -541,7 +542,7 @@ const char *fastled_file_offset(const char *file);
 /// Call this from your main loop() if using enableBackgroundFlush()
 /// This function is lightweight - returns immediately if no flush needed
 namespace fl {
-    void async_log_service();
+    void async_log_service() FL_NOEXCEPT;
 
     /// @brief Configure async logger automatic servicing task
     /// @param interval_ms Service interval in milliseconds (default 16ms = 60fps)
@@ -562,7 +563,7 @@ namespace fl {
     ///     fl::delay(10);  // Loggers serviced automatically!
     /// }
     /// ```
-    void configureAsyncLogService(u32 interval_ms = 16, fl::size messages_per_tick = 5);
+    void configureAsyncLogService(u32 interval_ms = 16, fl::size messages_per_tick = 5) FL_NOEXCEPT;
 }
 
 /// @}

@@ -37,7 +37,7 @@ struct EdgeTime {
     constexpr EdgeTime() FL_NOEXCEPT : ns(0), high(0) {}
 
     /// Construct from high/low state and duration
-    constexpr EdgeTime(bool high_level, u32 ns_duration)
+    constexpr EdgeTime(bool high_level, u32 ns_duration) FL_NOEXCEPT
         : ns(ns_duration), high(high_level ? 1 : 0) {}
 };
 
@@ -56,7 +56,7 @@ struct EdgeRange {
     size_t count;   ///< Number of edges to extract
 
     /// Constructor
-    constexpr EdgeRange(size_t offsetParam, size_t countParam)
+    constexpr EdgeRange(size_t offsetParam, size_t countParam) FL_NOEXCEPT
         : offset(offsetParam), count(countParam) {}
 };
 
@@ -141,7 +141,7 @@ struct ChipsetTiming4Phase {
  * @endcode
  */
 ChipsetTiming4Phase make4PhaseTiming(const ChipsetTiming& timing_3phase,
-                                      u32 tolerance_ns = 150);
+                                      u32 tolerance_ns = 150) FL_NOEXCEPT;
 
 /**
  * @brief Result codes for RX wait() operations
@@ -170,7 +170,7 @@ enum class RxDeviceType : u8 {
  * @param type RX device type
  * @return String name ("ISR" or "RMT")
  */
-inline const char* toString(RxDeviceType type) {
+inline const char* toString(RxDeviceType type) FL_NOEXCEPT {
     switch (type) {
     case RxDeviceType::PLATFORM_DEFAULT: return "PLATFORM_DEFAULT";
     case RxDeviceType::ISR:     return "ISR";
@@ -263,7 +263,7 @@ public:
      * @endcode
      */
     template <RxDeviceType TYPE>
-    static fl::shared_ptr<RxDevice> create(int pin);
+    static fl::shared_ptr<RxDevice> create(int pin) FL_NOEXCEPT;
 
     /**
      * @brief Initialize (or re-arm) RX channel with configuration
@@ -289,20 +289,20 @@ public:
      * rx->begin(config);
      * @endcode
      */
-    virtual bool begin(const RxConfig& config) = 0;
+    virtual bool begin(const RxConfig& config) FL_NOEXCEPT = 0;
 
     /**
      * @brief Check if receive operation is complete
      * @return true if receive finished, false if still in progress
      */
-    virtual bool finished() const = 0;
+    virtual bool finished() const FL_NOEXCEPT = 0;
 
     /**
      * @brief Wait for data with timeout
      * @param timeout_ms Timeout in milliseconds
      * @return RxWaitResult - SUCCESS, TIMEOUT, or BUFFER_OVERFLOW
      */
-    virtual RxWaitResult wait(u32 timeout_ms) = 0;
+    virtual RxWaitResult wait(u32 timeout_ms) FL_NOEXCEPT = 0;
 
     /**
      * @brief Decode captured data to bytes into a span
@@ -311,7 +311,7 @@ public:
      * @return Result with total bytes decoded, or error
      */
     virtual fl::result<u32, DecodeError> decode(const ChipsetTiming4Phase &timing,
-                                                       fl::span<u8> out) = 0;
+                                                       fl::span<u8> out) FL_NOEXCEPT = 0;
 
     /**
      * @brief Get raw edge timings in universal format (for debugging)
@@ -341,19 +341,19 @@ public:
      * size_t count = rx->getRawEdgeTimes(edges, 50);
      * @endcode
      */
-    virtual size_t getRawEdgeTimes(fl::span<EdgeTime> out, size_t offset = 0) = 0;
+    virtual size_t getRawEdgeTimes(fl::span<EdgeTime> out, size_t offset = 0) FL_NOEXCEPT = 0;
 
     /**
      * @brief Get device type name
      * @return Device name (e.g., "dummy", "RMT", "ISR")
      */
-    virtual const char* name() const = 0;
+    virtual const char* name() const FL_NOEXCEPT = 0;
 
     /**
      * @brief Get GPIO pin number
      * @return Pin number this device is listening on
      */
-    virtual int getPin() const = 0;
+    virtual int getPin() const FL_NOEXCEPT = 0;
 
     /**
      * @brief Manually inject edge timings for testing (Phase 1 - PARLIO gap simulation)
@@ -394,7 +394,7 @@ public:
      *
      * @note Not all RX devices support injection. DummyRxDevice returns false.
      */
-    virtual bool injectEdges(fl::span<const EdgeTime> edges) = 0;
+    virtual bool injectEdges(fl::span<const EdgeTime> edges) FL_NOEXCEPT = 0;
 
 protected:
     // Allow shared_ptr to access protected destructor
@@ -410,7 +410,7 @@ private:
      * Used by default template implementation when no platform-specific
      * specialization exists. Returns singleton DummyRxDevice instance.
      */
-    static fl::shared_ptr<RxDevice> createDummy();
+    static fl::shared_ptr<RxDevice> createDummy() FL_NOEXCEPT;
 };
 
 } // namespace fl

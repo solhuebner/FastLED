@@ -25,13 +25,14 @@
 #ifdef FL_IS_STUB
 // IWYU pragma: begin_keep
 #include "platforms/shared/rx_device_native.h"  // ok platform headers
+#include "fl/stl/noexcept.h"
 // IWYU pragma: end_keep
 #endif
 
 namespace fl {
 
 // Private static helper - creates dummy device (singleton pattern)
-fl::shared_ptr<RxDevice> RxDevice::createDummy() {
+fl::shared_ptr<RxDevice> RxDevice::createDummy() FL_NOEXCEPT {
     static fl::shared_ptr<RxDevice> dummy = fl::make_shared<DummyRxDevice>( // okay static in header
         "RX devices not supported on this platform"
     );
@@ -40,7 +41,7 @@ fl::shared_ptr<RxDevice> RxDevice::createDummy() {
 
 // Implementation of make4PhaseTiming function
 ChipsetTiming4Phase make4PhaseTiming(const ChipsetTiming& timing_3phase,
-                                      u32 tolerance_ns) {
+                                      u32 tolerance_ns) FL_NOEXCEPT {
     // Calculate derived values from 3-phase timing
     // The encoder uses:
     //   Bit 0: T1 high + (T2+T3) low
@@ -150,25 +151,25 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pi
 
 // RMT device specialization (native stub for host/desktop testing)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) FL_NOEXCEPT {
     return NativeRxDevice::create(pin);
 }
 
 // ISR device specialization (native stub for host/desktop testing)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) FL_NOEXCEPT {
     return NativeRxDevice::create(pin);
 }
 
 // FLEXPWM device specialization (native stub for host/desktop testing)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) FL_NOEXCEPT {
     return NativeRxDevice::create(pin);
 }
 
 // DEFAULT maps to RMT on stub (same as ESP32 default)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) FL_NOEXCEPT {
     return RxDevice::create<RxDeviceType::RMT>(pin);
 }
 

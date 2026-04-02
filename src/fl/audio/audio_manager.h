@@ -13,14 +13,14 @@ namespace audio {
 
 class AudioManager {
   public:
-    static AudioManager &instance();
+    static AudioManager &instance() FL_NOEXCEPT;
 
-    shared_ptr<Processor> add(const Config &config);
-    shared_ptr<Processor> add(shared_ptr<IInput> input);
-    shared_ptr<Processor> add(UIAudio &uiAudio);
-    void remove(shared_ptr<Processor> processor);
+    shared_ptr<Processor> add(const Config &config) FL_NOEXCEPT;
+    shared_ptr<Processor> add(shared_ptr<IInput> input) FL_NOEXCEPT;
+    shared_ptr<Processor> add(UIAudio &uiAudio) FL_NOEXCEPT;
+    void remove(shared_ptr<Processor> processor) FL_NOEXCEPT;
 
-    shared_ptr<Processor> &processor();
+    shared_ptr<Processor> &processor() FL_NOEXCEPT;
 
     AudioManager() FL_NOEXCEPT = default;
     ~AudioManager() FL_NOEXCEPT = default;

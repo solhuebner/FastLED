@@ -1,8 +1,9 @@
 #include "fl/id_tracker.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
-int IdTracker::getOrCreateId(void* ptr) {
+int IdTracker::getOrCreateId(void* ptr) FL_NOEXCEPT {
     if (!ptr) {
         return -1;  // Invalid pointer gets invalid ID
     }
@@ -26,7 +27,7 @@ int IdTracker::getOrCreateId(void* ptr) {
     return newId;
 }
 
-bool IdTracker::getId(void* ptr, int* outId) {
+bool IdTracker::getId(void* ptr, int* outId) FL_NOEXCEPT {
     if (!ptr || !outId) {
         return false;
     }
@@ -44,7 +45,7 @@ bool IdTracker::getId(void* ptr, int* outId) {
     return found;
 }
 
-bool IdTracker::removeId(void* ptr) {
+bool IdTracker::removeId(void* ptr) FL_NOEXCEPT {
     if (!ptr) {
         return false;
     }
@@ -58,7 +59,7 @@ bool IdTracker::removeId(void* ptr) {
     return removed;
 }
 
-size_t IdTracker::size() {
+size_t IdTracker::size() FL_NOEXCEPT {
     // Lock for thread safety
     mMutex.lock();
     
@@ -68,7 +69,7 @@ size_t IdTracker::size() {
     return currentSize;
 }
 
-void IdTracker::clear() {
+void IdTracker::clear() FL_NOEXCEPT {
     // Lock for thread safety
     mMutex.lock();
     

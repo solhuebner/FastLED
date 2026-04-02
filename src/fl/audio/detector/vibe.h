@@ -67,51 +67,51 @@ public:
     ~Vibe() FL_NOEXCEPT override;
 
     // Detector interface
-    void update(shared_ptr<Context> context) override;
-    void fireCallbacks() override;
-    bool needsFFT() const override { return true; }
-    const char* getName() const override { return "Vibe"; }
-    void reset() override;
-    void setSampleRate(int sampleRate) override { mSampleRate = sampleRate; }
+    void update(shared_ptr<Context> context) FL_NOEXCEPT override;
+    void fireCallbacks() FL_NOEXCEPT override;
+    bool needsFFT() const FL_NOEXCEPT override { return true; }
+    const char* getName() const FL_NOEXCEPT override { return "Vibe"; }
+    void reset() FL_NOEXCEPT override;
+    void setSampleRate(int sampleRate) FL_NOEXCEPT override { mSampleRate = sampleRate; }
 
     // ---- Self-normalizing relative levels (the primary API) ----
     // These hover around 1.0 for the current song. >1 = louder than average,
     // <1 = quieter.
 
-    float getBass() const { return mImmRel[0]; }
-    float getMid() const { return mImmRel[1]; }
-    float getTreb() const { return mImmRel[2]; }
-    float getVol() const { return (mImmRel[0] + mImmRel[1] + mImmRel[2]) / 3.0f; }
+    float getBass() const FL_NOEXCEPT { return mImmRel[0]; }
+    float getMid() const FL_NOEXCEPT { return mImmRel[1]; }
+    float getTreb() const FL_NOEXCEPT { return mImmRel[2]; }
+    float getVol() const FL_NOEXCEPT { return (mImmRel[0] + mImmRel[1] + mImmRel[2]) / 3.0f; }
 
     // ---- Smoothed relative levels ("attenuated") ----
     // Short-term smoothed versions. When bass > bassAtt, a beat is happening.
 
-    float getBassAtt() const { return mAvgRel[0]; }
-    float getMidAtt() const { return mAvgRel[1]; }
-    float getTrebAtt() const { return mAvgRel[2]; }
-    float getVolAtt() const { return (mAvgRel[0] + mAvgRel[1] + mAvgRel[2]) / 3.0f; }
+    float getBassAtt() const FL_NOEXCEPT { return mAvgRel[0]; }
+    float getMidAtt() const FL_NOEXCEPT { return mAvgRel[1]; }
+    float getTrebAtt() const FL_NOEXCEPT { return mAvgRel[2]; }
+    float getVolAtt() const FL_NOEXCEPT { return (mAvgRel[0] + mAvgRel[1] + mAvgRel[2]) / 3.0f; }
 
     // ---- Spike detection ----
     // True when the immediate relative level exceeds the smoothed level,
     // meaning energy is rising — a transient/beat is in progress.
 
-    bool isBassSpike() const { return mBassSpike; }
-    bool isMidSpike() const { return mMidSpike; }
-    bool isTrebSpike() const { return mTrebSpike; }
+    bool isBassSpike() const FL_NOEXCEPT { return mBassSpike; }
+    bool isMidSpike() const FL_NOEXCEPT { return mMidSpike; }
+    bool isTrebSpike() const FL_NOEXCEPT { return mTrebSpike; }
 
     // ---- Raw absolute values (for advanced use) ----
 
-    float getBassRaw() const { return mImm[0]; }
-    float getMidRaw() const { return mImm[1]; }
-    float getTrebRaw() const { return mImm[2]; }
+    float getBassRaw() const FL_NOEXCEPT { return mImm[0]; }
+    float getMidRaw() const FL_NOEXCEPT { return mImm[1]; }
+    float getTrebRaw() const FL_NOEXCEPT { return mImm[2]; }
 
-    float getBassAvg() const { return mAvg[0]; }
-    float getMidAvg() const { return mAvg[1]; }
-    float getTrebAvg() const { return mAvg[2]; }
+    float getBassAvg() const FL_NOEXCEPT { return mAvg[0]; }
+    float getMidAvg() const FL_NOEXCEPT { return mAvg[1]; }
+    float getTrebAvg() const FL_NOEXCEPT { return mAvg[2]; }
 
-    float getBassLongAvg() const { return mLongAvg[0]; }
-    float getMidLongAvg() const { return mLongAvg[1]; }
-    float getTrebLongAvg() const { return mLongAvg[2]; }
+    float getBassLongAvg() const FL_NOEXCEPT { return mLongAvg[0]; }
+    float getMidLongAvg() const FL_NOEXCEPT { return mLongAvg[1]; }
+    float getTrebLongAvg() const FL_NOEXCEPT { return mLongAvg[2]; }
 
     // ---- Callbacks ----
 
@@ -126,11 +126,11 @@ public:
 
     // Target FPS for rate adjustment (default 30.0).
     // Only needed if the audio update rate doesn't match the actual frame rate.
-    void setTargetFps(float fps) { mTargetFps = fps; }
+    void setTargetFps(float fps) FL_NOEXCEPT { mTargetFps = fps; }
 
     // Diagnostic counters
-    static int getPrivateFFTCount();
-    static void resetPrivateFFTCount();
+    static int getPrivateFFTCount() FL_NOEXCEPT;
+    static void resetPrivateFFTCount() FL_NOEXCEPT;
 
 private:
     int mSampleRate = 44100;
@@ -155,7 +155,7 @@ private:
     bool mPrevTrebSpike = false;
 
     // FPS-independent rate adjustment
-    static float adjustRateToFPS(float rateAtFps1, float fps1, float actualFps);
+    static float adjustRateToFPS(float rateAtFps1, float fps1, float actualFps) FL_NOEXCEPT;
 };
 
 } // namespace detector

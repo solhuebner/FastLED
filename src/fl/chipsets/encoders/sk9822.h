@@ -22,6 +22,7 @@
 #include "fl/chipsets/encoders/encoder_utils.h"
 #include "fl/chipsets/encoders/encoder_constants.h"
 #include "fl/stl/compiler_control.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -35,7 +36,7 @@ namespace fl {
 /// @note SK9822 uses BGR wire order: pixel[0]=Blue, pixel[1]=Green, pixel[2]=Red
 template <typename InputIterator, typename OutputIterator>
 void encodeSK9822(InputIterator first, InputIterator last, OutputIterator out,
-                  u8 global_brightness = 31) {
+                  u8 global_brightness = 31) FL_NOEXCEPT {
     // Clamp brightness to 5-bit range
     global_brightness = global_brightness & 0x1F;
 
@@ -75,7 +76,7 @@ void encodeSK9822(InputIterator first, InputIterator last, OutputIterator out,
 /// @note SK9822 uses BGR wire order: pixel[0]=Blue, pixel[1]=Green, pixel[2]=Red
 template <typename InputIterator, typename BrightnessIterator, typename OutputIterator>
 void encodeSK9822_HD(InputIterator first, InputIterator last,
-                     BrightnessIterator brightness_first, OutputIterator out) {
+                     BrightnessIterator brightness_first, OutputIterator out) FL_NOEXCEPT {
     // Start frame: 4 bytes of 0x00
     *out++ = 0x00;
     *out++ = 0x00;
@@ -118,7 +119,7 @@ void encodeSK9822_HD(InputIterator first, InputIterator last,
 template <typename InputIterator, typename OutputIterator>
 FL_NO_INLINE_IF_AVR
 void encodeSK9822_AutoBrightness(InputIterator first, InputIterator last,
-                                 OutputIterator out) {
+                                 OutputIterator out) FL_NOEXCEPT {
     if (first == last) {
         // Empty range - just write start frame
         *out++ = 0x00; *out++ = 0x00; *out++ = 0x00; *out++ = 0x00;

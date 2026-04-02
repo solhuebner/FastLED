@@ -40,7 +40,7 @@ public:
      * @param ptr Pointer to track
      * @return Unique integer ID for this pointer
      */
-    int getOrCreateId(void* ptr);
+    int getOrCreateId(void* ptr) FL_NOEXCEPT;
 
     /**
      * Get existing ID for pointer without creating a new one.
@@ -50,7 +50,7 @@ public:
      * @param outId Pointer to store the ID if found
      * @return true if ID was found, false if pointer not tracked
      */
-    bool getId(void* ptr, int* outId);
+    bool getId(void* ptr, int* outId) FL_NOEXCEPT;
 
     /**
      * Remove tracking for a pointer.
@@ -59,7 +59,7 @@ public:
      * @param ptr Pointer to stop tracking
      * @return true if pointer was being tracked and removed, false if not found
      */
-    bool removeId(void* ptr);
+    bool removeId(void* ptr) FL_NOEXCEPT;
 
     /**
      * Get the current number of tracked pointers.
@@ -67,13 +67,13 @@ public:
      * 
      * @return Number of currently tracked pointers
      */
-    size_t size();
+    size_t size() FL_NOEXCEPT;
 
     /**
      * Clear all tracked pointers and reset ID counter.
      * Thread-safe.
      */
-    void clear();
+    void clear() FL_NOEXCEPT;
 
     // Non-copyable and non-movable for thread safety
     // (Each instance should have its own independent state)

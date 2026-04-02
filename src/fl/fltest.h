@@ -59,7 +59,7 @@ struct SourceLocation {
     const char* mFile;
     int mLine;
 
-    SourceLocation(const char* file = "", int line = 0)
+    SourceLocation(const char* file = "", int line = 0) FL_NOEXCEPT
         : mFile(file), mLine(line) {}
 };
 
@@ -70,7 +70,7 @@ struct AssertResult {
     fl::string mExpanded;  // Expanded values
     SourceLocation mLocation;
 
-    AssertResult(bool passed = true)
+    AssertResult(bool passed = true) FL_NOEXCEPT
         : mPassed(passed) {}
 };
 
@@ -84,7 +84,7 @@ struct TestStats {
     fl::u32 mAssertsFailed = 0;
     fl::u32 mTotalDurationMs = 0;   // Total duration of all tests in milliseconds
 
-    void reset() {
+    void reset() FL_NOEXCEPT {
         mTestCasesRun = 0;
         mTestCasesPassed = 0;
         mTestCasesFailed = 0;
@@ -94,7 +94,7 @@ struct TestStats {
         mTotalDurationMs = 0;
     }
 
-    bool allPassed() const {
+    bool allPassed() const FL_NOEXCEPT {
         return mAssertsFailed == 0 && mTestCasesFailed == 0;
     }
 };
@@ -104,28 +104,28 @@ class IReporter {
 public:
     virtual ~IReporter() FL_NOEXCEPT = default;
 
-    virtual void testRunStart() = 0;
-    virtual void testRunEnd(const TestStats& stats) = 0;
-    virtual void testCaseStart(const char* name) = 0;
+    virtual void testRunStart() FL_NOEXCEPT = 0;
+    virtual void testRunEnd(const TestStats& stats) FL_NOEXCEPT = 0;
+    virtual void testCaseStart(const char* name) FL_NOEXCEPT = 0;
     /// Called when a test case ends
     /// @param passed Whether the test passed
     /// @param durationMs Duration of the test in milliseconds (0 if no timer available)
-    virtual void testCaseEnd(bool passed, fl::u32 durationMs = 0) = 0;
-    virtual void subcaseStart(const char* name) = 0;
-    virtual void subcaseEnd() = 0;
-    virtual void assertResult(const AssertResult& result) = 0;
+    virtual void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT = 0;
+    virtual void subcaseStart(const char* name) FL_NOEXCEPT = 0;
+    virtual void subcaseEnd() FL_NOEXCEPT = 0;
+    virtual void assertResult(const AssertResult& result) FL_NOEXCEPT = 0;
 };
 
 // Default reporter that uses FL_DBG/printf
 class DefaultReporter : public IReporter {
 public:
-    void testRunStart() override;
-    void testRunEnd(const TestStats& stats) override;
-    void testCaseStart(const char* name) override;
-    void testCaseEnd(bool passed, fl::u32 durationMs = 0) override;
-    void subcaseStart(const char* name) override;
-    void subcaseEnd() override;
-    void assertResult(const AssertResult& result) override;
+    void testRunStart() FL_NOEXCEPT override;
+    void testRunEnd(const TestStats& stats) FL_NOEXCEPT override;
+    void testCaseStart(const char* name) FL_NOEXCEPT override;
+    void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT override;
+    void subcaseStart(const char* name) FL_NOEXCEPT override;
+    void subcaseEnd() FL_NOEXCEPT override;
+    void assertResult(const AssertResult& result) FL_NOEXCEPT override;
 };
 
 // Subcase signature for tracking which subcases have been run
@@ -134,19 +134,19 @@ struct SubcaseSignature {
     const char* mFile;
     int mLine;
 
-    bool operator==(const SubcaseSignature& other) const {
+    bool operator==(const SubcaseSignature& other) const FL_NOEXCEPT {
         return mLine == other.mLine &&
                fl::strcmp(mFile, other.mFile) == 0 &&
                fl::strcmp(mName, other.mName) == 0;
     }
 
-    bool operator!=(const SubcaseSignature& other) const {
+    bool operator!=(const SubcaseSignature& other) const FL_NOEXCEPT {
         return !(*this == other);
     }
 };
 
 // Hash function for SubcaseSignature
-inline fl::u32 hashSubcaseSignature(const SubcaseSignature& sig) {
+inline fl::u32 hashSubcaseSignature(const SubcaseSignature& sig) FL_NOEXCEPT {
     fl::u32 hash = 0;
     for (const char* p = sig.mName; *p; ++p) {
         hash = hash * 31 + static_cast<fl::u32>(*p);
@@ -176,7 +176,7 @@ typedef bool (*TimeoutHandlerFunc)(const char* testName, fl::u32 elapsedMs);
 // Global test context - manages test execution state
 class TestContext {
 public:
-    static TestContext& instance();
+    static TestContext& instance() FL_NOEXCEPT;
 
     // Test registration
     typedef void (*TestFunc)();
@@ -187,62 +187,62 @@ public:
         int mLine;
     };
 
-    int registerTest(TestFunc func, const char* name, const char* file, int line);
+    int registerTest(TestFunc func, const char* name, const char* file, int line) FL_NOEXCEPT;
 
     // Run all tests
     // argc/argv: command line args (filter pattern from first arg)
     // filter: explicit filter pattern (if provided, overrides argv)
-    int run(int argc = 0, const char* const* argv = nullptr);
+    int run(int argc = 0, const char* const* argv = nullptr) FL_NOEXCEPT;
 
     // Run tests matching filter pattern
     // Filter supports:
     //   - "*" matches any sequence of characters
     //   - "?" matches any single character
     //   - Exact substring match if no wildcards
-    int run(const char* filter);
+    int run(const char* filter) FL_NOEXCEPT;
 
     // List all registered test names without running them
     // Returns the number of tests listed
-    fl::size listTests(const char* filter = nullptr) const;
+    fl::size listTests(const char* filter = nullptr) const FL_NOEXCEPT;
 
     // Subcase management
-    bool enterSubcase(const SubcaseSignature& sig);
-    void exitSubcase(const SubcaseSignature& sig);
-    bool needsReentry() const { return !mNextSubcaseStack.empty(); }
+    bool enterSubcase(const SubcaseSignature& sig) FL_NOEXCEPT;
+    void exitSubcase(const SubcaseSignature& sig) FL_NOEXCEPT;
+    bool needsReentry() const FL_NOEXCEPT { return !mNextSubcaseStack.empty(); }
 
     // Assertion handling
-    void reportAssert(const AssertResult& result);
-    void checkFailed(const char* expr, const char* file, int line);
-    void requireFailed(const char* expr, const char* file, int line);
+    void reportAssert(const AssertResult& result) FL_NOEXCEPT;
+    void checkFailed(const char* expr, const char* file, int line) FL_NOEXCEPT;
+    void requireFailed(const char* expr, const char* file, int line) FL_NOEXCEPT;
 
     // Reporter
-    void setReporter(IReporter* reporter) { mReporter = reporter; }
-    IReporter* reporter() { return mReporter; }
+    void setReporter(IReporter* reporter) FL_NOEXCEPT { mReporter = reporter; }
+    IReporter* reporter() FL_NOEXCEPT { return mReporter; }
 
     // Stats
-    TestStats& stats() { return mStats; }
-    const TestStats& stats() const { return mStats; }
+    TestStats& stats() FL_NOEXCEPT { return mStats; }
+    const TestStats& stats() const FL_NOEXCEPT { return mStats; }
 
     // Current test state
-    bool hasFailure() const { return mCurrentTestFailed; }
-    void setCurrentTestFailed(bool failed) { mCurrentTestFailed = failed; }
+    bool hasFailure() const FL_NOEXCEPT { return mCurrentTestFailed; }
+    void setCurrentTestFailed(bool failed) FL_NOEXCEPT { mCurrentTestFailed = failed; }
 
     // Timeout support
     /// Set the function to get current time in milliseconds
-    void setGetMillis(GetMillisFunc func) { mGetMillis = func; }
+    void setGetMillis(GetMillisFunc func) FL_NOEXCEPT { mGetMillis = func; }
 
     /// Set the timeout handler callback
-    void setTimeoutHandler(TimeoutHandlerFunc func) { mTimeoutHandler = func; }
+    void setTimeoutHandler(TimeoutHandlerFunc func) FL_NOEXCEPT { mTimeoutHandler = func; }
 
     /// Set default timeout for all tests (0 = no timeout)
-    void setDefaultTimeoutMs(fl::u32 timeoutMs) { mDefaultTimeoutMs = timeoutMs; }
+    void setDefaultTimeoutMs(fl::u32 timeoutMs) FL_NOEXCEPT { mDefaultTimeoutMs = timeoutMs; }
 
     /// Check if current test has timed out (call periodically in long tests)
     /// Returns true if timed out
-    bool checkTimeout();
+    bool checkTimeout() FL_NOEXCEPT;
 
     /// Get elapsed time for current test (in ms)
-    fl::u32 getElapsedMs() const;
+    fl::u32 getElapsedMs() const FL_NOEXCEPT;
 
 private:
     TestContext() FL_NOEXCEPT;
@@ -270,26 +270,26 @@ private:
     bool mCurrentTestTimedOut = false;
 
     // Run a single test case
-    void runTestCase(const TestCaseInfo& info);
+    void runTestCase(const TestCaseInfo& info) FL_NOEXCEPT;
 
     // Hash the path to a subcase
-    fl::u32 hashCurrentPath(const SubcaseSignature& sig) const;
+    fl::u32 hashCurrentPath(const SubcaseSignature& sig) const FL_NOEXCEPT;
 
     // Check if a path has been fully traversed
-    bool isFullyTraversed(fl::u32 hash) const;
-    void markFullyTraversed(fl::u32 hash);
+    bool isFullyTraversed(fl::u32 hash) const FL_NOEXCEPT;
+    void markFullyTraversed(fl::u32 hash) FL_NOEXCEPT;
 
     // Pattern matching helper for test filtering
-    bool matchesFilter(const char* name, const char* filter) const;
+    bool matchesFilter(const char* name, const char* filter) const FL_NOEXCEPT;
 };
 
 // RAII subcase class
 class Subcase {
 public:
-    Subcase(const char* name, const char* file, int line);
+    Subcase(const char* name, const char* file, int line) FL_NOEXCEPT;
     ~Subcase() FL_NOEXCEPT;
 
-    explicit operator bool() const { return mEntered; }
+    explicit operator bool() const FL_NOEXCEPT { return mEntered; }
 
 private:
     SubcaseSignature mSignature;
@@ -298,7 +298,7 @@ private:
 
 // Test registration helper
 struct TestRegistrar {
-    TestRegistrar(TestContext::TestFunc func, const char* name, const char* file, int line) {
+    TestRegistrar(TestContext::TestFunc func, const char* name, const char* file, int line) FL_NOEXCEPT {
         TestContext::instance().registerTest(func, name, file, line);
     }
 };
@@ -309,53 +309,53 @@ struct ExpressionValue {
     T mValue;
     fl::string mStringified;
 
-    ExpressionValue(const T& value) : mValue(value) {
+    ExpressionValue(const T& value) FL_NOEXCEPT : mValue(value) {
         fl::sstream ss;
         ss << value;
         mStringified = ss.str();
     }
 
-    operator T() const { return mValue; }
-    const char* str() const { return mStringified.c_str(); }
+    operator T() const FL_NOEXCEPT { return mValue; }
+    const char* str() const FL_NOEXCEPT { return mStringified.c_str(); }
 };
 
 // Comparison helpers
 // Use decay to remove references and cv qualifiers for comparison function types
 template<typename L, typename R>
 struct CompareEq {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs == rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs == rhs; }
 };
 
 template<typename L, typename R>
 struct CompareNe {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs != rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs != rhs; }
 };
 
 template<typename L, typename R>
 struct CompareLt {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs < rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs < rhs; }
 };
 
 template<typename L, typename R>
 struct CompareGt {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs > rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs > rhs; }
 };
 
 template<typename L, typename R>
 struct CompareLe {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs <= rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs <= rhs; }
 };
 
 template<typename L, typename R>
 struct CompareGe {
-    bool operator()(const L& lhs, const R& rhs) const { return lhs >= rhs; }
+    bool operator()(const L& lhs, const R& rhs) const FL_NOEXCEPT { return lhs >= rhs; }
 };
 
 // Binary assertion helper
 template<typename L, typename R, typename Cmp>
 bool binaryAssert(const L& lhs, const R& rhs, Cmp cmp,
                   const char* lhsExpr, const char* op, const char* rhsExpr,
-                  const char* file, int line) {
+                  const char* file, int line) FL_NOEXCEPT {
     bool result = cmp(lhs, rhs);
 
     AssertResult ar(result);
@@ -394,7 +394,7 @@ bool binaryAssert(const L& lhs, const R& rhs, Cmp cmp,
 /// By default: epsilon=1e-5, margin=0.0 (only epsilon comparison)
 class Approx {
 public:
-    explicit Approx(double value)
+    explicit Approx(double value) FL_NOEXCEPT
         : mValue(value)
         , mEpsilon(1e-5)  // Default relative epsilon
         , mMargin(0.0)    // Default no absolute margin
@@ -403,31 +403,31 @@ public:
 
     /// Set custom relative epsilon for comparison
     /// Comparison uses: epsilon * (scale + max(|a|, |b|))
-    Approx& epsilon(double newEpsilon) {
+    Approx& epsilon(double newEpsilon) FL_NOEXCEPT {
         mEpsilon = newEpsilon;
         return *this;
     }
 
     /// Set absolute margin for comparison
     /// When margin > 0, passes if |a - b| <= margin
-    Approx& margin(double newMargin) {
+    Approx& margin(double newMargin) FL_NOEXCEPT {
         mMargin = newMargin < 0 ? 0 : newMargin;
         return *this;
     }
 
     /// Set custom scale for comparison
-    Approx& scale(double newScale) {
+    Approx& scale(double newScale) FL_NOEXCEPT {
         mScale = newScale;
         return *this;
     }
 
-    double value() const { return mValue; }
-    double getEpsilon() const { return mEpsilon; }
-    double getMargin() const { return mMargin; }
-    double getScale() const { return mScale; }
+    double value() const FL_NOEXCEPT { return mValue; }
+    double getEpsilon() const FL_NOEXCEPT { return mEpsilon; }
+    double getMargin() const FL_NOEXCEPT { return mMargin; }
+    double getScale() const FL_NOEXCEPT { return mScale; }
 
     // Comparison operators
-    friend bool operator==(double lhs, const Approx& rhs) {
+    friend bool operator==(double lhs, const Approx& rhs) FL_NOEXCEPT {
         double diff = lhs - rhs.mValue;
         if (diff < 0) diff = -diff;
 
@@ -444,31 +444,31 @@ public:
         return diff <= relativeMargin;
     }
 
-    friend bool operator==(const Approx& lhs, double rhs) {
+    friend bool operator==(const Approx& lhs, double rhs) FL_NOEXCEPT {
         return rhs == lhs;
     }
 
-    friend bool operator!=(double lhs, const Approx& rhs) {
+    friend bool operator!=(double lhs, const Approx& rhs) FL_NOEXCEPT {
         return !(lhs == rhs);
     }
 
-    friend bool operator!=(const Approx& lhs, double rhs) {
+    friend bool operator!=(const Approx& lhs, double rhs) FL_NOEXCEPT {
         return !(lhs == rhs);
     }
 
-    friend bool operator<=(double lhs, const Approx& rhs) {
+    friend bool operator<=(double lhs, const Approx& rhs) FL_NOEXCEPT {
         return lhs < rhs.mValue || lhs == rhs;
     }
 
-    friend bool operator>=(double lhs, const Approx& rhs) {
+    friend bool operator>=(double lhs, const Approx& rhs) FL_NOEXCEPT {
         return lhs > rhs.mValue || lhs == rhs;
     }
 
-    friend bool operator<(double lhs, const Approx& rhs) {
+    friend bool operator<(double lhs, const Approx& rhs) FL_NOEXCEPT {
         return lhs < rhs.mValue && !(lhs == rhs);
     }
 
-    friend bool operator>(double lhs, const Approx& rhs) {
+    friend bool operator>(double lhs, const Approx& rhs) FL_NOEXCEPT {
         return lhs > rhs.mValue && !(lhs == rhs);
     }
 
@@ -480,7 +480,7 @@ private:
 };
 
 // Stringify Approx for output
-inline fl::sstream& operator<<(fl::sstream& os, const Approx& approx) {
+inline fl::sstream& operator<<(fl::sstream& os, const Approx& approx) FL_NOEXCEPT {
     os << "Approx(" << approx.value() << ")";
     return os;
 }
@@ -490,13 +490,13 @@ inline fl::sstream& operator<<(fl::sstream& os, const Approx& approx) {
 // =============================================================================
 
 /// Helper to output INFO/MESSAGE during test execution
-void outputMessage(const char* msg, const char* file, int line);
+void outputMessage(const char* msg, const char* file, int line) FL_NOEXCEPT;
 
 /// Helper to output CAPTURE variable
-void outputCapture(const char* name, const char* value, const char* file, int line);
+void outputCapture(const char* name, const char* value, const char* file, int line) FL_NOEXCEPT;
 
 /// Helper for FAIL macros
-void fail(const char* msg, const char* file, int line, bool isFatal);
+void fail(const char* msg, const char* file, int line, bool isFatal) FL_NOEXCEPT;
 
 // =============================================================================
 // SerialReporter for embedded device output
@@ -518,23 +518,23 @@ typedef void (*SerialPrintFunc)(const char* msg);
 class SerialReporter : public IReporter {
 public:
     /// Create a serial reporter with custom print function
-    explicit SerialReporter(SerialPrintFunc printFunc = nullptr)
+    explicit SerialReporter(SerialPrintFunc printFunc = nullptr) FL_NOEXCEPT
         : mPrintFunc(printFunc) {}
 
-    void testRunStart() override;
-    void testRunEnd(const TestStats& stats) override;
-    void testCaseStart(const char* name) override;
-    void testCaseEnd(bool passed, fl::u32 durationMs = 0) override;
-    void subcaseStart(const char* name) override;
-    void subcaseEnd() override;
-    void assertResult(const AssertResult& result) override;
+    void testRunStart() FL_NOEXCEPT override;
+    void testRunEnd(const TestStats& stats) FL_NOEXCEPT override;
+    void testCaseStart(const char* name) FL_NOEXCEPT override;
+    void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT override;
+    void subcaseStart(const char* name) FL_NOEXCEPT override;
+    void subcaseEnd() FL_NOEXCEPT override;
+    void assertResult(const AssertResult& result) FL_NOEXCEPT override;
 
     /// Set the print function
-    void setPrintFunc(SerialPrintFunc func) { mPrintFunc = func; }
+    void setPrintFunc(SerialPrintFunc func) FL_NOEXCEPT { mPrintFunc = func; }
 
 private:
     SerialPrintFunc mPrintFunc;
-    void print(const char* msg);
+    void print(const char* msg) FL_NOEXCEPT;
 };
 
 // =============================================================================
@@ -555,19 +555,19 @@ private:
 class XMLReporter : public IReporter {
 public:
     /// Create an XML reporter that writes to the given string buffer
-    explicit XMLReporter(fl::string* outputBuffer, const char* suiteName = "fltest")
+    explicit XMLReporter(fl::string* outputBuffer, const char* suiteName = "fltest") FL_NOEXCEPT
         : mOutput(outputBuffer), mSuiteName(suiteName) {}
 
-    void testRunStart() override;
-    void testRunEnd(const TestStats& stats) override;
-    void testCaseStart(const char* name) override;
-    void testCaseEnd(bool passed, fl::u32 durationMs = 0) override;
-    void subcaseStart(const char* name) override;
-    void subcaseEnd() override;
-    void assertResult(const AssertResult& result) override;
+    void testRunStart() FL_NOEXCEPT override;
+    void testRunEnd(const TestStats& stats) FL_NOEXCEPT override;
+    void testCaseStart(const char* name) FL_NOEXCEPT override;
+    void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT override;
+    void subcaseStart(const char* name) FL_NOEXCEPT override;
+    void subcaseEnd() FL_NOEXCEPT override;
+    void assertResult(const AssertResult& result) FL_NOEXCEPT override;
 
     /// Set the test suite name (used in XML output)
-    void setSuiteName(const char* name) { mSuiteName = name; }
+    void setSuiteName(const char* name) FL_NOEXCEPT { mSuiteName = name; }
 
 private:
     fl::string* mOutput;
@@ -580,7 +580,7 @@ private:
     fl::vector<fl::string> mTestCaseResults;
 
     // Helper to escape XML special characters
-    static fl::string escapeXml(const char* text);
+    static fl::string escapeXml(const char* text) FL_NOEXCEPT;
 };
 
 // =============================================================================
@@ -600,16 +600,16 @@ private:
 class JSONReporter : public IReporter {
 public:
     /// Create a JSON reporter that writes to the given string buffer
-    explicit JSONReporter(fl::string* outputBuffer)
+    explicit JSONReporter(fl::string* outputBuffer) FL_NOEXCEPT
         : mOutput(outputBuffer) {}
 
-    void testRunStart() override;
-    void testRunEnd(const TestStats& stats) override;
-    void testCaseStart(const char* name) override;
-    void testCaseEnd(bool passed, fl::u32 durationMs = 0) override;
-    void subcaseStart(const char* name) override;
-    void subcaseEnd() override;
-    void assertResult(const AssertResult& result) override;
+    void testRunStart() FL_NOEXCEPT override;
+    void testRunEnd(const TestStats& stats) FL_NOEXCEPT override;
+    void testCaseStart(const char* name) FL_NOEXCEPT override;
+    void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT override;
+    void subcaseStart(const char* name) FL_NOEXCEPT override;
+    void subcaseEnd() FL_NOEXCEPT override;
+    void assertResult(const AssertResult& result) FL_NOEXCEPT override;
 
 private:
     fl::string* mOutput;
@@ -623,7 +623,7 @@ private:
     fl::vector<fl::string> mTestResults;
 
     // Helper to escape JSON special characters
-    static fl::string escapeJson(const char* text);
+    static fl::string escapeJson(const char* text) FL_NOEXCEPT;
 };
 
 // =============================================================================
@@ -646,24 +646,24 @@ private:
 class TAPReporter : public IReporter {
 public:
     /// Create a TAP reporter that writes to the given string buffer
-    explicit TAPReporter(fl::string* outputBuffer)
+    explicit TAPReporter(fl::string* outputBuffer) FL_NOEXCEPT
         : mOutput(outputBuffer), mPrintFunc(nullptr), mTestNumber(0), mTotalTests(0) {}
 
     /// Create a TAP reporter that uses a print function for streaming output
-    explicit TAPReporter(SerialPrintFunc printFunc)
+    explicit TAPReporter(SerialPrintFunc printFunc) FL_NOEXCEPT
         : mOutput(nullptr), mPrintFunc(printFunc), mTestNumber(0), mTotalTests(0) {}
 
-    void testRunStart() override;
-    void testRunEnd(const TestStats& stats) override;
-    void testCaseStart(const char* name) override;
-    void testCaseEnd(bool passed, fl::u32 durationMs = 0) override;
-    void subcaseStart(const char* name) override;
-    void subcaseEnd() override;
-    void assertResult(const AssertResult& result) override;
+    void testRunStart() FL_NOEXCEPT override;
+    void testRunEnd(const TestStats& stats) FL_NOEXCEPT override;
+    void testCaseStart(const char* name) FL_NOEXCEPT override;
+    void testCaseEnd(bool passed, fl::u32 durationMs = 0) FL_NOEXCEPT override;
+    void subcaseStart(const char* name) FL_NOEXCEPT override;
+    void subcaseEnd() FL_NOEXCEPT override;
+    void assertResult(const AssertResult& result) FL_NOEXCEPT override;
 
     /// Set the total number of tests (for TAP plan line)
     /// If not set, plan is output at the end instead
-    void setTotalTests(fl::u32 total) { mTotalTests = total; }
+    void setTotalTests(fl::u32 total) FL_NOEXCEPT { mTotalTests = total; }
 
 private:
     fl::string* mOutput;
@@ -678,7 +678,7 @@ private:
     fl::string mStreamingOutput;  // Used for streaming mode
 
     // Helper to output a line
-    void output(const char* line);
+    void output(const char* line) FL_NOEXCEPT;
 };
 
 // =============================================================================
@@ -687,10 +687,10 @@ private:
 // Allows tests to be skipped with a message
 
 /// Record that the current test should be skipped
-void skipTest(const char* reason, const char* file, int line);
+void skipTest(const char* reason, const char* file, int line) FL_NOEXCEPT;
 
 /// Check if current test has been marked as skipped
-bool isTestSkipped();
+bool isTestSkipped() FL_NOEXCEPT;
 
 } // namespace test
 } // namespace fl
@@ -1014,14 +1014,14 @@ bool isTestSkipped();
 namespace fl {
 namespace test {
 namespace detail {
-    inline const char*& currentSuiteName() {
+    inline const char*& currentSuiteName() FL_NOEXCEPT {
         static const char* name = nullptr;
         return name;
     }
 
     struct SuiteScope {
         const char* mPreviousName;
-        SuiteScope(const char* name) {
+        SuiteScope(const char* name) FL_NOEXCEPT {
             mPreviousName = currentSuiteName();
             currentSuiteName() = name;
         }
@@ -1747,7 +1747,7 @@ namespace detail {
 // Type name extraction using compiler-specific intrinsics
 // This extracts the type name from FL_PRETTY_FUNCTION (__PRETTY_FUNCTION__ or __FUNCSIG__)
 template <typename T>
-inline fl::string getTypeName() {
+inline fl::string getTypeName() FL_NOEXCEPT {
 #if defined(__clang__) || defined(__GNUC__)
     // FL_PRETTY_FUNCTION format: "fl::string fl::test::detail::getTypeName() [T = int]"
     const char* func = FL_PRETTY_FUNCTION;
@@ -1798,7 +1798,7 @@ inline fl::string getTypeName() {
 // Specialization holder for custom type names
 template <typename T>
 struct TypeNameHolder {
-    static const char* name() {
+    static const char* name() FL_NOEXCEPT {
         static fl::string cachedName = getTypeName<T>();
         return cachedName.c_str();
     }
@@ -1815,13 +1815,13 @@ struct TypeIterator;
 // Base case: empty TypeList
 template <typename TestFunc>
 struct TypeIterator<TypeList<>, TestFunc> {
-    static void iterate(const char*, const char*, int, int) {}
+    static void iterate(const char*, const char*, int, int) FL_NOEXCEPT {}
 };
 
 // Recursive case: TypeList with at least one type
 template <typename T, typename... Rest, typename TestFunc>
 struct TypeIterator<TypeList<T, Rest...>, TestFunc> {
-    static void iterate(const char* baseName, const char* file, int line, int index) {
+    static void iterate(const char* baseName, const char* file, int line, int index) FL_NOEXCEPT {
         // Build the test name: "baseName<TypeName>"
         fl::sstream ss;
         ss << baseName << "<" << TypeNameHolder<T>::name() << ">";

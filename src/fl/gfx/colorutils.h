@@ -52,18 +52,18 @@ namespace fl {
 /// @param leds a pointer to the LED array to fade
 /// @param num_leds the number of LEDs to fade
 /// @param fadeBy how much to fade each LED
-void fadeLightBy(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy);
+void fadeLightBy(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy) FL_NOEXCEPT;
 
 /// @copydoc fadeLightBy()
-inline void fadeLightBy(fl::span<CRGB> leds, fl::u8 fadeBy) {
+inline void fadeLightBy(fl::span<CRGB> leds, fl::u8 fadeBy) FL_NOEXCEPT {
     fadeLightBy(leds.data(), static_cast<fl::u16>(leds.size()), fadeBy);
 }
 
 /// @copydoc fadeLightBy()
-void fade_video(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy);
+void fade_video(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy) FL_NOEXCEPT;
 
 /// @copydoc fadeLightBy()
-inline void fade_video(fl::span<CRGB> leds, fl::u8 fadeBy) {
+inline void fade_video(fl::span<CRGB> leds, fl::u8 fadeBy) FL_NOEXCEPT {
     fade_video(leds.data(), static_cast<fl::u16>(leds.size()), fadeBy);
 }
 
@@ -72,10 +72,10 @@ inline void fade_video(fl::span<CRGB> leds, fl::u8 fadeBy) {
 /// @param leds a pointer to the LED array to scale
 /// @param num_leds the number of LEDs to scale
 /// @param scale how much to scale each LED
-void nscale8_video(CRGB *leds, fl::u16 num_leds, fl::u8 scale);
+void nscale8_video(CRGB *leds, fl::u16 num_leds, fl::u8 scale) FL_NOEXCEPT;
 
 /// @copydoc nscale8_video()
-inline void nscale8_video(fl::span<CRGB> leds, fl::u8 scale) {
+inline void nscale8_video(fl::span<CRGB> leds, fl::u8 scale) FL_NOEXCEPT {
     nscale8_video(leds.data(), static_cast<fl::u16>(leds.size()), scale);
 }
 
@@ -84,18 +84,18 @@ inline void nscale8_video(fl::span<CRGB> leds, fl::u8 scale) {
 /// @param leds a pointer to the LED array to fade
 /// @param num_leds the number of LEDs to fade
 /// @param fadeBy how much to fade each LED
-void fadeToBlackBy(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy);
+void fadeToBlackBy(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy) FL_NOEXCEPT;
 
 /// @copydoc fadeToBlackBy()
-inline void fadeToBlackBy(fl::span<CRGB> leds, fl::u8 fadeBy) {
+inline void fadeToBlackBy(fl::span<CRGB> leds, fl::u8 fadeBy) FL_NOEXCEPT {
     fadeToBlackBy(leds.data(), static_cast<fl::u16>(leds.size()), fadeBy);
 }
 
 /// @copydoc fadeToBlackBy()
-void fade_raw(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy);
+void fade_raw(CRGB *leds, fl::u16 num_leds, fl::u8 fadeBy) FL_NOEXCEPT;
 
 /// @copydoc fade_raw()
-inline void fade_raw(fl::span<CRGB> leds, fl::u8 fadeBy) {
+inline void fade_raw(fl::span<CRGB> leds, fl::u8 fadeBy) FL_NOEXCEPT {
     fade_raw(leds.data(), static_cast<fl::u16>(leds.size()), fadeBy);
 }
 
@@ -105,10 +105,10 @@ inline void fade_raw(fl::span<CRGB> leds, fl::u8 fadeBy) {
 /// @param leds a pointer to the LED array to scale
 /// @param num_leds the number of LEDs to scale
 /// @param scale how much to scale each LED
-void nscale8(CRGB *leds, fl::u16 num_leds, fl::u8 scale);
+void nscale8(CRGB *leds, fl::u16 num_leds, fl::u8 scale) FL_NOEXCEPT;
 
 /// @copydoc nscale8()
-inline void nscale8(fl::span<CRGB> leds, fl::u8 scale) {
+inline void nscale8(fl::span<CRGB> leds, fl::u8 scale) FL_NOEXCEPT {
     nscale8(leds.data(), static_cast<fl::u16>(leds.size()), scale);
 }
 
@@ -123,10 +123,10 @@ inline void nscale8(fl::span<CRGB> leds, fl::u8 scale) {
 /// @param leds a pointer to the LED array to fade
 /// @param numLeds the number of LEDs to fade
 /// @param colormask the color mask to fade with
-void fadeUsingColor(CRGB *leds, fl::u16 numLeds, const CRGB &colormask);
+void fadeUsingColor(CRGB *leds, fl::u16 numLeds, const CRGB &colormask) FL_NOEXCEPT;
 
 /// @copydoc fadeUsingColor()
-inline void fadeUsingColor(fl::span<CRGB> leds, const CRGB &colormask) {
+inline void fadeUsingColor(fl::span<CRGB> leds, const CRGB &colormask) FL_NOEXCEPT {
     fadeUsingColor(leds.data(), static_cast<fl::u16>(leds.size()), colormask);
 }
 
@@ -141,12 +141,12 @@ inline void fadeUsingColor(fl::span<CRGB> leds, const CRGB &colormask) {
 /// @param p1 the first color to blend
 /// @param p2 the second color to blend
 /// @param amountOfP2 the fraction of p2 to blend into p1
-CRGB blend(const CRGB &p1, const CRGB &p2, fract8 amountOfP2);
+CRGB blend(const CRGB &p1, const CRGB &p2, fract8 amountOfP2) FL_NOEXCEPT;
 
 /// @copydoc blend(const CRGB&, const CRGB&, fract8)
 /// @param directionCode the direction to travel around the color wheel
 CHSV blend(const CHSV &p1, const CHSV &p2, fract8 amountOfP2,
-           TGradientDirectionCode directionCode = SHORTEST_HUES);
+           TGradientDirectionCode directionCode = SHORTEST_HUES) FL_NOEXCEPT;
 
 /// Computes a new blended array of colors, each some fraction of the way
 /// between corresponding elements of two source arrays of colors. Useful for
@@ -157,11 +157,11 @@ CHSV blend(const CHSV &p1, const CHSV &p2, fract8 amountOfP2,
 /// @param count the number of LEDs to blend
 /// @param amountOfsrc2 the fraction of src2 to blend into src1
 CRGB *blend(const CRGB *src1, const CRGB *src2, CRGB *dest, fl::u16 count,
-            fract8 amountOfsrc2);
+            fract8 amountOfsrc2) FL_NOEXCEPT;
 
 /// @copydoc blend(const CRGB*, const CRGB*, CRGB*, fl::u16, fract8)
 inline void blend(fl::span<const CRGB> src1, fl::span<const CRGB> src2,
-                  fl::span<CRGB> dest, fract8 amountOfsrc2) {
+                  fl::span<CRGB> dest, fract8 amountOfsrc2) FL_NOEXCEPT {
     blend(src1.data(), src2.data(), dest.data(),
           static_cast<fl::u16>(dest.size()), amountOfsrc2);
 }
@@ -170,19 +170,19 @@ inline void blend(fl::span<const CRGB> src1, fl::span<const CRGB> src2,
 /// @param directionCode the direction to travel around the color wheel
 CHSV *blend(const CHSV *src1, const CHSV *src2, CHSV *dest, fl::u16 count,
             fract8 amountOfsrc2,
-            TGradientDirectionCode directionCode = SHORTEST_HUES);
+            TGradientDirectionCode directionCode = SHORTEST_HUES) FL_NOEXCEPT;
 
 /// Destructively modifies one color, blending in a given fraction of an overlay
 /// color
 /// @param existing the color to modify
 /// @param overlay the color to blend into existing
 /// @param amountOfOverlay the fraction of overlay to blend into existing
-CRGB &nblend(CRGB &existing, const CRGB &overlay, fract8 amountOfOverlay);
+CRGB &nblend(CRGB &existing, const CRGB &overlay, fract8 amountOfOverlay) FL_NOEXCEPT;
 
 /// @copydoc nblend(CRGB&, const CRGB&, fract8)
 /// @param directionCode the direction to travel around the color wheel
 CHSV &nblend(CHSV &existing, const CHSV &overlay, fract8 amountOfOverlay,
-             TGradientDirectionCode directionCode = SHORTEST_HUES);
+             TGradientDirectionCode directionCode = SHORTEST_HUES) FL_NOEXCEPT;
 
 /// Destructively blends a given fraction of a color array into an existing
 /// color array
@@ -191,11 +191,11 @@ CHSV &nblend(CHSV &existing, const CHSV &overlay, fract8 amountOfOverlay,
 /// @param count the number of colors to process
 /// @param amountOfOverlay the fraction of overlay to blend into existing
 void nblend(CRGB *existing, const CRGB *overlay, fl::u16 count,
-            fract8 amountOfOverlay);
+            fract8 amountOfOverlay) FL_NOEXCEPT;
 
 /// @copydoc nblend(CRGB*, const CRGB*, fl::u16, fract8)
 inline void nblend(fl::span<CRGB> existing, fl::span<const CRGB> overlay,
-                   fract8 amountOfOverlay) {
+                   fract8 amountOfOverlay) FL_NOEXCEPT {
     nblend(existing.data(), overlay.data(),
            static_cast<fl::u16>(existing.size()), amountOfOverlay);
 }
@@ -204,7 +204,7 @@ inline void nblend(fl::span<CRGB> existing, fl::span<const CRGB> overlay,
 /// @param directionCode the direction to travel around the color wheel
 void nblend(CHSV *existing, const CHSV *overlay, fl::u16 count,
             fract8 amountOfOverlay,
-            TGradientDirectionCode directionCode = SHORTEST_HUES);
+            TGradientDirectionCode directionCode = SHORTEST_HUES) FL_NOEXCEPT;
 
 /// @} ColorBlends
 
@@ -216,7 +216,7 @@ void nblend(CHSV *existing, const CHSV *overlay, fl::u16 count,
 /// Heat is specified as an arbitrary scale from 0 (cool) to 255 (hot).
 /// This is NOT a chromatically correct "black body radiation"
 /// spectrum, but it's surprisingly close, and it's fast and small.
-CRGB HeatColor(fl::u8 temperature);
+CRGB HeatColor(fl::u8 temperature) FL_NOEXCEPT;
 
 /// @} ColorFills
 /// @} ColorUtils
@@ -343,28 +343,28 @@ typedef TDynamicRGBGradientPalette_bytes
 /// @param srcpal16 the source palette to upscale
 /// @param destpal256 the destination palette for the upscaled data
 void UpscalePalette(const class CRGBPalette16 &srcpal16,
-                    class CRGBPalette256 &destpal256);
+                    class CRGBPalette256 &destpal256) FL_NOEXCEPT;
 /// @copydoc UpscalePalette(const class CRGBPalette16&, class CRGBPalette256&)
 void UpscalePalette(const class CHSVPalette16 &srcpal16,
-                    class CHSVPalette256 &destpal256);
+                    class CHSVPalette256 &destpal256) FL_NOEXCEPT;
 
 /// Convert a 16-entry palette to a 32-entry palette
 /// @param srcpal16 the source palette to upscale
 /// @param destpal32 the destination palette for the upscaled data
 void UpscalePalette(const class CRGBPalette16 &srcpal16,
-                    class CRGBPalette32 &destpal32);
+                    class CRGBPalette32 &destpal32) FL_NOEXCEPT;
 /// @copydoc UpscalePalette(const class CRGBPalette16&, class CRGBPalette32&)
 void UpscalePalette(const class CHSVPalette16 &srcpal16,
-                    class CHSVPalette32 &destpal32);
+                    class CHSVPalette32 &destpal32) FL_NOEXCEPT;
 
 /// Convert a 32-entry palette to a 256-entry palette
 /// @param srcpal32 the source palette to upscale
 /// @param destpal256 the destination palette for the upscaled data
 void UpscalePalette(const class CRGBPalette32 &srcpal32,
-                    class CRGBPalette256 &destpal256);
+                    class CRGBPalette256 &destpal256) FL_NOEXCEPT;
 /// @copydoc UpscalePalette(const class CRGBPalette32&, class CRGBPalette256&)
 void UpscalePalette(const class CHSVPalette32 &srcpal32,
-                    class CHSVPalette256 &destpal256);
+                    class CHSVPalette256 &destpal256) FL_NOEXCEPT;
 
 /// @} PaletteUpscale
 
@@ -385,7 +385,7 @@ class CHSVPalette16 {
                   const CHSV &c06, const CHSV &c07, const CHSV &c08,
                   const CHSV &c09, const CHSV &c10, const CHSV &c11,
                   const CHSV &c12, const CHSV &c13, const CHSV &c14,
-                  const CHSV &c15) {
+                  const CHSV &c15) FL_NOEXCEPT {
         entries[0] = c00;
         entries[1] = c01;
         entries[2] = c02;
@@ -416,7 +416,7 @@ class CHSVPalette16 {
     }
 
     /// Create palette from palette stored in PROGMEM
-    CHSVPalette16(const TProgmemHSVPalette16 &rhs) {
+    CHSVPalette16(const TProgmemHSVPalette16 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 16; ++i) {
             CRGB xyz(FL_PGM_READ_DWORD_NEAR(rhs + i));
             entries[i].hue = xyz.red;
@@ -442,31 +442,31 @@ class CHSVPalette16 {
     /// @note This does not perform any interpolation like ColorFromPalette(),
     /// it accesses the underlying entries that make up the gradient. Beware
     /// of bounds issues!
-    inline CHSV &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CHSV &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc operator[]
-    inline const CHSV &operator[](fl::u8 x) const
+    inline const CHSV &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc operator[]
-    inline CHSV &operator[](int x) __attribute__((always_inline)) {
+    inline CHSV &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// @copydoc operator[]
-    inline const CHSV &operator[](int x) const __attribute__((always_inline)) {
+    inline const CHSV &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CHSV entries making up the palette
-    operator CHSV *() { return &(entries[0]); }
+    operator CHSV *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// Check if two palettes have the same color entries
-    bool operator==(const CHSVPalette16 &rhs) const {
+    bool operator==(const CHSVPalette16 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -481,16 +481,16 @@ class CHSVPalette16 {
     }
 
     /// Check if two palettes do not have the same color entries
-    bool operator!=(const CHSVPalette16 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CHSVPalette16 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
 
     /// Create palette filled with one color
     /// @param c1 the color to fill the palette with
-    CHSVPalette16(const CHSV &c1) { fill_solid(&(entries[0]), 16, c1); }
+    CHSVPalette16(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 16, c1); }
 
     /// Create palette with a gradient from one color to another
     /// @param c1 the starting color for the gradient
     /// @param c2 the end color for the gradient
-    CHSVPalette16(const CHSV &c1, const CHSV &c2) {
+    CHSVPalette16(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2);
     }
 
@@ -498,7 +498,7 @@ class CHSVPalette16 {
     /// @param c1 the starting color for the gradient
     /// @param c2 the middle color for the gradient
     /// @param c3 the end color for the gradient
-    CHSVPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CHSVPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2, c3);
     }
 
@@ -508,7 +508,7 @@ class CHSVPalette16 {
     /// @param c3 the second middle color for the gradient
     /// @param c4 the end color for the gradient
     CHSVPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                  const CHSV &c4) {
+                  const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2, c3, c4);
     }
 };
@@ -530,7 +530,7 @@ class CHSVPalette256 {
                    const CHSV &c06, const CHSV &c07, const CHSV &c08,
                    const CHSV &c09, const CHSV &c10, const CHSV &c11,
                    const CHSV &c12, const CHSV &c13, const CHSV &c14,
-                   const CHSV &c15) {
+                   const CHSV &c15) FL_NOEXCEPT {
         CHSVPalette16 p16(c00, c01, c02, c03, c04, c05, c06, c07, c08, c09, c10,
                           c11, c12, c13, c14, c15);
         *this = p16;
@@ -547,7 +547,7 @@ class CHSVPalette256 {
     }
 
     /// Create upscaled palette from 16-entry palette
-    CHSVPalette256(const CHSVPalette16 &rhs16) { UpscalePalette(rhs16, *this); }
+    CHSVPalette256(const CHSVPalette16 &rhs16) FL_NOEXCEPT { UpscalePalette(rhs16, *this); }
     /// @copydoc  CHSVPalette256( const CHSVPalette16&)
     CHSVPalette256 &operator=(const CHSVPalette16 &rhs16) FL_NOEXCEPT {
         UpscalePalette(rhs16, *this);
@@ -555,7 +555,7 @@ class CHSVPalette256 {
     }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    CHSVPalette256(const TProgmemRGBPalette16 &rhs) {
+    CHSVPalette256(const TProgmemRGBPalette16 &rhs) FL_NOEXCEPT {
         CHSVPalette16 p16(rhs);
         *this = p16;
     }
@@ -567,29 +567,29 @@ class CHSVPalette256 {
     }
 
     /// @copydoc CHSVPalette16::operator[]
-    inline CHSV &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CHSV &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
     /// @copydoc operator[]
-    inline const CHSV &operator[](fl::u8 x) const
+    inline const CHSV &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc operator[]
-    inline CHSV &operator[](int x) __attribute__((always_inline)) {
+    inline CHSV &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
     /// @copydoc operator[]
-    inline const CHSV &operator[](int x) const __attribute__((always_inline)) {
+    inline const CHSV &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CHSV entries making up the palette
-    operator CHSV *() { return &(entries[0]); }
+    operator CHSV *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// @copydoc CHSVPalette16::operator==
-    bool operator==(const CHSVPalette256 &rhs) const {
+    bool operator==(const CHSVPalette256 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -604,23 +604,23 @@ class CHSVPalette256 {
     }
 
     /// @copydoc CHSVPalette16::operator!=
-    bool operator!=(const CHSVPalette256 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CHSVPalette256 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&)
-    CHSVPalette256(const CHSV &c1) { fill_solid(&(entries[0]), 256, c1); }
+    CHSVPalette256(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 256, c1); }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&)
-    CHSVPalette256(const CHSV &c1, const CHSV &c2) {
+    CHSVPalette256(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CHSVPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CHSVPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2, c3);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CHSVPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                   const CHSV &c4) {
+                   const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2, c3, c4);
     }
 };
@@ -639,7 +639,7 @@ class CRGBPalette16 {
                   const CRGB &c06, const CRGB &c07, const CRGB &c08,
                   const CRGB &c09, const CRGB &c10, const CRGB &c11,
                   const CRGB &c12, const CRGB &c13, const CRGB &c14,
-                  const CRGB &c15) {
+                  const CRGB &c15) FL_NOEXCEPT {
         entries[0] = c00;
         entries[1] = c01;
         entries[2] = c02;
@@ -663,7 +663,7 @@ class CRGBPalette16 {
         memmove8((void *)&(entries[0]), &(rhs.entries[0]), sizeof(entries));
     }
     /// Create palette from array of CRGB colors
-    CRGBPalette16(const CRGB rhs[16]) {
+    CRGBPalette16(const CRGB rhs[16]) FL_NOEXCEPT {
         memmove8((void *)&(entries[0]), &(rhs[0]), sizeof(entries));
     }
     /// @copydoc CRGBPalette16(const CRGBPalette16&)
@@ -678,13 +678,13 @@ class CRGBPalette16 {
     }
 
     /// Create palette from CHSV palette
-    CRGBPalette16(const CHSVPalette16 &rhs) {
+    CRGBPalette16(const CHSVPalette16 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 16; ++i) {
             entries[i] = rhs.entries[i]; // implicit HSV-to-RGB conversion
         }
     }
     /// Create palette from array of CHSV colors
-    CRGBPalette16(const CHSV rhs[16]) {
+    CRGBPalette16(const CHSV rhs[16]) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 16; ++i) {
             entries[i] = rhs[i]; // implicit HSV-to-RGB conversion
         }
@@ -705,7 +705,7 @@ class CRGBPalette16 {
     }
 
     /// Create palette from palette stored in PROGMEM
-    CRGBPalette16(const TProgmemRGBPalette16 &rhs) {
+    CRGBPalette16(const TProgmemRGBPalette16 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 16; ++i) {
             entries[i] = FL_PGM_READ_DWORD_NEAR(rhs + i);
         }
@@ -719,7 +719,7 @@ class CRGBPalette16 {
     }
 
     /// @copydoc CHSVPalette16::operator==
-    bool operator==(const CRGBPalette16 &rhs) const {
+    bool operator==(const CRGBPalette16 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -733,62 +733,62 @@ class CRGBPalette16 {
         return true;
     }
     /// @copydoc CHSVPalette16::operator!=
-    bool operator!=(const CRGBPalette16 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CRGBPalette16 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
     /// @copydoc CHSVPalette16::operator[]
-    inline CRGB &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CRGB &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
     /// @copydoc CHSVPalette16::operator[]
-    inline const CRGB &operator[](fl::u8 x) const
+    inline const CRGB &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc CHSVPalette16::operator[]
-    inline CRGB &operator[](int x) __attribute__((always_inline)) {
+    inline CRGB &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
     /// @copydoc CHSVPalette16::operator[]
-    inline const CRGB &operator[](int x) const __attribute__((always_inline)) {
+    inline const CRGB &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CHSV entries making up the palette
-    operator CRGB *() { return &(entries[0]); }
+    operator CRGB *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&)
-    CRGBPalette16(const CHSV &c1) { fill_solid(&(entries[0]), 16, c1); }
+    CRGBPalette16(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 16, c1); }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&)
-    CRGBPalette16(const CHSV &c1, const CHSV &c2) {
+    CRGBPalette16(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CRGBPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CRGBPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2, c3);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CRGBPalette16(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                  const CHSV &c4) {
+                  const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 16, c1, c2, c3, c4);
     }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&)
-    CRGBPalette16(const CRGB &c1) { fill_solid(&(entries[0]), 16, c1); }
+    CRGBPalette16(const CRGB &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 16, c1); }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&)
-    CRGBPalette16(const CRGB &c1, const CRGB &c2) {
+    CRGBPalette16(const CRGB &c1, const CRGB &c2) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 16, c1, c2);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CRGBPalette16(const CRGB &c1, const CRGB &c2, const CRGB &c3) {
+    CRGBPalette16(const CRGB &c1, const CRGB &c2, const CRGB &c3) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 16, c1, c2, c3);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CRGBPalette16(const CRGB &c1, const CRGB &c2, const CRGB &c3,
-                  const CRGB &c4) {
+                  const CRGB &c4) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 16, c1, c2, c3, c4);
     }
 
@@ -821,7 +821,7 @@ class CRGBPalette16 {
     /// will be, by definition, different from the widths in the gradient
     /// palette.  This code attempts to preserve "all the colors", rather than
     /// the exact stripe widths at the expense of dropping some colors.
-    CRGBPalette16(TProgmemRGBGradientPalette_bytes progpal) { *this = progpal; }
+    CRGBPalette16(TProgmemRGBGradientPalette_bytes progpal) FL_NOEXCEPT { *this = progpal; }
     /// @copydoc CRGBPalette16(TProgmemRGBGradientPalette_bytes)
     CRGBPalette16 &operator=(TProgmemRGBGradientPalette_bytes progpal) FL_NOEXCEPT {
         TRGBGradientPaletteEntryUnion *progent =
@@ -901,7 +901,7 @@ class CRGBPalette16 {
     /// @copydetails
     /// CRGBPalette16::CRGBPalette16(TProgmemRGBGradientPalette_bytes)
     CRGBPalette16 &
-    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) {
+    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) FL_NOEXCEPT {
         TRGBGradientPaletteEntryUnion *ent =
             // (TRGBGradientPaletteEntryUnion *)(gpal);
             fl::bit_cast<TRGBGradientPaletteEntryUnion *>(gpal);
@@ -994,7 +994,7 @@ class CHSVPalette32 {
                   const CHSV &c06, const CHSV &c07, const CHSV &c08,
                   const CHSV &c09, const CHSV &c10, const CHSV &c11,
                   const CHSV &c12, const CHSV &c13, const CHSV &c14,
-                  const CHSV &c15) {
+                  const CHSV &c15) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 2; ++i) {
             entries[0 + i] = c00;
             entries[2 + i] = c01;
@@ -1026,7 +1026,7 @@ class CHSVPalette32 {
     }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    CHSVPalette32(const TProgmemHSVPalette32 &rhs) {
+    CHSVPalette32(const TProgmemHSVPalette32 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 32; ++i) {
             CRGB xyz(FL_PGM_READ_DWORD_NEAR(rhs + i));
             entries[i].hue = xyz.red;
@@ -1046,29 +1046,29 @@ class CHSVPalette32 {
     }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    inline CHSV &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CHSV &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    inline const CHSV &operator[](fl::u8 x) const
+    inline const CHSV &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    inline CHSV &operator[](int x) __attribute__((always_inline)) {
+    inline CHSV &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const TProgmemHSVPalette16&)
-    inline const CHSV &operator[](int x) const __attribute__((always_inline)) {
+    inline const CHSV &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CHSV entries making up the palette
-    operator CHSV *() { return &(entries[0]); }
+    operator CHSV *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// @copydoc CHSVPalette16::operator==
-    bool operator==(const CHSVPalette32 &rhs) const {
+    bool operator==(const CHSVPalette32 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -1082,23 +1082,23 @@ class CHSVPalette32 {
         return true;
     }
     /// @copydoc CHSVPalette16::operator!=
-    bool operator!=(const CHSVPalette32 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CHSVPalette32 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
 
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&)
-    CHSVPalette32(const CHSV &c1) { fill_solid(&(entries[0]), 32, c1); }
+    CHSVPalette32(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 32, c1); }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&)
-    CHSVPalette32(const CHSV &c1, const CHSV &c2) {
+    CHSVPalette32(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CHSVPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CHSVPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2, c3);
     }
     /// @copydoc CHSVPalette16::CHSVPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CHSVPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                  const CHSV &c4) {
+                  const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2, c3, c4);
     }
 };
@@ -1121,7 +1121,7 @@ class CRGBPalette32 {
                   const CRGB &c06, const CRGB &c07, const CRGB &c08,
                   const CRGB &c09, const CRGB &c10, const CRGB &c11,
                   const CRGB &c12, const CRGB &c13, const CRGB &c14,
-                  const CRGB &c15) {
+                  const CRGB &c15) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 2; ++i) {
             entries[0 + i] = c00;
             entries[2 + i] = c01;
@@ -1147,7 +1147,7 @@ class CRGBPalette32 {
         memmove8((void *)&(entries[0]), &(rhs.entries[0]), sizeof(entries));
     }
     /// Create palette from array of CRGB colors
-    CRGBPalette32(const CRGB rhs[32]) {
+    CRGBPalette32(const CRGB rhs[32]) FL_NOEXCEPT {
         memmove8((void *)&(entries[0]), &(rhs[0]), sizeof(entries));
     }
     /// @copydoc CRGBPalette32(const CRGBPalette32&)
@@ -1162,13 +1162,13 @@ class CRGBPalette32 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSVPalette16&)
-    CRGBPalette32(const CHSVPalette32 &rhs) {
+    CRGBPalette32(const CHSVPalette32 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 32; ++i) {
             entries[i] = rhs.entries[i]; // implicit HSV-to-RGB conversion
         }
     }
     /// Create palette from array of CHSV colors
-    CRGBPalette32(const CHSV rhs[32]) {
+    CRGBPalette32(const CHSV rhs[32]) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 32; ++i) {
             entries[i] = rhs[i]; // implicit HSV-to-RGB conversion
         }
@@ -1189,7 +1189,7 @@ class CRGBPalette32 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const TProgmemRGBPalette16&)
-    CRGBPalette32(const TProgmemRGBPalette32 &rhs) {
+    CRGBPalette32(const TProgmemRGBPalette32 &rhs) FL_NOEXCEPT {
         for (fl::u8 i = 0; i < 32; ++i) {
             entries[i] = FL_PGM_READ_DWORD_NEAR(rhs + i);
         }
@@ -1203,7 +1203,7 @@ class CRGBPalette32 {
     }
 
     /// @copydoc CRGBPalette16::operator==
-    bool operator==(const CRGBPalette32 &rhs) const {
+    bool operator==(const CRGBPalette32 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -1217,68 +1217,68 @@ class CRGBPalette32 {
         return true;
     }
     /// @copydoc CRGBPalette16::operator!=
-    bool operator!=(const CRGBPalette32 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CRGBPalette32 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
 
     /// @copydoc CRGBPalette16::operator[]
-    inline CRGB &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CRGB &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
     /// @copydoc CRGBPalette16::operator[]
-    inline const CRGB &operator[](fl::u8 x) const
+    inline const CRGB &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc CRGBPalette16::operator[]
-    inline CRGB &operator[](int x) __attribute__((always_inline)) {
+    inline CRGB &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
     /// @copydoc CRGBPalette16::operator[]
-    inline const CRGB &operator[](int x) const __attribute__((always_inline)) {
+    inline const CRGB &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CRGB entries making up the palette
-    operator CRGB *() { return &(entries[0]); }
+    operator CRGB *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&)
-    CRGBPalette32(const CHSV &c1) { fill_solid(&(entries[0]), 32, c1); }
+    CRGBPalette32(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 32, c1); }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&)
-    CRGBPalette32(const CHSV &c1, const CHSV &c2) {
+    CRGBPalette32(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CRGBPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CRGBPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2, c3);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CRGBPalette32(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                  const CHSV &c4) {
+                  const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 32, c1, c2, c3, c4);
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&)
-    CRGBPalette32(const CRGB &c1) { fill_solid(&(entries[0]), 32, c1); }
+    CRGBPalette32(const CRGB &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 32, c1); }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&)
-    CRGBPalette32(const CRGB &c1, const CRGB &c2) {
+    CRGBPalette32(const CRGB &c1, const CRGB &c2) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 32, c1, c2);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&, const
     /// CRGB&)
-    CRGBPalette32(const CRGB &c1, const CRGB &c2, const CRGB &c3) {
+    CRGBPalette32(const CRGB &c1, const CRGB &c2, const CRGB &c3) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 32, c1, c2, c3);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&, const
     /// CRGB&, const CRGB&)
     CRGBPalette32(const CRGB &c1, const CRGB &c2, const CRGB &c3,
-                  const CRGB &c4) {
+                  const CRGB &c4) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 32, c1, c2, c3, c4);
     }
 
     /// Create upscaled palette from 16-entry palette
-    CRGBPalette32(const CRGBPalette16 &rhs16) { UpscalePalette(rhs16, *this); }
+    CRGBPalette32(const CRGBPalette16 &rhs16) FL_NOEXCEPT { UpscalePalette(rhs16, *this); }
     /// @copydoc CRGBPalette32(const CRGBPalette16&)
     CRGBPalette32 &operator=(const CRGBPalette16 &rhs16) FL_NOEXCEPT {
         UpscalePalette(rhs16, *this);
@@ -1286,7 +1286,7 @@ class CRGBPalette32 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const TProgmemRGBPalette16&)
-    CRGBPalette32(const TProgmemRGBPalette16 &rhs) {
+    CRGBPalette32(const TProgmemRGBPalette16 &rhs) FL_NOEXCEPT {
         CRGBPalette16 p16(rhs);
         *this = p16;
     }
@@ -1298,7 +1298,7 @@ class CRGBPalette32 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(TProgmemRGBGradientPalette_bytes)
-    CRGBPalette32(TProgmemRGBGradientPalette_bytes progpal) { *this = progpal; }
+    CRGBPalette32(TProgmemRGBGradientPalette_bytes progpal) FL_NOEXCEPT { *this = progpal; }
     /// @copydoc CRGBPalette32(TProgmemRGBGradientPalette_bytes)
     CRGBPalette32 &operator=(TProgmemRGBGradientPalette_bytes progpal) FL_NOEXCEPT {
         TRGBGradientPaletteEntryUnion *progent =
@@ -1378,7 +1378,7 @@ class CRGBPalette32 {
     /// @copydoc
     /// CRGBPalette16::loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes)
     CRGBPalette32 &
-    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) {
+    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) FL_NOEXCEPT {
         TRGBGradientPaletteEntryUnion *ent =
             // (TRGBGradientPaletteEntryUnion *)(gpal);
             fl::bit_cast<TRGBGradientPaletteEntryUnion *>(gpal);
@@ -1473,7 +1473,7 @@ class CRGBPalette256 {
                    const CRGB &c06, const CRGB &c07, const CRGB &c08,
                    const CRGB &c09, const CRGB &c10, const CRGB &c11,
                    const CRGB &c12, const CRGB &c13, const CRGB &c14,
-                   const CRGB &c15) {
+                   const CRGB &c15) FL_NOEXCEPT {
         CRGBPalette16 p16(c00, c01, c02, c03, c04, c05, c06, c07, c08, c09, c10,
                           c11, c12, c13, c14, c15);
         *this = p16;
@@ -1484,7 +1484,7 @@ class CRGBPalette256 {
         memmove8((void *)&(entries[0]), &(rhs.entries[0]), sizeof(entries));
     }
     /// Create palette from array of CRGB colors
-    CRGBPalette256(const CRGB rhs[256]) {
+    CRGBPalette256(const CRGB rhs[256]) FL_NOEXCEPT {
         memmove8((void *)&(entries[0]), &(rhs[0]), sizeof(entries));
     }
     /// @copydoc CRGBPalette256(const CRGBPalette256&)
@@ -1499,13 +1499,13 @@ class CRGBPalette256 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSVPalette16&)
-    CRGBPalette256(const CHSVPalette256 &rhs) {
+    CRGBPalette256(const CHSVPalette256 &rhs) FL_NOEXCEPT {
         for (int i = 0; i < 256; ++i) {
             entries[i] = rhs.entries[i]; // implicit HSV-to-RGB conversion
         }
     }
     /// Create palette from array of CHSV colors
-    CRGBPalette256(const CHSV rhs[256]) {
+    CRGBPalette256(const CHSV rhs[256]) FL_NOEXCEPT {
         for (int i = 0; i < 256; ++i) {
             entries[i] = rhs[i]; // implicit HSV-to-RGB conversion
         }
@@ -1526,7 +1526,7 @@ class CRGBPalette256 {
     }
 
     /// @copydoc CRGBPalette32::CRGBPalette32(const CRGBPalette16&)
-    CRGBPalette256(const CRGBPalette16 &rhs16) { UpscalePalette(rhs16, *this); }
+    CRGBPalette256(const CRGBPalette16 &rhs16) FL_NOEXCEPT { UpscalePalette(rhs16, *this); }
     /// @copydoc CRGBPalette256(const CRGBPalette16&)
     CRGBPalette256 &operator=(const CRGBPalette16 &rhs16) FL_NOEXCEPT {
         UpscalePalette(rhs16, *this);
@@ -1534,7 +1534,7 @@ class CRGBPalette256 {
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const TProgmemRGBPalette16&)
-    CRGBPalette256(const TProgmemRGBPalette16 &rhs) {
+    CRGBPalette256(const TProgmemRGBPalette16 &rhs) FL_NOEXCEPT {
         CRGBPalette16 p16(rhs);
         *this = p16;
     }
@@ -1546,7 +1546,7 @@ class CRGBPalette256 {
     }
 
     /// @copydoc CRGBPalette16::operator==
-    bool operator==(const CRGBPalette256 &rhs) const {
+    bool operator==(const CRGBPalette256 &rhs) const FL_NOEXCEPT {
         const fl::u8 *p = (const fl::u8 *)(&(this->entries[0]));
         const fl::u8 *q = (const fl::u8 *)(&(rhs.entries[0]));
         if (p == q)
@@ -1560,68 +1560,68 @@ class CRGBPalette256 {
         return true;
     }
     /// @copydoc CRGBPalette16::operator!=
-    bool operator!=(const CRGBPalette256 &rhs) const { return !(*this == rhs); }
+    bool operator!=(const CRGBPalette256 &rhs) const FL_NOEXCEPT { return !(*this == rhs); }
 
     /// @copydoc CRGBPalette16::operator[]
-    inline CRGB &operator[](fl::u8 x) __attribute__((always_inline)) {
+    inline CRGB &operator[](fl::u8 x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[x];
     }
     /// @copydoc CRGBPalette16::operator[]
-    inline const CRGB &operator[](fl::u8 x) const
+    inline const CRGB &operator[](fl::u8 x) const FL_NOEXCEPT
         __attribute__((always_inline)) {
         return entries[x];
     }
 
     /// @copydoc CRGBPalette16::operator[]
-    inline CRGB &operator[](int x) __attribute__((always_inline)) {
+    inline CRGB &operator[](int x) FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
     /// @copydoc CRGBPalette16::operator[]
-    inline const CRGB &operator[](int x) const __attribute__((always_inline)) {
+    inline const CRGB &operator[](int x) const FL_NOEXCEPT __attribute__((always_inline)) {
         return entries[(fl::u8)x];
     }
 
     /// Get the underlying pointer to the CHSV entries making up the palette
-    operator CRGB *() { return &(entries[0]); }
+    operator CRGB *() FL_NOEXCEPT { return &(entries[0]); }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&)
-    CRGBPalette256(const CHSV &c1) { fill_solid(&(entries[0]), 256, c1); }
+    CRGBPalette256(const CHSV &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 256, c1); }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&)
-    CRGBPalette256(const CHSV &c1, const CHSV &c2) {
+    CRGBPalette256(const CHSV &c1, const CHSV &c2) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&, const
     /// CHSV&)
-    CRGBPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3) {
+    CRGBPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2, c3);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CHSV&, const CHSV&, const
     /// CHSV&, const CHSV&)
     CRGBPalette256(const CHSV &c1, const CHSV &c2, const CHSV &c3,
-                   const CHSV &c4) {
+                   const CHSV &c4) FL_NOEXCEPT {
         fill_gradient(&(entries[0]), 256, c1, c2, c3, c4);
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&)
-    CRGBPalette256(const CRGB &c1) { fill_solid(&(entries[0]), 256, c1); }
+    CRGBPalette256(const CRGB &c1) FL_NOEXCEPT { fill_solid(&(entries[0]), 256, c1); }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&)
-    CRGBPalette256(const CRGB &c1, const CRGB &c2) {
+    CRGBPalette256(const CRGB &c1, const CRGB &c2) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 256, c1, c2);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&, const
     /// CRGB&)
-    CRGBPalette256(const CRGB &c1, const CRGB &c2, const CRGB &c3) {
+    CRGBPalette256(const CRGB &c1, const CRGB &c2, const CRGB &c3) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 256, c1, c2, c3);
     }
     /// @copydoc CRGBPalette16::CRGBPalette16(const CRGB&, const CRGB&, const
     /// CRGB&, const CRGB&)
     CRGBPalette256(const CRGB &c1, const CRGB &c2, const CRGB &c3,
-                   const CRGB &c4) {
+                   const CRGB &c4) FL_NOEXCEPT {
         fill_gradient_RGB(&(entries[0]), 256, c1, c2, c3, c4);
     }
 
     /// @copydoc CRGBPalette16::CRGBPalette16(TProgmemRGBGradientPalette_bytes)
-    CRGBPalette256(TProgmemRGBGradientPalette_bytes progpal) {
+    CRGBPalette256(TProgmemRGBGradientPalette_bytes progpal) FL_NOEXCEPT {
         *this = progpal;
     }
     /// @copydoc CRGBPalette256(TProgmemRGBGradientPalette_bytes)
@@ -1662,7 +1662,7 @@ class CRGBPalette256 {
     /// @copydoc
     /// CRGBPalette16::loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes)
     CRGBPalette256 &
-    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) {
+    loadDynamicGradientPalette(TDynamicRGBGradientPalette_bytes gpal) FL_NOEXCEPT {
         TRGBGradientPaletteEntryUnion *ent =
             //(TRGBGradientPaletteEntryUnion *)(gpal);
             fl::bit_cast<TRGBGradientPaletteEntryUnion *>(gpal);
@@ -1726,7 +1726,7 @@ typedef enum {
 /// or blend linearly between palette entries (LINEARBLEND)
 CRGB ColorFromPalette(const CRGBPalette16 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @brief Same as ColorFromPalette, but with fl::u16 `index` to give greater
 /// precision.
@@ -1735,7 +1735,7 @@ CRGB ColorFromPalette(const CRGBPalette16 &pal, fl::u8 index,
 /// @see https://wokwi.com/projects/285170662915441160
 /// @see https://wokwi.com/projects/407831886158110721
 CRGB ColorFromPaletteExtended(const CRGBPalette16 &pal, fl::u16 index,
-                              fl::u8 brightness, TBlendType blendType);
+                              fl::u8 brightness, TBlendType blendType) FL_NOEXCEPT;
 
 /// @brief Same as ColorFromPalette, but higher precision. Will eventually
 ///        become the default.
@@ -1743,62 +1743,62 @@ CRGB ColorFromPaletteExtended(const CRGBPalette16 &pal, fl::u16 index,
 /// @see https://github.com/FastLED/FastLED/pull/202#issuecomment-631333384
 /// @see https://wokwi.com/projects/285170662915441160
 CRGB ColorFromPaletteExtended(const CRGBPalette32 &pal, fl::u16 index,
-                              fl::u8 brightness, TBlendType blendType);
+                              fl::u8 brightness, TBlendType blendType) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPaletteExtended(const CRGBPalette16&, fl::u16, fl::u8, TBlendType)
 CRGB ColorFromPaletteExtended(const TProgmemRGBPalette16 &pal, fl::u16 index,
                               fl::u8 brightness = 255,
-                              TBlendType blendType = LINEARBLEND);
+                              TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPaletteExtended(const CRGBPalette32&, fl::u16, fl::u8, TBlendType)
 CRGB ColorFromPaletteExtended(const TProgmemRGBPalette32 &pal, fl::u16 index,
                               fl::u8 brightness = 255,
-                              TBlendType blendType = LINEARBLEND);
+                              TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CRGB ColorFromPalette(const TProgmemRGBPalette16 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CRGB ColorFromPalette(const CRGBPalette256 &pal, fl::u8 index,
-                      fl::u8 brightness = 255, TBlendType blendType = NOBLEND);
+                      fl::u8 brightness = 255, TBlendType blendType = NOBLEND) FL_NOEXCEPT;
 
 // @author https://github.com/generalelectrix
 CRGB ColorFromPaletteExtended(const CRGBPalette256 &pal, fl::u16 index,
                               fl::u8 brightness = 255,
-                              TBlendType blendType = LINEARBLEND);
+                              TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CHSV ColorFromPalette(const CHSVPalette16 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CHSV ColorFromPalette(const CHSVPalette256 &pal, fl::u8 index,
-                      fl::u8 brightness = 255, TBlendType blendType = NOBLEND);
+                      fl::u8 brightness = 255, TBlendType blendType = NOBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CRGB ColorFromPalette(const CRGBPalette32 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CRGB ColorFromPalette(const TProgmemRGBPalette32 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// @copydoc ColorFromPalette(const CRGBPalette16&, fl::u8, fl::u8,
 /// TBlendType)
 CHSV ColorFromPalette(const CHSVPalette32 &pal, fl::u8 index,
                       fl::u8 brightness = 255,
-                      TBlendType blendType = LINEARBLEND);
+                      TBlendType blendType = LINEARBLEND) FL_NOEXCEPT;
 
 /// Fill a range of LEDs with a sequence of entries from a palette
 /// @tparam PALETTE the type of the palette used (auto-deduced)
@@ -1813,7 +1813,7 @@ CHSV ColorFromPalette(const CHSVPalette32 &pal, fl::u8 index,
 template <typename PALETTE>
 void fill_palette(CRGB *L, fl::u16 N, fl::u8 startIndex, fl::u8 incIndex,
                   const PALETTE &pal, fl::u8 brightness = 255,
-                  TBlendType blendType = LINEARBLEND) {
+                  TBlendType blendType = LINEARBLEND) FL_NOEXCEPT {
     fl::u8 colorIndex = startIndex;
     for (fl::u16 i = 0; i < N; ++i) {
         L[i] = ColorFromPalette(pal, colorIndex, brightness, blendType);
@@ -1825,7 +1825,7 @@ void fill_palette(CRGB *L, fl::u16 N, fl::u8 startIndex, fl::u8 incIndex,
 template <typename PALETTE>
 inline void fill_palette(fl::span<CRGB> L, fl::u8 startIndex, fl::u8 incIndex,
                          const PALETTE &pal, fl::u8 brightness = 255,
-                         TBlendType blendType = LINEARBLEND) {
+                         TBlendType blendType = LINEARBLEND) FL_NOEXCEPT {
     fill_palette(L.data(), static_cast<fl::u16>(L.size()), startIndex, incIndex,
                  pal, brightness, blendType);
 }
@@ -1845,7 +1845,7 @@ template <typename PALETTE>
 void fill_palette_circular(CRGB *L, fl::u16 N, fl::u8 startIndex,
                            const PALETTE &pal, fl::u8 brightness = 255,
                            TBlendType blendType = LINEARBLEND,
-                           bool reversed = false) {
+                           bool reversed = false) FL_NOEXCEPT {
     if (N == 0)
         return; // avoiding div/0
 
@@ -1868,7 +1868,7 @@ template <typename PALETTE>
 inline void fill_palette_circular(fl::span<CRGB> L, fl::u8 startIndex,
                                   const PALETTE &pal, fl::u8 brightness = 255,
                                   TBlendType blendType = LINEARBLEND,
-                                  bool reversed = false) {
+                                  bool reversed = false) FL_NOEXCEPT {
     fill_palette_circular(L.data(), static_cast<fl::u16>(L.size()), startIndex,
                           pal, brightness, blendType, reversed);
 }
@@ -1896,7 +1896,7 @@ template <typename PALETTE>
 void map_data_into_colors_through_palette(
     fl::u8 *dataArray, fl::u16 dataCount, CRGB *targetColorArray,
     const PALETTE &pal, fl::u8 brightness = 255, fl::u8 opacity = 255,
-    TBlendType blendType = LINEARBLEND) {
+    TBlendType blendType = LINEARBLEND) FL_NOEXCEPT {
     for (fl::u16 i = 0; i < dataCount; ++i) {
         fl::u8 d = dataArray[i];
         CRGB rgb = ColorFromPalette(pal, d, brightness, blendType);
@@ -1915,7 +1915,7 @@ template <typename PALETTE>
 inline void map_data_into_colors_through_palette(
     fl::span<fl::u8> dataArray, fl::span<CRGB> targetColorArray,
     const PALETTE &pal, fl::u8 brightness = 255, fl::u8 opacity = 255,
-    TBlendType blendType = LINEARBLEND) {
+    TBlendType blendType = LINEARBLEND) FL_NOEXCEPT {
     map_data_into_colors_through_palette(
         dataArray.data(), static_cast<fl::u16>(dataArray.size()),
         targetColorArray.data(), pal, brightness, opacity, blendType);
@@ -1961,7 +1961,7 @@ inline void map_data_into_colors_through_palette(
 /// @todo Shouldn't the `targetPalette` be `const`?
 void nblendPaletteTowardPalette(CRGBPalette16 &currentPalette,
                                 CRGBPalette16 &targetPalette,
-                                fl::u8 maxChanges = 24);
+                                fl::u8 maxChanges = 24) FL_NOEXCEPT;
 
 /// @} PaletteColors
 
@@ -2003,13 +2003,13 @@ void nblendPaletteTowardPalette(CRGBPalette16 &currentPalette,
 /// @param brightness the value of the color data
 /// @param gamma the gamma value to apply
 /// @returns the color data, adjusted for gamma
-fl::u8 applyGamma_video(fl::u8 brightness, float gamma);
+fl::u8 applyGamma_video(fl::u8 brightness, float gamma) FL_NOEXCEPT;
 
 /// Applies a gamma adjustment to a color
 /// @param orig the color to apply an adjustment to
 /// @param gamma the gamma value to apply
 /// @returns copy of the CRGB object with gamma adjustment applied
-CRGB applyGamma_video(const CRGB &orig, float gamma);
+CRGB applyGamma_video(const CRGB &orig, float gamma) FL_NOEXCEPT;
 
 /// Applies a gamma adjustment to a color
 /// @param orig the color to apply an adjustment to
@@ -2018,29 +2018,29 @@ CRGB applyGamma_video(const CRGB &orig, float gamma);
 /// @param gammaB the gamma value to apply to the CRGB::blue channel
 /// @returns copy of the CRGB object with gamma adjustment applied
 CRGB applyGamma_video(const CRGB &orig, float gammaR, float gammaG,
-                      float gammaB);
+                      float gammaB) FL_NOEXCEPT;
 
 /// Destructively applies a gamma adjustment to a color
 /// @param rgb the color to apply an adjustment to (modified in place)
 /// @param gamma the gamma value to apply
-CRGB &napplyGamma_video(CRGB &rgb, float gamma);
+CRGB &napplyGamma_video(CRGB &rgb, float gamma) FL_NOEXCEPT;
 
 /// Destructively applies a gamma adjustment to a color
 /// @param rgb the color to apply an adjustment to (modified in place)
 /// @param gammaR the gamma value to apply to the CRGB::red channel
 /// @param gammaG the gamma value to apply to the CRGB::green channel
 /// @param gammaB the gamma value to apply to the CRGB::blue channel
-CRGB &napplyGamma_video(CRGB &rgb, float gammaR, float gammaG, float gammaB);
+CRGB &napplyGamma_video(CRGB &rgb, float gammaR, float gammaG, float gammaB) FL_NOEXCEPT;
 
 /// Destructively applies a gamma adjustment to a color array
 /// @param rgbarray pointer to an LED array to apply an adjustment to (modified
 /// in place)
 /// @param count the number of LEDs to modify
 /// @param gamma the gamma value to apply
-void napplyGamma_video(CRGB *rgbarray, fl::u16 count, float gamma);
+void napplyGamma_video(CRGB *rgbarray, fl::u16 count, float gamma) FL_NOEXCEPT;
 
 /// @copydoc napplyGamma_video(CRGB*, fl::u16, float)
-inline void napplyGamma_video(fl::span<CRGB> rgbarray, float gamma) {
+inline void napplyGamma_video(fl::span<CRGB> rgbarray, float gamma) FL_NOEXCEPT {
     napplyGamma_video(rgbarray.data(), static_cast<fl::u16>(rgbarray.size()),
                       gamma);
 }
@@ -2053,11 +2053,11 @@ inline void napplyGamma_video(fl::span<CRGB> rgbarray, float gamma) {
 /// @param gammaG the gamma value to apply to the CRGB::green channel
 /// @param gammaB the gamma value to apply to the CRGB::blue channel
 void napplyGamma_video(CRGB *rgbarray, fl::u16 count, float gammaR,
-                       float gammaG, float gammaB);
+                       float gammaG, float gammaB) FL_NOEXCEPT;
 
 /// @copydoc napplyGamma_video(CRGB*, fl::u16, float, float, float)
 inline void napplyGamma_video(fl::span<CRGB> rgbarray, float gammaR,
-                              float gammaG, float gammaB) {
+                              float gammaG, float gammaB) FL_NOEXCEPT {
     napplyGamma_video(rgbarray.data(), static_cast<fl::u16>(rgbarray.size()),
                       gammaR, gammaG, gammaB);
 }

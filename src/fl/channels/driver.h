@@ -56,7 +56,7 @@ public:
         constexpr Capabilities() FL_NOEXCEPT : supportsClockless(false), supportsSpi(false) {}
 
         /// @brief Constructor with explicit capabilities
-        constexpr Capabilities(bool clockless, bool spi)
+        constexpr Capabilities(bool clockless, bool spi) FL_NOEXCEPT
             : supportsClockless(clockless), supportsSpi(spi) {}
     };
 
@@ -74,17 +74,17 @@ public:
         fl::string error;   ///< Error message (only populated when state == ERROR)
 
         /// @brief Construct from state only (no error)
-        DriverState(Value v) : state(v), error() {}
+        DriverState(Value v) FL_NOEXCEPT : state(v), error() {}
 
         /// @brief Construct from state and error message
-        DriverState(Value v, const fl::string& e) : state(v), error(e) {}
+        DriverState(Value v, const fl::string& e) FL_NOEXCEPT : state(v), error(e) {}
 
         /// @brief Implicit conversion to Value for backward compatibility
-        operator Value() const { return state; }
+        operator Value() const FL_NOEXCEPT { return state; }
 
         /// @brief Comparison operators for backward compatibility
-        bool operator==(Value v) const { return state == v; }
-        bool operator!=(Value v) const { return state != v; }
+        bool operator==(Value v) const FL_NOEXCEPT { return state == v; }
+        bool operator!=(Value v) const FL_NOEXCEPT { return state != v; }
     };
 
     /// @brief Enqueue channel data for transmission
@@ -92,12 +92,12 @@ public:
     /// @note Behavior depends on implementation - may batch or transmit immediately
     /// @note Non-blocking. Data is stored until show() is called (typical pattern).
     /// @note Clever implementations may begin transmission early to save memory.
-    virtual void enqueue(ChannelDataPtr channelData) = 0;
+    virtual void enqueue(ChannelDataPtr channelData) FL_NOEXCEPT = 0;
 
     /// @brief Trigger transmission of enqueued data
     /// @note May block depending on current driver state (poll() returns BUSY/DRAINING)
     /// @note Typical behavior: Wait for hardware to be READY, then transmit all enqueued data
-    virtual void show() = 0;
+    virtual void show() FL_NOEXCEPT = 0;
 
     /// @brief Query driver state and perform maintenance
     /// @return DriverState containing state and optional error message
@@ -106,30 +106,30 @@ public:
     ///   - Check hardware transmission status
     ///   - Clear channel "in use" flags when transmission completes
     ///   - Return error message via DriverState when state == ERROR
-    virtual DriverState poll() = 0;
+    virtual DriverState poll() FL_NOEXCEPT = 0;
 
     /// @brief Get the driver name for affinity binding
     /// @return Driver name (e.g., "RMT", "SPI", "PARLIO"), or empty string if unnamed
     /// @note Used by Channel affinity system to bind channels to specific drivers
-    virtual fl::string getName() const { return fl::string::from_literal(""); }
+    virtual fl::string getName() const FL_NOEXCEPT { return fl::string::from_literal(""); }
 
     /// @brief Get driver capabilities (clockless, SPI, or both)
     /// @return Capabilities struct with bool flags for supported protocols
     /// @note Used by diagnostic logging to show which protocols each driver supports
-    virtual Capabilities getCapabilities() const = 0;
+    virtual Capabilities getCapabilities() const FL_NOEXCEPT = 0;
 
     /// @brief Check if this driver can handle the given channel data
     /// @param data Channel data to check (chipset configuration, pin, timing)
     /// @return true if this driver can render the channel data, false otherwise
     /// @note Drivers must implement this to filter by chipset type (e.g., SPI-only, clockless-only)
     /// @note Used by ChannelManager to route channels to compatible drivers
-    virtual bool canHandle(const ChannelDataPtr& data) const = 0;
+    virtual bool canHandle(const ChannelDataPtr& data) const FL_NOEXCEPT = 0;
 
     /// @brief Wait for driver to become READY
     /// @param timeoutMs Optional timeout in milliseconds (0 = no timeout)
     /// @return true if driver became READY, false if timeout occurred
-    bool waitForReady(u32 timeoutMs = 1000);
-    bool waitForReadyOrDraining(u32 timeoutMs = 1000);
+    bool waitForReady(u32 timeoutMs = 1000) FL_NOEXCEPT;
+    bool waitForReadyOrDraining(u32 timeoutMs = 1000) FL_NOEXCEPT;
 
     /// @brief Virtual destructor
     virtual ~IChannelDriver() FL_NOEXCEPT = default;
@@ -144,7 +144,7 @@ protected:
     IChannelDriver& operator=(IChannelDriver&&) FL_NOEXCEPT = delete;
 
     template<typename Condition>
-    bool waitForCondition(Condition condition, u32 timeoutMs = 1000);
+    bool waitForCondition(Condition condition, u32 timeoutMs = 1000) FL_NOEXCEPT;
 };
 
 }  // namespace fl

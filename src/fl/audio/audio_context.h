@@ -19,15 +19,15 @@ struct BandEnergy {
 
 class Context {
 public:
-    explicit Context(const Sample& sample);
+    explicit Context(const Sample& sample) FL_NOEXCEPT;
     ~Context() FL_NOEXCEPT;
 
     // ----- Basic Sample Access -----
-    const Sample& getSample() const { return mSample; }
-    span<const i16> getPCM() const { return mSample.pcm(); }
-    float getRMS() const { return mSample.rms(); }
-    float getZCF() const { return mSample.zcf(); }
-    u32 getTimestamp() const { return mSample.timestamp(); }
+    const Sample& getSample() const FL_NOEXCEPT { return mSample; }
+    span<const i16> getPCM() const FL_NOEXCEPT { return mSample.pcm(); }
+    float getRMS() const FL_NOEXCEPT { return mSample.rms(); }
+    float getZCF() const FL_NOEXCEPT { return mSample.zcf(); }
+    u32 getTimestamp() const FL_NOEXCEPT { return mSample.timestamp(); }
 
     // ----- Lazy fft::FFT Computation (with shared_ptr caching + recycling) -----
     shared_ptr<const fft::Bins> getFFT(
@@ -36,31 +36,31 @@ public:
         float fmax = fft::Args::DefaultMaxFrequency(),
         fft::Mode mode = fft::Mode::AUTO,
         fft::Window window = fft::Window::BLACKMAN_HARRIS
-    );
-    bool hasFFT() const { return !mFFTCache.empty(); }
+    ) FL_NOEXCEPT;
+    bool hasFFT() const FL_NOEXCEPT { return !mFFTCache.empty(); }
 
     // 3-band energy from 3 linear bins (20-11025 Hz).
     // bass: 20-3688 Hz, mid: 3688-7356 Hz, treb: 7356-11025 Hz.
-    BandEnergy getBandEnergy();
+    BandEnergy getBandEnergy() FL_NOEXCEPT;
 
     // Standard 16-bin fft::FFT (90-14080 Hz).
     // Detectors that need 16 bins should use this to share a single cached fft::FFT.
     shared_ptr<const fft::Bins> getFFT16(fft::Mode mode = fft::Mode::LOG_REBIN,
-                                       fft::Window window = fft::Window::BLACKMAN_HARRIS);
+                                       fft::Window window = fft::Window::BLACKMAN_HARRIS) FL_NOEXCEPT;
 
     // ----- fft::FFT History (for temporal analysis) -----
-    void setFFTHistoryDepth(int depth);
-    const vector<fft::Bins>& getFFTHistory() const { return mFFTHistory; }
-    bool hasFFTHistory() const { return mFFTHistoryDepth > 0; }
-    const fft::Bins* getHistoricalFFT(int framesBack) const;
+    void setFFTHistoryDepth(int depth) FL_NOEXCEPT;
+    const vector<fft::Bins>& getFFTHistory() const FL_NOEXCEPT { return mFFTHistory; }
+    bool hasFFTHistory() const FL_NOEXCEPT { return mFFTHistoryDepth > 0; }
+    const fft::Bins* getHistoricalFFT(int framesBack) const FL_NOEXCEPT;
 
     // ----- Sample Rate -----
-    void setSampleRate(int sampleRate) { mSampleRate = sampleRate; }
-    int getSampleRate() const { return mSampleRate; }
+    void setSampleRate(int sampleRate) FL_NOEXCEPT { mSampleRate = sampleRate; }
+    int getSampleRate() const FL_NOEXCEPT { return mSampleRate; }
 
     // ----- Update & Reset -----
-    void setSample(const Sample& sample);
-    void clearCache();
+    void setSample(const Sample& sample) FL_NOEXCEPT;
+    void clearCache() FL_NOEXCEPT;
 
 private:
     static constexpr int MAX_FFT_CACHE_ENTRIES = 4;
@@ -71,7 +71,7 @@ private:
     };
 
     // Create cache key hash from fft::Args for O(1) lookup
-    static fl::size hashFFTArgs(const fft::Args& args);
+    static fl::size hashFFTArgs(const fft::Args& args) FL_NOEXCEPT;
 
     int mSampleRate = 44100;
     Sample mSample;
@@ -87,7 +87,7 @@ private:
 /// Compute the time delta (in seconds) for an audio buffer.
 /// Each buffer of pcmSize samples at sampleRate Hz represents exactly
 /// pcmSize/sampleRate seconds of audio, regardless of when the CPU reads it.
-inline float computeAudioDt(fl::size pcmSize, int sampleRate) {
+inline float computeAudioDt(fl::size pcmSize, int sampleRate) FL_NOEXCEPT {
     if (sampleRate <= 0 || pcmSize == 0) return 0.0f;
     return static_cast<float>(pcmSize) / static_cast<float>(sampleRate);
 }

@@ -13,20 +13,20 @@ namespace fl {
 UIElement::UIElement() {}
 
 // UISlider constructor
-UISlider::UISlider(const char *name, float value, float min, float max, float step)
+UISlider::UISlider(const char *name, float value, float min, float max, float step) FL_NOEXCEPT
     : mImpl(name, value, min, max, step), mListener(this) {
     mListener.addToEngineEventsOnce();
 }
 
 // UIButton constructor
-UIButton::UIButton(const char *name) : mImpl(name), mListener(this) {
+UIButton::UIButton(const char *name) FL_NOEXCEPT : mImpl(name), mListener(this) {
     mListener.addToEngineEventsOnce();
 }
 
 UIButton::~UIButton() FL_NOEXCEPT {}
 
 // UICheckbox constructor
-UICheckbox::UICheckbox(const char *name, bool value)
+UICheckbox::UICheckbox(const char *name, bool value) FL_NOEXCEPT
     : mImpl(name, value), mLastFrameValue(false), mLastFrameValueValid(false), mListener(this) {
     mListener.addToEngineEventsOnce();
 }
@@ -34,7 +34,7 @@ UICheckbox::UICheckbox(const char *name, bool value)
 UICheckbox::~UICheckbox() FL_NOEXCEPT {}
 
 // UINumberField constructor
-UINumberField::UINumberField(const char *name, double value, double min, double max)
+UINumberField::UINumberField(const char *name, double value, double min, double max) FL_NOEXCEPT
     : mImpl(name, value, min, max), mListener(this), mLastFrameValue(0), mLastFrameValueValid(false) {
     mListener.addToEngineEventsOnce();
 }
@@ -43,7 +43,7 @@ UINumberField::~UINumberField() FL_NOEXCEPT {}
 
 // UITitle constructors
 #if FASTLED_USE_JSON_UI
-UITitle::UITitle(const char *name) : mImpl(fl::string(name), fl::string(name)) {}
+UITitle::UITitle(const char *name) FL_NOEXCEPT : mImpl(fl::string(name), fl::string(name)) {}
 #else
 UITitle::UITitle(const char *name) : mImpl(name) {}
 #endif
@@ -51,20 +51,20 @@ UITitle::UITitle(const char *name) : mImpl(name) {}
 UITitle::~UITitle() FL_NOEXCEPT {}
 
 // UIDescription constructor
-UIDescription::UIDescription(const char *name) : mImpl(name) {}
+UIDescription::UIDescription(const char *name) FL_NOEXCEPT : mImpl(name) {}
 UIDescription::~UIDescription() FL_NOEXCEPT {}
 
 // UIHelp constructor
-UIHelp::UIHelp(const char *markdownContent) : mImpl(markdownContent) {}
+UIHelp::UIHelp(const char *markdownContent) FL_NOEXCEPT : mImpl(markdownContent) {}
 UIHelp::~UIHelp() FL_NOEXCEPT {}
 
 // UIAudio constructors
-UIAudio::UIAudio(const fl::string& name) : mImpl(name) {}
-UIAudio::UIAudio(const fl::string& name, const fl::url& url) : mImpl(name, url) {}
-UIAudio::UIAudio(const fl::string& name, const fl::audio::Config& config) : mImpl(name, config), mConfig(config) {}
+UIAudio::UIAudio(const fl::string& name) FL_NOEXCEPT : mImpl(name) {}
+UIAudio::UIAudio(const fl::string& name, const fl::url& url) FL_NOEXCEPT : mImpl(name, url) {}
+UIAudio::UIAudio(const fl::string& name, const fl::audio::Config& config) FL_NOEXCEPT : mImpl(name, config), mConfig(config) {}
 UIAudio::~UIAudio() FL_NOEXCEPT {}
 
-fl::shared_ptr<audio::Processor> UIAudio::processor() {
+fl::shared_ptr<audio::Processor> UIAudio::processor() FL_NOEXCEPT {
     if (!mProcessor) {
         mProcessor = audio::AudioManager::instance().add(*this);
     }
@@ -72,12 +72,12 @@ fl::shared_ptr<audio::Processor> UIAudio::processor() {
 }
 
 // UIDropdown constructors
-UIDropdown::UIDropdown(const char *name, fl::span<fl::string> options)
+UIDropdown::UIDropdown(const char *name, fl::span<fl::string> options) FL_NOEXCEPT
     : mImpl(fl::string(name), options), mListener(this) {
     mListener.addToEngineEventsOnce();
 }
 
-UIDropdown::UIDropdown(const char *name, fl::initializer_list<fl::string> options)
+UIDropdown::UIDropdown(const char *name, fl::initializer_list<fl::string> options) FL_NOEXCEPT
     : mImpl(name, options), mListener(this) {
     mListener.addToEngineEventsOnce();
 }
@@ -85,10 +85,10 @@ UIDropdown::UIDropdown(const char *name, fl::initializer_list<fl::string> option
 UIDropdown::~UIDropdown() FL_NOEXCEPT {}
 
 // UIGroup constructors
-UIGroup::UIGroup(const fl::string& groupName) : mImpl(groupName.c_str()) {}
+UIGroup::UIGroup(const fl::string& groupName) FL_NOEXCEPT : mImpl(groupName.c_str()) {}
 UIGroup::~UIGroup() FL_NOEXCEPT {}
 
-void UISlider::setValue(float value) {
+void UISlider::setValue(float value) FL_NOEXCEPT {
     float oldValue = mImpl.value();
     if (value != oldValue) {
         mImpl.setValue(value);
@@ -100,7 +100,7 @@ void UISlider::setValue(float value) {
     }
 }
 
-void UISlider::Listener::onBeginFrame() {
+void UISlider::Listener::onBeginFrame() FL_NOEXCEPT {
     UISlider &owner = *mOwner;
     if (!owner.mLastFrameValueValid) {
         owner.mLastFrameValue = owner.value();
@@ -114,7 +114,7 @@ void UISlider::Listener::onBeginFrame() {
     }
 }
 
-void UIButton::Listener::onBeginFrame() {
+void UIButton::Listener::onBeginFrame() FL_NOEXCEPT {
     bool clicked_this_frame = mOwner->clicked();
     bool pressed_this_frame = mOwner->isPressed();
 
@@ -148,7 +148,7 @@ void UIButton::Listener::onBeginFrame() {
     // mOwner->mCallbacks.invoke(*mOwner);
 }
 
-void UICheckbox::Listener::onBeginFrame() {
+void UICheckbox::Listener::onBeginFrame() FL_NOEXCEPT {
     UICheckbox &owner = *mOwner;
     if (!owner.mLastFrameValueValid) {
         owner.mLastFrameValue = owner.value();
@@ -162,7 +162,7 @@ void UICheckbox::Listener::onBeginFrame() {
     }
 }
 
-void UINumberField::Listener::onBeginFrame() {
+void UINumberField::Listener::onBeginFrame() FL_NOEXCEPT {
     UINumberField &owner = *mOwner;
     if (!owner.mLastFrameValueValid) {
         owner.mLastFrameValue = owner.value();
@@ -176,7 +176,7 @@ void UINumberField::Listener::onBeginFrame() {
     }
 }
 
-void UIDropdown::Listener::onBeginFrame() {
+void UIDropdown::Listener::onBeginFrame() FL_NOEXCEPT {
     UIDropdown &owner = *mOwner;
     
     // Check the next button if one is attached (via IButtonInput interface)

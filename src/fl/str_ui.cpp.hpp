@@ -6,13 +6,14 @@
 #include "fl/stl/string.h"
 // IWYU pragma: begin_keep
 #include "platforms/shared/ui/json/ui_internal.h"  // ok platform headers
+#include "fl/stl/noexcept.h"
 // IWYU pragma: end_keep // ok platform headers
 
 namespace fl {
 
 // Implementation of UI-specific append method
 // This will only be linked if JsonUiInternal is actually used somewhere
-string &string::append(const JsonUiInternal& val) {
+string &string::append(const JsonUiInternal& val) FL_NOEXCEPT {
     append(val.name());
     return *this;
 }

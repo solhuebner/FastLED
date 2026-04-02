@@ -8,6 +8,7 @@
 
 #include "fl/stl/stdint.h"
 #include "fl/gfx/gamma_lut.h"
+#include "fl/stl/noexcept.h"
 
 namespace fl {
 
@@ -16,7 +17,7 @@ namespace fl {
 /// @return 5-bit brightness (0-31)
 /// @note Ensures non-zero input maps to non-zero output (fixes issue #1908)
 /// @note Uses bit-shift approximation on AVR to avoid expensive division
-inline u8 mapBrightness8to5(u8 brightness_8bit) {
+inline u8 mapBrightness8to5(u8 brightness_8bit) FL_NOEXCEPT {
     #if defined(FL_IS_AVR)
     // AVR-specific: Use bit shifts to avoid expensive division
     // Approximation: (value * 31) / 255 ≈ (value * 31) >> 8
@@ -48,7 +49,7 @@ inline u8 mapBrightness8to5(u8 brightness_8bit) {
 /// @param b Blue component (0-255)
 /// @return P9813 flag byte (0xC0 | checksum)
 /// @note Checksum uses top 2 bits of each color channel
-inline u8 p9813FlagByte(u8 r, u8 g, u8 b) {
+inline u8 p9813FlagByte(u8 r, u8 g, u8 b) FL_NOEXCEPT {
     return 0xC0 | ((~b & 0xC0) >> 2) | ((~g & 0xC0) >> 4) | ((~r & 0xC0) >> 6);
 }
 
@@ -56,7 +57,7 @@ inline u8 p9813FlagByte(u8 r, u8 g, u8 b) {
 /// @param value 8-bit color value (0-255)
 /// @return 7-bit color with MSB set (0x80-0xFF)
 /// @note LPD8806 uses 7-bit color depth with MSB always set
-inline u8 lpd8806Encode(u8 value) {
+inline u8 lpd8806Encode(u8 value) FL_NOEXCEPT {
     // LPD8806 requires MSB set on each byte, and uses 7-bit color depth
     return 0x80 | ((value >> 1) | ((value && (value < 254)) & 0x01));
 }
@@ -64,7 +65,7 @@ inline u8 lpd8806Encode(u8 value) {
 /// @brief Convert 8-bit color to HD108 16-bit gamma-corrected value (gamma 2.8)
 /// @param value 8-bit color value (0-255)
 /// @return 16-bit gamma-corrected value
-inline u16 hd108GammaCorrect(u8 value) {
+inline u16 hd108GammaCorrect(u8 value) FL_NOEXCEPT {
     return Gamma28LUT16::read(value);
 }
 
@@ -76,7 +77,7 @@ inline u16 hd108GammaCorrect(u8 value) {
 /// @note All gains set to maximum (31) for maximum precision
 /// @note Brightness control via 16-bit PWM values (applied before encoding)
 /// @note Future: Per channel gain control for higher color range
-inline void hd108BrightnessHeader(u8 brightness_8bit, u8* f0_out, u8* f1_out) {
+inline void hd108BrightnessHeader(u8 brightness_8bit, u8* f0_out, u8* f1_out) FL_NOEXCEPT {
     (void)brightness_8bit;  // Unused - brightness applied to 16-bit values instead
 
     // Use maximum gain for all channels for maximum precision
@@ -98,7 +99,7 @@ inline void hd108BrightnessHeader(u8 brightness_8bit, u8* f0_out, u8* f1_out) {
 /// @param b Blue component (0-255)
 /// @return 16-bit LPD6803 command word
 /// @note Bit 15: marker (1), Bits 14-0: 5-5-5 RGB
-inline u16 lpd6803EncodeRGB(u8 r, u8 g, u8 b) {
+inline u16 lpd6803EncodeRGB(u8 r, u8 g, u8 b) FL_NOEXCEPT {
     u16 command = 0x8000;  // Start marker
     command |= (r & 0xF8) << 7;   // Red: high 5 bits
     command |= (g & 0xF8) << 2;   // Green: high 5 bits

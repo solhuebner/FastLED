@@ -34,29 +34,29 @@ FASTLED_SHARED_PTR_NO_FWD(LUTXYZFLOAT);
 // Templated lookup table.
 template <typename T> class LUT {
   public:
-    LUT(u32 length) : length(length) {
+    LUT(u32 length) FL_NOEXCEPT : length(length) {
         T *ptr = PSRamAllocator<T>::Alloc(length);
         mDataHandle.reset(ptr);
         data = ptr;
     }
     // In this version the data is passed in but not managed by this object.
-    LUT(u32 length, T *data) : length(length) { this->data = data; }
+    LUT(u32 length, T *data) FL_NOEXCEPT : length(length) { this->data = data; }
     ~LUT() FL_NOEXCEPT {
         PSRamAllocator<T>::Free(mDataHandle.release());
         data = mDataHandle.get();
     }
 
-    const T &operator[](u32 index) const { return data[index]; }
+    const T &operator[](u32 index) const FL_NOEXCEPT { return data[index]; }
 
-    const T &operator[](u16 index) const { return data[index]; }
+    const T &operator[](u16 index) const FL_NOEXCEPT { return data[index]; }
 
-    T *getDataMutable() { return data; }
+    T *getDataMutable() FL_NOEXCEPT { return data; }
 
-    const T *getData() const { return data; }
+    const T *getData() const FL_NOEXCEPT { return data; }
 
-    u32 size() const { return length; }
+    u32 size() const FL_NOEXCEPT { return length; }
 
-    T interp8(u8 alpha) {
+    T interp8(u8 alpha) FL_NOEXCEPT {
         if (length == 0)
             return T();
         if (alpha == 0)
@@ -77,7 +77,7 @@ template <typename T> class LUT {
         return a + (b - a) * blend / 255;
     }
 
-    T interp16(u16 alpha) {
+    T interp16(u16 alpha) FL_NOEXCEPT {
         if (length == 0)
             return T();
         if (alpha == 0)

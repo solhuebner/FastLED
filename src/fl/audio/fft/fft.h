@@ -45,7 +45,7 @@ class Bins {
     friend class Context;
 
   public:
-    Bins(fl::size n);
+    Bins(fl::size n) FL_NOEXCEPT;
     ~Bins() FL_NOEXCEPT;
 
     Bins(const Bins &) FL_NOEXCEPT = default;
@@ -53,58 +53,58 @@ class Bins {
     Bins(Bins &&) FL_NOEXCEPT = default;
     Bins &operator=(Bins &&) FL_NOEXCEPT = default;
 
-    void clear();
+    void clear() FL_NOEXCEPT;
 
     // Configured band count (stable across clear/populate cycles)
-    fl::size bands() const;
+    fl::size bands() const FL_NOEXCEPT;
 
     // Read-only span accessors
-    fl::span<const float> raw() const;
+    fl::span<const float> raw() const FL_NOEXCEPT;
 
     // dB magnitudes: 20 * log10(raw[i]).
     // Lazily computed from raw() on first access; cached until raw changes.
-    fl::span<const float> db() const;
+    fl::span<const float> db() const FL_NOEXCEPT;
 
     // Bin-width-normalized raw magnitudes: raw[i] * normFactor[i].
     // Corrects for wider high-frequency bins accumulating more sidelobe energy.
     // Use this for equalization display; use raw() for feature extraction.
     // Returns a span into an internal buffer (no per-call allocation).
     // Lazily recomputed only when raw bins or norm factors change.
-    fl::span<const float> rawNormalized() const;
+    fl::span<const float> rawNormalized() const FL_NOEXCEPT;
 
     // Linear-spaced magnitude bins captured directly from raw FFT output.
     // Same count as CQ bins, evenly spaced from linearFmin() to linearFmax().
-    fl::span<const float> linear() const;
-    float linearFmin() const;
-    float linearFmax() const;
+    fl::span<const float> linear() const FL_NOEXCEPT;
+    float linearFmin() const FL_NOEXCEPT;
+    float linearFmax() const FL_NOEXCEPT;
 
     // CQ parameters (set by Impl after populating bins)
-    float fmin() const;
-    float fmax() const;
-    int sampleRate() const;
+    float fmin() const FL_NOEXCEPT;
+    float fmax() const FL_NOEXCEPT;
+    int sampleRate() const FL_NOEXCEPT;
 
     // Log-spaced center frequency for CQ bin i
-    float binToFreq(int i) const;
+    float binToFreq(int i) const FL_NOEXCEPT;
 
     // Find which CQ bin contains a given frequency (inverse of binToFreq)
-    int freqToBin(float freq) const;
+    int freqToBin(float freq) const FL_NOEXCEPT;
 
     // Frequency boundary between adjacent CQ bins i and i+1 (geometric mean)
-    float binBoundary(int i) const;
+    float binBoundary(int i) const FL_NOEXCEPT;
 
   private:
-    static FloatVectorPool& pool();
+    static FloatVectorPool& pool() FL_NOEXCEPT;
 
     // Mutable accessors for Context (the only writer).
     // raw_mut() invalidates derived caches (db, normalized).
-    fl::vector<float>& raw_mut();
-    fl::vector<float>& linear_mut();
+    fl::vector<float>& raw_mut() FL_NOEXCEPT;
+    fl::vector<float>& linear_mut() FL_NOEXCEPT;
 
-    void setParams(float fmin, float fmax, int sampleRate);
-    void setLinearParams(float linearFmin, float linearFmax);
+    void setParams(float fmin, float fmax, int sampleRate) FL_NOEXCEPT;
+    void setLinearParams(float linearFmin, float linearFmax) FL_NOEXCEPT;
 
     // Copy data into the existing buffer to reuse pooled capacity.
-    void setNormFactors(const fl::vector<float>& factors);
+    void setNormFactors(const fl::vector<float>& factors) FL_NOEXCEPT;
 
     fl::size mBands;
     fl::vector<float> mBinsRaw;
@@ -122,11 +122,11 @@ class Bins {
 };
 
 struct Args {
-    static int DefaultSamples() { return 512; }
-    static int DefaultBands() { return 16; }
-    static float DefaultMinFrequency() { return 90.0f; }
-    static float DefaultMaxFrequency() { return 14080.0f; }
-    static int DefaultSampleRate() { return 44100; }
+    static int DefaultSamples() FL_NOEXCEPT { return 512; }
+    static int DefaultBands() FL_NOEXCEPT { return 16; }
+    static float DefaultMinFrequency() FL_NOEXCEPT { return 90.0f; }
+    static float DefaultMaxFrequency() FL_NOEXCEPT { return 14080.0f; }
+    static int DefaultSampleRate() FL_NOEXCEPT { return 44100; }
 
     int samples = DefaultSamples();
     int bands = DefaultBands();
@@ -142,17 +142,17 @@ struct Args {
              int sample_rate = DefaultSampleRate(),
              Mode mode = Mode::AUTO,
              Window window = Window::AUTO)
-        : samples(samples), bands(bands), fmin(fmin), fmax(fmax),
+ FL_NOEXCEPT : samples(samples), bands(bands), fmin(fmin), fmax(fmax),
           sample_rate(sample_rate), mode(mode), window(window) {}
 
     // Resolve AUTO values for mode and window in-place.
     // Mode is resolved first; window depends on the resolved mode.
     // Takes bins (band count), samples, fmin, fmax as context.
     static void resolveModeEnums(Mode &mode, Window &window, int bands,
-                                 int samples, float fmin, float fmax);
+                                 int samples, float fmin, float fmax) FL_NOEXCEPT;
 
-    bool operator==(const Args &other) const ;
-    bool operator!=(const Args &other) const { return !(*this == other); }
+    bool operator==(const Args &other) const FL_NOEXCEPT;
+    bool operator!=(const Args &other) const FL_NOEXCEPT { return !(*this == other); }
 };
 
 class FFT {
@@ -166,20 +166,20 @@ class FFT {
     FFT &operator=(const FFT &) FL_NOEXCEPT = default;
 
     void run(const span<const i16> &sample, Bins *out,
-             const Args &args = Args());
+             const Args &args = Args()) FL_NOEXCEPT;
 
-    void clear();
-    fl::size size() const;
+    void clear() FL_NOEXCEPT;
+    fl::size size() const FL_NOEXCEPT;
 
     // FFT kernels are expensive to create, so they are stored in a global
     // LRU cache shared by all AudioContext instances. This sets the max
     // number of cached Impl entries (default 10).
-    static void setFFTCacheSize(fl::size size);
+    static void setFFTCacheSize(fl::size size) FL_NOEXCEPT;
 
   private:
     struct ImplCache;
     // Global LRU kernel cache — shared across all FFT / AudioContext instances.
-    static ImplCache &globalCache();
+    static ImplCache &globalCache() FL_NOEXCEPT;
 };
 
 } // namespace fft
