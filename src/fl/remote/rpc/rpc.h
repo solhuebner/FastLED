@@ -71,9 +71,6 @@
 // =============================================================================
 
 #include "fl/stl/json.h"  // IWYU pragma: keep
-
-#if FASTLED_ENABLE_JSON
-
 // Internal RPC headers
 #include "fl/remote/rpc/rpc_handle.h"
 #include "fl/remote/rpc/rpc_registry.h"
@@ -385,5 +382,3 @@ private:
 using RpcFactory = Rpc;
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

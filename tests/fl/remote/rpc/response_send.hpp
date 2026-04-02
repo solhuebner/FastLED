@@ -2,9 +2,6 @@
 #include "fl/stl/json.h"
 #include "fl/stl/vector.h"
 #include "test.h"
-
-#if FASTLED_ENABLE_JSON
-
 using namespace fl;
 
 FL_TEST_CASE("ResponseSend: send() creates proper JSON-RPC response") {
@@ -139,5 +136,3 @@ FL_TEST_CASE("ResponseSend: requestId() returns correct ID") {
 
     FL_REQUIRE(responseSend.requestId().as_string().value() == "my-id");
 }
-
-#endif // FASTLED_ENABLE_JSON

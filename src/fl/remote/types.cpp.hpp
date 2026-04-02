@@ -1,7 +1,4 @@
 #include "fl/remote/types.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 fl::json RpcResult::to_json() const {
@@ -16,5 +13,3 @@ fl::json RpcResult::to_json() const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

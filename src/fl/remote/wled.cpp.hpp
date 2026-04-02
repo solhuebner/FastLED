@@ -2,9 +2,6 @@
 #include "fl/fx/wled.h"
 #include "fl/system/log.h"
 #include "fl/system/log.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 // WLED Constructor and Stub Implementations
@@ -558,5 +555,3 @@ const WLEDSegment* WLED::findSegmentById(u8 id) const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

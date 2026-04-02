@@ -22,15 +22,7 @@
 #include "fl/task/promise.h" // For fl::task::Error type
 #include "fl/stl/string_view.h"
 
-#include "fl/system/sketch_macros.h"
 #include "fl/stl/noexcept.h"
-
-#ifndef FASTLED_ENABLE_JSON
-// FASTLED_ENABLE_JSON enables JSON UI components (always enabled on platforms with memory)
-// This flag controls UI component compilation (sliders, checkboxes, etc.)
-#define FASTLED_ENABLE_JSON SKETCH_HAS_LOTS_OF_MEMORY
-#endif
-
 
 namespace fl {
 

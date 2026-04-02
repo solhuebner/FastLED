@@ -5,9 +5,6 @@
 #pragma once
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/system/delay.h"
 #include "fl/stl/int.h"
 #include "fl/stl/cctype.h"
@@ -241,5 +238,3 @@ void writeSerialLine(SerialOut& serial, const fl::string& str) {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

@@ -5,9 +5,6 @@
 #include "platforms/shared/ui/json/ui_internal.h"
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 class JsonUiHelpInternal : public JsonUiInternal {
@@ -81,5 +78,3 @@ void JsonHelpImpl::setGroup(const fl::string &groupName) {
 int JsonHelpImpl::id() const { return mInternal->id(); }
 
 } // namespace fl
-
-#endif

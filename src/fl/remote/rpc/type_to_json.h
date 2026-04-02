@@ -4,9 +4,6 @@
 #include "fl/stl/string.h"
 #include "fl/stl/vector.h"
 #include "fl/remote/rpc/base64.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 namespace detail {
 
@@ -66,5 +63,3 @@ struct TypeToJson<void> {
 
 } // namespace detail
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

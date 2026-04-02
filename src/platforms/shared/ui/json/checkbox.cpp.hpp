@@ -4,9 +4,6 @@
 #include "fl/stl/json.h"
 #include "fl/stl/json.h"
 #include "platforms/shared/ui/json/ui.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 // Definition of the internal class that was previously in checkbox_internal.h
@@ -93,5 +90,3 @@ int JsonCheckboxImpl::id() const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

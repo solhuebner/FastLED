@@ -6,9 +6,6 @@
 #include "platforms/shared/ui/json/number_field.h"
 #include "platforms/shared/ui/json/ui_internal.h"
 #include "platforms/shared/ui/json/ui.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 // Definition of the internal class that was previously in number_field_internal.h
@@ -133,5 +130,3 @@ bool JsonNumberFieldImpl::operator!=(float v) const { return !fl::almost_equal(v
 bool JsonNumberFieldImpl::operator!=(int v) const { return !fl::almost_equal(value(), static_cast<float>(v)); }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

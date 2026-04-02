@@ -5,9 +5,6 @@
 #include "fl/stl/string.h"  // IWYU pragma: keep
 #include "fl/stl/cstdlib.h"  // IWYU pragma: keep
 #include "fl/stl/noexcept.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 namespace detail {
 
@@ -311,5 +308,3 @@ struct JsonToStringVisitor {
 
 } // namespace detail
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

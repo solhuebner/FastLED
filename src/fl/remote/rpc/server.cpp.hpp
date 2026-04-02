@@ -1,7 +1,4 @@
 #include "fl/remote/rpc/server.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/json.h"
 #include "fl/stl/cstddef.h"
 #include "fl/stl/move.h"
@@ -83,5 +80,3 @@ size_t Server::push() {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

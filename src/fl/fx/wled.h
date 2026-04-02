@@ -12,8 +12,6 @@
 #include "fl/fx/wled/client.h"  // IWYU pragma: keep
 
 // WLED-specific Remote extension requires JSON support
-#if FASTLED_ENABLE_JSON
-
 #include "fl/fx/wled/segment.h"
 #include "fl/fx/wled/json_helpers.h"  // IWYU pragma: keep
 #include "fl/stl/noexcept.h"
@@ -462,5 +460,3 @@ private:
 };
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

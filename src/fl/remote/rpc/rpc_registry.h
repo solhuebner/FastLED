@@ -1,9 +1,6 @@
 #pragma once
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/stdint.h"  // IWYU pragma: keep
 #include "fl/stl/string.h"
 #include "fl/stl/vector.h"
@@ -79,5 +76,3 @@ inline json makeJsonRpcError(int code, const fl::string& message, const json& id
 
 } // namespace detail
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

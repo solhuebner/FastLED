@@ -10,10 +10,6 @@
 #include "platforms/shared/ui/json/ui.h"
 
 #include "platforms/shared/ui/json/audio_buffer.h"
-
-#if FASTLED_ENABLE_JSON
-
-
 namespace fl {
 // namespace {
 //     fl::string& scratchBuffer() {
@@ -86,5 +82,3 @@ audio::Sample JsonAudioImpl::next() {
 bool JsonAudioImpl::hasNext() { return !mInternal->audioSamples().empty(); }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

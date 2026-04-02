@@ -3,9 +3,6 @@
 #include "platforms/shared/ui/json/title.h"
 #include "fl/stl/json.h"
 #include "platforms/shared/ui/json/ui.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 class JsonUiTitleInternal : public JsonUiInternal {
@@ -87,5 +84,3 @@ void JsonTitleImpl::setGroup(const fl::string &groupName) {
 int JsonTitleImpl::id() const { return mInternal->id(); }
 
 } // namespace fl
-
-#endif

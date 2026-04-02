@@ -11,9 +11,6 @@
 #include "fl/stl/span.h"
 #include "fl/remote/rpc/base64.h"
 #include "fl/stl/noexcept.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 // Helper wrapper for const char* parameters in RPC
@@ -267,5 +264,3 @@ struct JsonToType<fl::vector<fl::u8>, void> {
 
 } // namespace detail
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

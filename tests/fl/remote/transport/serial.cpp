@@ -2,9 +2,6 @@
 // Tests for serial transport layer optimizations
 
 #include "fl/remote/transport/serial.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "test.h"
 
 FL_TEST_FILE(FL_FILEPATH) {
@@ -223,7 +220,4 @@ FL_TEST_CASE("String view: zero-copy operations") {
     FL_REQUIRE(view1.size() == view2.size());
     FL_REQUIRE(view1.size() == 7);  // "content"
 }
-
-#endif // FASTLED_ENABLE_JSON
-
 } // FL_TEST_FILE

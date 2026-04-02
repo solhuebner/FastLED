@@ -77,8 +77,6 @@ fl::string ActiveStripData::infoJsonStringNew() {
     // NEW API - Using fl::json creation API (PROPER IMPLEMENTATION)
     // 
     // This is the target implementation that the JSON creation API must support
-    
-#if FASTLED_ENABLE_JSON
     // Create a JSON array using the new fl::json API
     auto json = fl::json::createArray();
     
@@ -93,9 +91,6 @@ fl::string ActiveStripData::infoJsonStringNew() {
     
     // Serialize the JSON structure
     return json.serialize();
-#else
-    return fl::string("[]");
-#endif
 }
 
 } // namespace fl 

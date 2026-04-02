@@ -1,7 +1,4 @@
 #include "fl/remote/rpc/rpc.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/int.h"
 #include "fl/stl/json.h"
 #include "fl/system/log.h"
@@ -260,5 +257,3 @@ json Rpc::schema() const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

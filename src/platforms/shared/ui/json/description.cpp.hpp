@@ -6,9 +6,6 @@
 
 #include "fl/stl/json.h"
 #include "fl/stl/compiler_control.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 class JsonUiDescriptionInternal : public JsonUiInternal {
@@ -83,5 +80,3 @@ int JsonDescriptionImpl::id() const {
 }
 
 } // namespace fl
-
-#endif

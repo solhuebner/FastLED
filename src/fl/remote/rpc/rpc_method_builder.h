@@ -1,7 +1,4 @@
 #pragma once
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/string.h"
 #include "fl/stl/vector.h"
 #include "fl/remote/rpc/rpc_handle.h"
@@ -70,5 +67,3 @@ private:
 
 } // namespace detail
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

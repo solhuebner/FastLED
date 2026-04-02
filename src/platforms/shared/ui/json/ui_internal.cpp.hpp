@@ -8,9 +8,6 @@
 #include "platforms/shared/ui/json/ui_internal.h"
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 const fl::string &JsonUiInternal::name() const { return mName; }
@@ -48,5 +45,3 @@ int JsonUiInternal::nextId() {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

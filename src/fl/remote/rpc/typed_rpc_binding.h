@@ -1,9 +1,6 @@
 #pragma once
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/stdint.h"
 #include "fl/stl/tuple.h"
 #include "fl/stl/function.h"
@@ -105,5 +102,3 @@ private:
 };
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

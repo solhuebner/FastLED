@@ -4,9 +4,6 @@
 #pragma once
 
 #include "fl/remote/transport/serial.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/cstring.h"
 #include "fl/stl/strstream.h"
 
@@ -34,5 +31,3 @@ fl::string formatJsonResponse(const fl::json& response, const char* prefix) {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

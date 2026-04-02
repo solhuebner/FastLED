@@ -14,9 +14,6 @@
 #include "test.h"
 
 #include "fl/remote/remote.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/remote/rpc/base64.h"
 #include "fl/stl/json.h"
 #include "fl/stl/string.h"
@@ -402,7 +399,4 @@ FL_TEST_CASE("decode_file: JSON-RPC dispatch") {
         FL_FAIL("Unknown extension: " << decoded_ext);
     }
 }
-
-#endif // FASTLED_ENABLE_JSON
-
 } // FL_TEST_FILE

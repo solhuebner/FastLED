@@ -9,9 +9,6 @@
 #include "fl/stl/compiler_control.h"
 
 FL_DISABLE_WARNING(deprecated-declarations)
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 // Definition of the internal class that was previously in slider_internal.h
@@ -152,5 +149,3 @@ int JsonSliderImpl::id() const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

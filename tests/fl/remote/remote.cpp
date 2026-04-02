@@ -1,9 +1,6 @@
 
 
 #include "fl/remote/remote.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/cctype.h"
 #include "fl/stl/stdint.h"
 #include "fl/stl/cstring.h"
@@ -1716,7 +1713,4 @@ FL_TEST_CASE("Remote: Async RPC - Sync vs Async behavior difference") {
         FL_REQUIRE(ackResult["acknowledged"].as_bool().value() == true);
     }
 }
-
-#endif // FASTLED_ENABLE_JSON
-
 } // FL_TEST_FILE

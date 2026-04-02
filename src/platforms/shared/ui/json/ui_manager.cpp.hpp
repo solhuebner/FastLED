@@ -13,9 +13,6 @@
 
 
 FL_DISABLE_WARNING(deprecated-declarations)
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 
@@ -216,5 +213,3 @@ void JsonUiManager::toJson(fl::json &doc) {
 }
 
 } // namespace fl
-
-#endif

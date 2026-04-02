@@ -5,9 +5,6 @@
 #include "fl/remote/rpc/rpc.h"
 
 #include "test.h"
-
-#if FASTLED_ENABLE_JSON
-
 using namespace fl;
 
 // =============================================================================
@@ -504,5 +501,3 @@ FL_TEST_CASE("JsonArgConverter - Edge cases") {
         }
     }
 }
-
-#endif // FASTLED_ENABLE_JSON

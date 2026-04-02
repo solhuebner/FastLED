@@ -23,8 +23,8 @@
 #include "fl/stl/noexcept.h"
 #include "fl/stl/pair.h"
 
-// BLE requires: JSON enabled + ESP32 + IDF 5+ + NimBLE headers present
-#if FASTLED_ENABLE_JSON && defined(FL_IS_ESP32) && defined(FL_IS_IDF_5_OR_HIGHER) \
+// BLE requires: ESP32 + IDF 5+ + NimBLE headers present
+#if defined(FL_IS_ESP32) && defined(FL_IS_IDF_5_OR_HIGHER) \
     && FL_HAS_INCLUDE(<nimble/nimble_port.h>)
 #define FL_BLE_AVAILABLE 1
 #else

@@ -5,9 +5,6 @@
 #include "fl/stl/json.h"
 #include "platforms/shared/ui/json/ui.h"
 #include "fl/stl/span.h"
-
-#if FASTLED_ENABLE_JSON
-
 namespace fl {
 
 
@@ -163,5 +160,3 @@ int JsonDropdownImpl::id() const {
 }
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON

@@ -1,9 +1,6 @@
 #pragma once
 
 #include "fl/stl/json.h"
-
-#if FASTLED_ENABLE_JSON
-
 #include "fl/stl/function.h"
 #include "fl/stl/noexcept.h"
 
@@ -157,5 +154,3 @@ private:
 };
 
 } // namespace fl
-
-#endif // FASTLED_ENABLE_JSON
