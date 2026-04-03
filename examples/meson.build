@@ -180,6 +180,9 @@ example_pch_usage_args = [
 
 # List to store all example executables for the alias target
 example_executables = []
+# DLL-only list for the all-with-examples alias (avoids building runner copies
+# which each take ~1.5s of file-copy overhead on Windows, saving ~10s total)
+example_dlls = []
 
 # Create executable target for each discovered example
 foreach example_name : example_paths.keys()
@@ -315,6 +318,7 @@ foreach example_name : example_paths.keys()
 
     # Track both DLL and runner for alias target
     example_executables += [example_dll, example_runner_copy]
+    example_dlls += [example_dll]
 endforeach
 
 # Create alias target to build all examples (only if we have examples)

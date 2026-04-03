@@ -106,14 +106,17 @@ if not is_wasm_build
   else
     # Stub variables for when examples are disabled
     example_executables = []
+    example_dlls = []
   endif
 
   # Combined alias: builds all test DLLs + example DLLs + both runner executables
   # in a single Ninja invocation, sharing PCH and libfastled compilation.
-  # Requires both unit tests (runner_exe) and examples (example_runner_exe) to be enabled.
-  if get_option('enable_unit_tests') and get_option('enable_examples') and example_executables.length() > 0
+  # Uses example_dlls (not example_executables) to skip building runner .exe copies
+  # which are only needed for standalone execution, not for test runs.
+  # This saves ~10s on Windows (86 file copies at ~1.5s each / 16 parallel jobs).
+  if get_option('enable_unit_tests') and get_option('enable_examples') and example_dlls.length() > 0
     alias_target('all-with-examples',
-      all_test_dlls + example_executables + [runner_exe, example_runner_exe])
+      all_test_dlls + example_dlls + [runner_exe, example_runner_exe])
   endif
 else
   # WASM build: emscripten cross-compilation with different flags and targets

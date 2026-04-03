@@ -209,16 +209,19 @@ endforeach
 # ============================================================================
 # Core link arguments (shared by all targets)
 # ============================================================================
-# --deploy-dependencies is a clang-tool-chain specific flag that copies
-# required runtime libraries to the build directory. Stock clang doesn't
-# support this flag.
 core_link_args = ['-fuse-ld=lld']
-if is_clang_tool_chain_wrapper
-  core_link_args += ['--deploy-dependencies']
-endif
 if build_mode == 'release'
   # Enable thin LTO at link time for release builds
   core_link_args += ['-flto=thin']
+endif
+
+# --deploy-dependencies copies runtime DLLs next to the output binary.
+# Only needed for runner executables and fastled.dll — NOT for test/example
+# DLLs, which find runtime DLLs via PATH set by the test runner.
+# Skipping this for ~270 DLLs avoids per-link overhead from ctc-clang++.
+deploy_link_args = []
+if is_clang_tool_chain_wrapper
+  deploy_link_args += ['--deploy-dependencies']
 endif
 
 # Sanitizer link flags (used in debug mode)
@@ -270,7 +273,7 @@ endif
 # ============================================================================
 # Used for building fastled.dll/libfastled.so itself.
 # Similar to DLL args but without consumer-specific flags like -mconsole.
-fastled_shared_link_args = core_link_args + sanitizer_link_args
+fastled_shared_link_args = core_link_args + deploy_link_args + sanitizer_link_args
 if is_windows
   # NOTE: Do NOT use -static-libgcc/-static-libstdc++ here.
   # fastled.dll and consumer DLLs must share the same C++ runtime heap.
@@ -300,7 +303,7 @@ endif
 if build_mode == 'debug'
   # Debug mode: dynamic linking required for sanitizers
   # No --no-undefined: sanitizers resolve symbols at runtime
-  runner_link_args = core_link_args + sanitizer_link_args + ['-pthread']
+  runner_link_args = core_link_args + deploy_link_args + sanitizer_link_args + ['-pthread']
   if is_windows
     runner_link_args += ['-ldbghelp', '-lpsapi', '-lws2_32']
   endif
@@ -313,7 +316,7 @@ elif build_mode == 'quick'
   # that cause SIGSEGV crashes. Use dynamic linking on Linux like macOS.
   if is_windows
     # Windows: static linking works well with LoadLibrary
-    runner_link_args = core_link_args + [
+    runner_link_args = core_link_args + deploy_link_args + [
       '-Wl,--no-undefined',  # Catch missing libraries early
       '-static',
       '-static-libgcc',
@@ -324,7 +327,7 @@ elif build_mode == 'quick'
   else
     # macOS and Linux: dynamic linking (glibc doesn't support static + dlopen)
     # Note: -lunwind is added conditionally below after checking availability
-    runner_link_args = core_link_args + [
+    runner_link_args = core_link_args + deploy_link_args + [
       '-Wl,--no-undefined',  # Catch missing libraries early
       '-pthread',
     ]
@@ -334,7 +337,7 @@ else
   # NOTE: Linux with glibc doesn't support static linking + dlopen() properly.
   if is_windows
     # Windows: static linking works well with LoadLibrary
-    runner_link_args = core_link_args + [
+    runner_link_args = core_link_args + deploy_link_args + [
       '-Wl,--no-undefined',  # Catch missing libraries early
       '-static',
       '-static-libgcc',
@@ -345,7 +348,7 @@ else
   else
     # macOS and Linux: dynamic linking (glibc doesn't support static + dlopen)
     # Note: -lunwind is added conditionally below after checking availability
-    runner_link_args = core_link_args + [
+    runner_link_args = core_link_args + deploy_link_args + [
       '-Wl,--no-undefined',  # Catch missing libraries early
       '-pthread',
     ]
