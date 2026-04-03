@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import argparse
+from __future__ import annotations
+
 import os
 import sys
 from pathlib import Path
 from typing import Optional
 
-from ci.util.smart_selector import TestMatch, get_best_match_or_prompt
 from ci.util.test_types import TestArgs
 from ci.util.timestamp_print import ts_print
 
@@ -31,6 +31,8 @@ def _python_test_exists(test_name: str) -> bool:
 
 def parse_args(args: Optional[list[str]] = None) -> TestArgs:
     """Parse command line arguments"""
+    import argparse  # noqa: PLC0415 - lazy: ~20ms saved on early-exit paths
+
     parser = argparse.ArgumentParser(description="Run FastLED tests")
     parser.add_argument(
         "--cpp",
@@ -288,6 +290,10 @@ def parse_args(args: Optional[list[str]] = None) -> TestArgs:
                 # --examples flag without --unit means examples only
                 filter_type = "example"
                 filter_desc = " (--examples filter)"
+
+            from ci.util.smart_selector import (
+                get_best_match_or_prompt,  # noqa: PLC0415 - lazy: ~50ms saved when no test name
+            )
 
             match = get_best_match_or_prompt(test_args.test, filter_type=filter_type)
 

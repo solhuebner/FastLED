@@ -6,24 +6,9 @@ This module provides platform-neutral colored output for the CI system,
 using the Rich library for consistent formatting across Windows, macOS, and Linux.
 """
 
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from .timestamp_print import get_elapsed_str
-
-
-if TYPE_CHECKING:
-    from rich.console import Console
-    from rich.text import Text
-
-try:
-    from rich.console import Console
-    from rich.text import Text
-
-    _HAS_RICH = True
-except ImportError:
-    _HAS_RICH = False
-    Console = None  # type: ignore
-    Text = None  # type: ignore
 
 
 class ColorOutput:
@@ -41,10 +26,15 @@ class ColorOutput:
         Args:
             force_terminal: Force terminal mode (True/False) or auto-detect (None)
         """
-        if _HAS_RICH and Console is not None:
+        try:
+            from rich.console import Console
+            from rich.text import Text
+
             self.console = Console(force_terminal=force_terminal)
-        else:
+            self._Text = Text
+        except ImportError:
             self.console = None
+            self._Text = None
 
     def _fallback_print(self, message: str, prefix: str = "") -> None:
         """Fallback print when Rich is not available."""
@@ -85,9 +75,9 @@ class ColorOutput:
     def print_cache_hit(self, message: str) -> None:
         """Print cache hit message in green with appropriate formatting."""
         elapsed = get_elapsed_str()
-        if self.console and Text is not None:
+        if self.console and self._Text is not None:
             # Use bright green with a checkmark for cache hits
-            text = Text()
+            text = self._Text()
             text.append(f"{elapsed} ", style="bright_green")
             text.append("✓ ", style="bright_green bold")
             text.append(message, style="green")
@@ -99,9 +89,9 @@ class ColorOutput:
     def print_cache_miss(self, message: str) -> None:
         """Print cache miss/invalidation message in yellow with warning formatting."""
         elapsed = get_elapsed_str()
-        if self.console and Text is not None:
+        if self.console and self._Text is not None:
             # Use yellow with a warning symbol for cache misses/invalidations
-            text = Text()
+            text = self._Text()
             text.append(f"{elapsed} ", style="yellow")
             text.append("⚠️  ", style="yellow bold")
             text.append(message, style="yellow")
@@ -110,39 +100,47 @@ class ColorOutput:
             self._fallback_print(f"{elapsed} {message}", "⚠️  ")
 
 
-# Global instance for easy access
-_color_output = ColorOutput()
+# Lazy global instance: deferred until first use to avoid paying the ~100ms
+# rich import cost at module import time.
+_color_output: Optional[ColorOutput] = None
+
+
+def _get_color_output() -> ColorOutput:
+    global _color_output
+    if _color_output is None:
+        _color_output = ColorOutput()
+    return _color_output
 
 
 # Convenience functions for common use cases
 def print_green(message: str) -> None:
     """Print message in green color (global function)."""
-    _color_output.print_green(message)
+    _get_color_output().print_green(message)
 
 
 def print_yellow(message: str) -> None:
     """Print message in yellow color (global function)."""
-    _color_output.print_yellow(message)
+    _get_color_output().print_yellow(message)
 
 
 def print_red(message: str) -> None:
     """Print message in red color (global function)."""
-    _color_output.print_red(message)
+    _get_color_output().print_red(message)
 
 
 def print_blue(message: str) -> None:
     """Print message in blue color (global function)."""
-    _color_output.print_blue(message)
+    _get_color_output().print_blue(message)
 
 
 def print_cache_hit(message: str) -> None:
     """Print cache hit message in green with checkmark (global function)."""
-    _color_output.print_cache_hit(message)
+    _get_color_output().print_cache_hit(message)
 
 
 def print_cache_miss(message: str) -> None:
     """Print cache miss/invalidation message in yellow with warning (global function)."""
-    _color_output.print_cache_miss(message)
+    _get_color_output().print_cache_miss(message)
 
 
 if __name__ == "__main__":

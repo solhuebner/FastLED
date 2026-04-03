@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 import functools
-import hashlib
 import os
 import threading
 import time
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-from typeguard import typechecked
+
+if TYPE_CHECKING:
+    from typeguard import typechecked
+else:
+    # No-op decorator: skip typeguard's ~277ms import cost at runtime.
+    # Static type checkers (mypy/pyright) still see the real decorator.
+    def typechecked(f):  # type: ignore[no-redef]
+        return f
+
 
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
@@ -344,6 +351,8 @@ def _hash_directory(start_directory: Path, glob: str) -> str:
 
     Raises exceptions on failure so lru_cache does not cache error results.
     """
+    import hashlib  # noqa: PLC0415 - lazy: ~5ms saved; only needed when fingerprinting
+
     hasher = hashlib.sha256()
 
     # Extract extensions from glob patterns (e.g., "**/*.h,**/*.cpp" -> {".h", ".cpp"})
@@ -432,6 +441,8 @@ def calculate_cpp_test_fingerprint(
     Returns:
         The fingerprint result covering files that affect C++ unit tests
     """
+    import hashlib  # noqa: PLC0415 - lazy: ~5ms saved; only needed when fingerprinting
+
     start_time = time.time()
     cwd = Path.cwd()
 
@@ -494,6 +505,8 @@ def calculate_examples_fingerprint(
     Returns:
         The fingerprint result covering files that affect example compilation tests
     """
+    import hashlib  # noqa: PLC0415 - lazy: ~5ms saved; only needed when fingerprinting
+
     start_time = time.time()
     cwd = Path.cwd()
 
@@ -569,6 +582,8 @@ def calculate_python_test_fingerprint() -> FingerprintResult:
     Returns:
         The fingerprint result covering files that affect Python tests
     """
+    import hashlib  # noqa: PLC0415 - lazy: ~5ms saved; only needed when fingerprinting
+
     start_time = time.time()
     cwd = Path.cwd()
 
@@ -618,6 +633,8 @@ def calculate_wasm_fingerprint() -> FingerprintResult:
     Returns:
         The fingerprint result covering files that affect WASM compilation
     """
+    import hashlib  # noqa: PLC0415 - lazy: ~5ms saved; only needed when fingerprinting
+
     start_time = time.time()
     cwd = Path.cwd()
 

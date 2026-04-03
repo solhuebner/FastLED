@@ -6,7 +6,6 @@ import signal
 import sys
 import threading
 import time
-import traceback
 from typing import Optional
 
 
@@ -23,6 +22,8 @@ def _print_caller(label: str) -> None:
     """When --debug-test is active, print the caller location and short stack."""
     if not _debug_test:
         return
+    import traceback  # noqa: PLC0415 - lazy: ~11ms saved; only needed in --debug-test mode
+
     # extract_stack() includes this function and the public wrapper;
     # skip the last 2 frames to show the actual caller.
     stack = traceback.extract_stack()

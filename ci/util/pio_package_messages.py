@@ -13,9 +13,15 @@ Supports:
 import time
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from typeguard import typechecked
+
+if TYPE_CHECKING:
+    from typeguard import typechecked
+else:
+
+    def typechecked(f):  # type: ignore[no-redef]
+        return f
 
 
 class DaemonState(Enum):

@@ -24,7 +24,6 @@ import subprocess
 import sys
 import threading
 import time
-import traceback
 from dataclasses import dataclass
 from queue import Queue
 
@@ -32,7 +31,15 @@ from queue import Queue
 from typing import TYPE_CHECKING, Callable, Optional
 
 from running_process import RunningProcess
-from typeguard import typechecked
+
+
+if TYPE_CHECKING:
+    from typeguard import typechecked
+else:
+
+    def typechecked(f):  # type: ignore[no-redef]
+        return f
+
 
 from ci.util.color_output import print_cache_hit
 
@@ -54,7 +61,6 @@ from ci.util.test_types import (
     determine_test_categories,
 )
 from ci.util.timestamp_print import ts_print
-from ci.util.zccache_config import show_zccache_stats
 
 
 @dataclass(slots=True)
@@ -1324,6 +1330,8 @@ class ProcessStuckMonitor:
             # monitoring thread, not a critical path. Interrupting main here
             # causes spurious "Interrupt signal received" on normal exits.
             ts_print(f"❌ Thread {thread_id} ({thread_name}) unexpected error: {e}")
+            import traceback  # noqa: PLC0415 - lazy: only imported on error path
+
             traceback.print_exc()
 
 
@@ -1573,6 +1581,8 @@ def runner(
             # Print timing summary table for unit-only mode
             # Skip zccache stats when test result came from cache (no compilation occurred)
             if not result.compilation_skipped:
+                from ci.util.zccache_config import show_zccache_stats  # noqa: PLC0415
+
                 show_zccache_stats()
             unit_timing = ProcessTiming(
                 name=f"cpp_unit_tests ({result.num_tests_passed}/{result.num_tests_run} passed)",
@@ -1851,6 +1861,8 @@ def runner(
                 meson_test_timing is not None and not meson_test_timing.skipped
             )
             if _did_compile:
+                from ci.util.zccache_config import show_zccache_stats  # noqa: PLC0415
+
                 show_zccache_stats()
             else:
                 # All tests were fingerprint-cached — refresh the full run cache so

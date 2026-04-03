@@ -396,6 +396,13 @@ def check_single_test_cached(test_name_raw: str, build_dir: Path) -> bool:
             matched = cn
             break
     if not matched:
+        # Suffix matching: "allocator" matches "fl_stl_allocator" etc.
+        # Only accept if exactly one cached name ends with _<query> to avoid ambiguity.
+        suffix = f"_{name_normalized}"
+        suffix_matches = [n for n in cached_names if n.endswith(suffix)]
+        if len(suffix_matches) == 1:
+            matched = suffix_matches[0]
+    if not matched:
         return False
 
     ext = ".dll" if os.name == "nt" else ".so"

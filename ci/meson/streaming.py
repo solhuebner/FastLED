@@ -18,6 +18,7 @@ from ci.meson.compile import (
     _is_compilation_error,
 )
 from ci.meson.compiler import get_meson_executable
+from ci.meson.mtime_stabilizer import stabilize_dll_mtimes
 from ci.meson.output import print_error, print_success
 from ci.meson.phase_tracker import PhaseTracker
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
@@ -433,6 +434,13 @@ def stream_compile_only(
     compile_sub_phases["compile_done"] = time.time()
     if build_timer is not None:
         build_timer.checkpoint("compile_done")
+
+    # Post-compile mtime stabilization: fix zccache relink loop.
+    # zccache restores cached link results with old mtimes, making DLLs
+    # perpetually older than the symbols file → infinite relink cascade.
+    # Touch stale outputs to break the loop (~5ms, saves ~1-2s per build).
+    if not compilation_failed:
+        stabilize_dll_mtimes(build_dir, verbose=verbose)
 
     return CompileOnlyResult(
         success=not compilation_failed,

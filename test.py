@@ -37,13 +37,20 @@ os.chdir(Path(__file__).parent)
 # entirely when the test result is found in cache.
 argv_ultra_early_exit(_START_TIME)
 
+# Configure UTF-8 console now that we know we're on the non-early-exit path.
+# This was previously in ci/__init__.py but was deferred to avoid ~20ms cost
+# on ultra-early-exit paths that only need ci.early_exit_cache (stdlib-only).
+import ci  # noqa: PLC0415 - already loaded; just grabbing the module reference
+
+
+ci._ensure_init()
+
 # --- Heavy imports: only reached if no early exit fired above ---
 from ci.util.global_interrupt_handler import (
     handle_keyboard_interrupt,
     signal_interrupt,
     wait_for_cleanup,
 )
-from ci.util.running_process_manager import RunningProcessManagerSingleton
 from ci.util.test_args import parse_args
 from ci.util.test_env import (
     dump_thread_stacks,
@@ -122,14 +129,19 @@ def _check_crash_dumps() -> None:
         _GDB_CRASH_SEEN.write_text(current_hash)
 
 
-# Platform to emulator backend mapping for --run command
-def _load_backends():
-    backend_path = Path(__file__).parent / "ci" / "runners" / "backends.json"
-    with open(backend_path) as f:
-        return json.load(f)
+# Platform to emulator backend mapping for --run command (lazy-loaded).
+# Loading reads a JSON file from disk (~18ms). Deferred to first access since
+# the mapping is only needed when --run is used.
+_RUN_PLATFORM_BACKENDS: dict[str, list[str]] | None = None
 
 
-_RUN_PLATFORM_BACKENDS = _load_backends()
+def _get_run_platform_backends() -> dict[str, list[str]]:
+    global _RUN_PLATFORM_BACKENDS
+    if _RUN_PLATFORM_BACKENDS is None:
+        backend_path = Path(__file__).parent / "ci" / "runners" / "backends.json"
+        with open(backend_path) as f:
+            _RUN_PLATFORM_BACKENDS = json.load(f)
+    return _RUN_PLATFORM_BACKENDS  # type: ignore[return-value]
 
 
 if os.environ.get("GITHUB_ACTIONS"):
@@ -154,6 +166,10 @@ def make_watch_dog_thread(
 
         # Dump outstanding running processes (if any)
         try:
+            from ci.util.running_process_manager import (
+                RunningProcessManagerSingleton,  # noqa: PLC0415
+            )
+
             RunningProcessManagerSingleton.dump_active()
         except KeyboardInterrupt as ki:
             handle_keyboard_interrupt(ki)
@@ -340,11 +356,50 @@ def main() -> None:
             python_test_change = True
             wasm_change = True
         else:
-            src_code_change = fingerprint_manager.check_all()
-            cpp_test_change = fingerprint_manager.check_cpp(args)
-            examples_change = fingerprint_manager.check_examples(args)
-            python_test_change = fingerprint_manager.check_python()
-            wasm_change = fingerprint_manager.check_wasm()
+            # OPTIMIZATION: Run fingerprint checks in parallel threads.
+            # Each check independently scans directories and hashes files (~20-30ms each).
+            # Running all 5 concurrently reduces total from ~110ms to ~30ms.
+            _fp_results: dict[str, bool] = {}
+
+            def _fp_check(name: str, fn) -> None:
+                _fp_results[name] = fn()
+
+            _fp_threads = [
+                threading.Thread(
+                    target=_fp_check,
+                    args=("all", fingerprint_manager.check_all),
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_fp_check,
+                    args=("cpp", lambda: fingerprint_manager.check_cpp(args)),
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_fp_check,
+                    args=("examples", lambda: fingerprint_manager.check_examples(args)),
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_fp_check,
+                    args=("python", fingerprint_manager.check_python),
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_fp_check,
+                    args=("wasm", fingerprint_manager.check_wasm),
+                    daemon=True,
+                ),
+            ]
+            for _t in _fp_threads:
+                _t.start()
+            for _t in _fp_threads:
+                _t.join()
+            src_code_change = _fp_results["all"]
+            cpp_test_change = _fp_results["cpp"]
+            examples_change = _fp_results["examples"]
+            python_test_change = _fp_results["python"]
+            wasm_change = _fp_results["wasm"]
 
         # Handle --docker flag: run tests in Docker container
         if args.docker:
@@ -364,7 +419,7 @@ def main() -> None:
 
             # Look up backend from mapping table
             backend = None
-            for b, platforms in _RUN_PLATFORM_BACKENDS.items():
+            for b, platforms in _get_run_platform_backends().items():
                 if platform in platforms:
                     backend = b
                     break
@@ -376,7 +431,7 @@ def main() -> None:
                 ts_print("Supported platforms:")
 
                 # Group platforms by backend
-                for b, platforms in _RUN_PLATFORM_BACKENDS.items():
+                for b, platforms in _get_run_platform_backends().items():
                     ts_print(f"  {b.upper()}: {', '.join(sorted(platforms))}")
 
                 sys.exit(1)
@@ -426,51 +481,69 @@ def main() -> None:
                     ProcessExecutionConfig,
                     RunningProcessGroup,
                 )
+
+                # Discover test counts in background to avoid blocking process
+                # creation (~1-10s for pytest --collect-only).
                 from ci.util.test_runner import (
+                    TestCounts,
                     create_examples_test_process,
                     create_python_test_process,
                     get_test_counts,
                 )
 
-                # Get and display test counts before starting
-                ts_print("Discovering tests...")
-                counts = get_test_counts()
-                total_tests = (
-                    counts.unit_test_count
-                    + counts.example_count
-                    + counts.python_test_count
-                )
-                ts_print(
-                    f"Found {total_tests} tests: {counts.unit_test_count} unit tests, {counts.example_count} examples, {counts.python_test_count} Python tests"
-                )
+                _counts_result: list[TestCounts] = []
 
-                # Create Python test process (runs first)
+                def _discover_counts() -> None:
+                    try:
+                        _counts_result.append(get_test_counts())
+                    except KeyboardInterrupt as ki:
+                        handle_keyboard_interrupt(ki)
+                    except Exception:
+                        pass
+
+                _discovery_thread = threading.Thread(
+                    target=_discover_counts, daemon=True, name="TestDiscovery"
+                )
+                _discovery_thread.start()
+
+                # Create processes while discovery runs in background
                 python_process = create_python_test_process(
                     enable_stack_trace=False, run_slow=True
                 )
                 python_process.auto_run = False
 
-                # Create examples compilation process
                 examples_process = create_examples_test_process(
                     args, not args.no_stack_trace
                 )
                 examples_process.auto_run = False
 
-                # Configure sequential execution with dependencies
+                # Now wait for discovery and display counts
+                _discovery_thread.join(timeout=15)
+                if _counts_result:
+                    counts = _counts_result[0]
+                    total_tests = (
+                        counts.unit_test_count
+                        + counts.example_count
+                        + counts.python_test_count
+                    )
+                    ts_print(
+                        f"Found {total_tests} tests: {counts.unit_test_count} unit tests, {counts.example_count} examples, {counts.python_test_count} Python tests"
+                    )
+
+                # Configure parallel execution — Python tests and examples are
+                # independent and can run concurrently for faster wall-clock time.
                 config = ProcessExecutionConfig(
-                    execution_mode=ExecutionMode.SEQUENTIAL_WITH_DEPENDENCIES,
+                    execution_mode=ExecutionMode.PARALLEL,
                     verbose=args.verbose,
-                    timeout_seconds=2100,  # 35 minutes for sequential examples compilation
+                    timeout_seconds=2100,  # 35 minutes for examples compilation
                     live_updates=True,  # Enable real-time display
                     display_type="auto",  # Auto-detect best display format
                 )
 
-                # Create process group and set up dependency
-                group = RunningProcessGroup(config=config, name="FullTestSequence")
+                # Create process group — no dependency between Python tests and examples
+                group = RunningProcessGroup(config=config, name="FullTestParallel")
                 group.add_process(python_process)
-                group.add_dependency(
-                    examples_process, python_process
-                )  # examples depends on python
+                group.add_process(examples_process)
 
                 try:
                     # Start real-time display for full test mode
@@ -495,7 +568,7 @@ def main() -> None:
                     if display_thread:
                         time.sleep(0.5)
 
-                    ts_print("Sequential test execution completed successfully")
+                    ts_print("Parallel test execution completed successfully")
 
                     # Print timing summary
                     if timings:
@@ -506,7 +579,7 @@ def main() -> None:
                     _thread.interrupt_main()
                     raise
                 except Exception as e:
-                    ts_print(f"Sequential test execution failed: {e}")
+                    ts_print(f"Parallel test execution failed: {e}")
                     sys.exit(1)
             else:
                 # Use normal test runner for other cases

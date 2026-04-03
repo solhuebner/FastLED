@@ -14,7 +14,6 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from clang_tool_chain import prepare_sanitizer_environment
 from running_process import RunningProcess
 
 from ci.meson.build_config import (
@@ -499,6 +498,10 @@ def run_meson_build_and_test(
     if use_debug:
         # Get sanitizer-configured environment from clang-tool-chain
         # Pass compiler flags so the API knows sanitizers are active
+        from clang_tool_chain import (
+            prepare_sanitizer_environment,  # noqa: PLC0415 - lazy: ~60ms saved on non-debug paths
+        )
+
         sanitizer_flags = ["-fsanitize=address"]
         sanitizer_env = prepare_sanitizer_environment(
             base_env=os.environ.copy(),
@@ -531,15 +534,10 @@ def run_meson_build_and_test(
     phase_tracker = PhaseTracker(build_dir, build_mode)
     phase_tracker.set_phase("CONFIGURE")
 
-    # Determine if examples should be enabled in Meson build
-    # Disable examples if 'examples' is in exclude_suites (indicating unit-test-only mode)
-    enable_examples = True
-    if exclude_suites:
-        # Check for both "examples" and "fastled:examples" formats
-        for suite in exclude_suites:
-            if "examples" in suite:
-                enable_examples = False
-                break
+    # Always configure Meson with examples enabled to avoid expensive
+    # reconfigure (~9s) when switching between unit-only and full modes.
+    # Example exclusion is handled at compile time (target selection) and
+    # test time (suite filtering via exclude_suites), not at configure time.
 
     _ts_print("[MESON] Configuring build (compiler probes may take 20-30s)...")
 
@@ -551,7 +549,7 @@ def run_meson_build_and_test(
         check=check,
         build_mode=build_mode,
         verbose=verbose,
-        enable_examples=enable_examples,
+        enable_examples=True,
         enable_unit_tests=True,
     ):
         return MesonTestResult(
@@ -826,7 +824,7 @@ def run_meson_build_and_test(
                         check,
                         build_mode,
                         verbose,
-                        enable_examples=include_examples,
+                        enable_examples=True,
                     ):
                         # Retry compilation after recovery
                         sr = stream_compile_and_run_tests(

@@ -6,8 +6,6 @@ import time
 import traceback
 from typing import Protocol, cast
 
-import psutil
-
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 from ci.util.test_types import TestArgs
 
@@ -44,6 +42,8 @@ def setup_windows_console() -> None:
 
 def get_process_tree_info(pid: int) -> str:
     """Get information about a process and its children"""
+    import psutil  # noqa: PLC0415 - lazy: ~21ms saved on normal execution paths
+
     try:
         process = psutil.Process(pid)
         info = [f"Process {pid} ({process.name()})"]
@@ -71,6 +71,8 @@ def get_process_tree_info(pid: int) -> str:
 
 def kill_process_tree(pid: int) -> None:
     """Kill a process and all its children"""
+    import psutil  # noqa: PLC0415 - lazy: deferred to cleanup-only path
+
     try:
         parent = psutil.Process(pid)
         children = parent.children(recursive=True)
