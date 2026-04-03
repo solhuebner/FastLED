@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -34,7 +35,7 @@ from ci.meson.compile import (
 from ci.meson.compiler import check_meson_installed, get_meson_executable
 from ci.meson.output import print_banner, print_error, print_info, print_success
 from ci.meson.phase_tracker import PhaseTracker
-from ci.meson.streaming import StreamingResult, stream_compile_and_run_tests
+from ci.meson.streaming import StreamingResult, TestResult, stream_compile_and_run_tests
 from ci.meson.test_discovery import get_fuzzy_test_candidates
 from ci.meson.test_execution import MesonTestResult, run_meson_test
 from ci.util.build_lock import libfastled_build_lock
@@ -660,8 +661,21 @@ def run_meson_build_and_test(
                         + _streaming_env.get("LD_LIBRARY_PATH", "")
                     )
 
-                def test_callback(test_path: Path) -> bool:
-                    """Run a single test executable and return success status"""
+                # Lock for thread-safe writes to _failed_test_outputs from
+                # parallel worker threads.
+                _failed_outputs_lock = threading.Lock()
+
+                # Track running subprocesses so they can be killed on halt.
+                _active_procs: set[RunningProcess] = set()
+                _active_procs_lock = threading.Lock()
+
+                def test_callback(test_path: Path) -> TestResult:
+                    """Run a single test executable and return TestResult.
+
+                    Output is always captured silently (echo=False) so that the
+                    caller can print it sequentially on the main thread, avoiding
+                    interleaved output when tests run in parallel.
+                    """
                     try:
                         # Handle shared library tests (.dll/.so/.dylib): use runner to load them
                         if test_path.suffix.lower() in (".dll", ".so", ".dylib"):
@@ -675,14 +689,22 @@ def run_meson_build_and_test(
                                     / f"example_runner{runner_suffix}"
                                 )
                             if not runner.exists():
-                                _ts_print(
-                                    f"[MESON] ⚠️  Runner not found: {runner}",
-                                    file=sys.stderr,
+                                return TestResult(
+                                    success=False,
+                                    output=f"[MESON] ⚠️  Runner not found: {runner}",
                                 )
-                                return False
                             cmd = [str(runner), str(test_path)]
                         else:
                             cmd = [str(test_path)]
+
+                        # Inject test file filter into subprocess env if the
+                        # streaming layer attached one (os.environ was already
+                        # copied into _streaming_env before the filter was set).
+                        env = _streaming_env
+                        file_filter = getattr(test_callback, "_test_file_filter", None)
+                        if file_filter:
+                            env = dict(_streaming_env)
+                            env["FL_TEST_FILE_FILTER"] = file_filter
 
                         # Use environment with fastled shared lib dir and ASAN_OPTIONS
                         proc = RunningProcess(
@@ -691,93 +713,53 @@ def run_meson_build_and_test(
                             timeout=600,  # 10 minute timeout per test
                             auto_run=True,
                             check=False,
-                            env=_streaming_env,
+                            env=env,
                             output_formatter=TimestampFormatter(),
                         )
 
-                        # Use filtering callback in verbose mode to suppress noise patterns
-                        echo_callback = (
-                            create_filtering_echo_callback() if verbose else False
-                        )
-                        returncode = proc.wait(echo=echo_callback)
+                        # Register so the process can be killed on halt.
+                        with _active_procs_lock:
+                            _active_procs.add(proc)
+                        try:
+                            # Always capture silently — caller prints sequentially
+                            returncode = proc.wait(echo=False)
+                        finally:
+                            with _active_procs_lock:
+                                _active_procs.discard(proc)
+                        captured = proc.stdout
 
                         # Enhanced error detection for streaming tests
                         if returncode != 0:
-                            # Capture output for failure logging
-                            _failed_test_outputs[test_path.stem] = proc.stdout
-                            stdout_lower = proc.stdout.lower()
-                            has_doctest_output = any(
-                                pattern in stdout_lower
-                                for pattern in [
-                                    "test cases:",
-                                    "assertions:",
-                                    "[doctest]",
-                                    "test case failed",
-                                ]
-                            )
+                            # Store output for end-of-run failure summary
+                            with _failed_outputs_lock:
+                                _failed_test_outputs[test_path.stem] = captured
 
-                            has_watchdog_timeout = (
-                                "internal timeout watchdog triggered" in stdout_lower
-                            )
-
-                            if (
-                                returncode == 1
-                                and has_watchdog_timeout
-                                and not has_doctest_output
-                            ):
-                                test_name = test_path.stem
-                                _ts_print(
-                                    f"[MESON] ⚠️  {test_name}: Test killed by internal timeout watchdog (exceeded time limit)",
-                                    file=sys.stderr,
-                                )
-                                _ts_print(
-                                    f"[MESON] 💡 This is a timeout, not a crash. Consider adding to slow_tests in tests/meson.build",
-                                    file=sys.stderr,
-                                )
-                            elif returncode == 1 and not has_doctest_output:
-                                test_name = test_path.stem
-                                _ts_print(
-                                    f"[MESON] ⚠️  {test_name}: Test failed during initialization (before doctest ran)",
-                                    file=sys.stderr,
-                                )
-
-                                # Filter for error messages in output
-                                error_lines = [
-                                    line.strip()
-                                    for line in proc.stdout.splitlines()
-                                    if "error" in line.lower() and line.strip()
-                                ]
-
-                                if error_lines and verbose:
-                                    _ts_print(
-                                        f"[MESON] 🔍 Error messages:",
-                                        file=sys.stderr,
-                                    )
-                                    # Show first 3 errors in streaming mode (more concise)
-                                    for error_line in error_lines[:3]:
-                                        _ts_print(
-                                            f"[MESON]    {error_line}", file=sys.stderr
-                                        )
-                                    if len(error_lines) > 3:
-                                        _ts_print(
-                                            f"[MESON]    ... (+{len(error_lines) - 3} more)",
-                                            file=sys.stderr,
-                                        )
-
-                                if verbose:
-                                    _ts_print(
-                                        f"[MESON] 💡 Check for: static init failure, test registration issues, or disabled tests",
-                                        file=sys.stderr,
-                                    )
-
-                        return returncode == 0
+                        return TestResult(success=returncode == 0, output=captured)
 
                     except KeyboardInterrupt as ki:
                         handle_keyboard_interrupt(ki)
-                        raise
+                        return TestResult(
+                            success=False,
+                            output="[MESON] Test interrupted by user",
+                        )
                     except Exception as e:
-                        _ts_print(f"[MESON] Test execution error: {e}", file=sys.stderr)
-                        return False
+                        return TestResult(
+                            success=False,
+                            output=f"[MESON] Test execution error: {e}",
+                        )
+
+                def _kill_active_procs() -> None:
+                    """Kill all running test subprocesses (called on halt)."""
+                    with _active_procs_lock:
+                        for p in list(_active_procs):
+                            try:
+                                p.kill()
+                            except KeyboardInterrupt as ki:
+                                handle_keyboard_interrupt(ki)
+                            except Exception:
+                                pass
+
+                test_callback.kill_all = _kill_active_procs  # type: ignore[attr-defined]
 
                 # Determine compile timeout based on build mode
                 # Debug builds with ASAN are significantly slower, especially on Windows CI
@@ -906,14 +888,19 @@ def run_meson_build_and_test(
                     print_error(
                         f"[MESON] ❌ Some tests failed ({sr.num_passed}/{num_tests_run} tests in {duration:.2f}s)"
                     )
+                    # Snapshot under lock — workers may still be running
+                    # after executor.shutdown(wait=False).
+                    with _failed_outputs_lock:
+                        _failed_snapshot = dict(_failed_test_outputs)
+
                     # Print captured error outputs to console
-                    if _failed_test_outputs:
+                    if _failed_snapshot:
                         print_error(f"\n{'=' * 80}")
                         print_error(
-                            f"[MESON] Test failure details ({len(_failed_test_outputs)} tests):"
+                            f"[MESON] Test failure details ({len(_failed_snapshot)} tests):"
                         )
                         print_error(f"{'=' * 80}")
-                        for tname, output in _failed_test_outputs.items():
+                        for tname, output in _failed_snapshot.items():
                             print_error(f"\n--- {tname} ---")
                             for line in output.splitlines()[-30:]:
                                 print_error(f"  {line}")
@@ -938,7 +925,7 @@ def run_meson_build_and_test(
                                 )
                         else:
                             # Tests ran and some failed — write per-test run logs
-                            for tname, output in _failed_test_outputs.items():
+                            for tname, output in _failed_snapshot.items():
                                 _write_failure_log(log_failures, tname, "run", output)
                     return MesonTestResult(
                         success=False,

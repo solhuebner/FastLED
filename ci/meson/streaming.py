@@ -1,5 +1,6 @@
 """Streaming compilation and test execution via Meson build system."""
 
+import concurrent.futures
 import os
 import re
 import sys
@@ -34,6 +35,14 @@ class StreamingResult:
     compile_output: str = ""
     failed_names: list[str] = field(default_factory=list)
     compile_sub_phases: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class TestResult:
+    """Result from a single test execution."""
+
+    success: bool
+    output: str = ""
 
 
 @dataclass
@@ -432,7 +441,7 @@ def stream_compile_only(
 
 def stream_compile_and_run_tests(
     build_dir: Path,
-    test_callback: Callable[[Path], bool],
+    test_callback: Callable[[Path], TestResult],
     target: Optional[str] = None,
     verbose: bool = False,
     compile_timeout: int = 600,
@@ -451,7 +460,7 @@ def stream_compile_and_run_tests(
     Args:
         build_dir: Meson build directory
         test_callback: Function called with each completed test path.
-                      Returns True if test passed, False if failed.
+                      Returns a TestResult indicating pass/fail and captured output.
         target: Specific target to build (None = all)
         verbose: Show detailed progress messages (default: False)
         compile_timeout: Timeout in seconds for compilation (default: 600)
@@ -503,56 +512,107 @@ def stream_compile_and_run_tests(
         )
 
     total = len(filtered_tests)
-    _ts_print(f"[MESON] Running {total} tests...")
+    max_workers = min(os.cpu_count() or 4, total, 16)
+    _ts_print(f"[MESON] Running {total} tests ({max_workers} parallel workers)...")
 
-    tests_run = 0
-    for test_path in filtered_tests:
-        tests_run += 1
-        if verbose:
-            _ts_print(f"[TEST {tests_run}/{total}] Running: {test_path.name}")
+    # Pass test file filter to the callback via an attribute so it can
+    # inject it into the subprocess environment (os.environ is stale after
+    # _streaming_env was copied).
+    if test_file_filter:
+        test_callback._test_file_filter = test_file_filter  # type: ignore[attr-defined]
 
+    tests_completed = 0
+    halt_event = threading.Event()
+    _kill_all = getattr(test_callback, "kill_all", None)
+
+    @dataclass
+    class _WorkerResult:
+        """Internal result from a worker thread."""
+
+        test_path: Path
+        test_result: TestResult
+        error_msg: str = ""
+
+    def _run_one_test(test_path: Path) -> _WorkerResult:
+        """Run a single test in a worker thread."""
+        if halt_event.is_set():
+            return _WorkerResult(test_path, TestResult(success=False))
         try:
-            # Set test file filter in environment if specified
-            try:
-                if test_file_filter:
-                    os.environ["FL_TEST_FILE_FILTER"] = test_file_filter
-                success = test_callback(test_path)
-            finally:
-                if test_file_filter and "FL_TEST_FILE_FILTER" in os.environ:
-                    del os.environ["FL_TEST_FILE_FILTER"]
+            return _WorkerResult(test_path, test_callback(test_path))
+        except KeyboardInterrupt as ki:
+            handle_keyboard_interrupt(ki)
+            return _WorkerResult(test_path, TestResult(success=False), "Interrupted")
+        except Exception as e:
+            return _WorkerResult(test_path, TestResult(success=False), str(e))
 
-            if success:
+    # Do NOT use `with` for the executor — its __exit__ calls
+    # shutdown(wait=True) which blocks until every running worker
+    # finishes, making Ctrl+C unresponsive for up to 600s per test.
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+    futures: list[concurrent.futures.Future[_WorkerResult]] = []
+    try:
+        futures = [executor.submit(_run_one_test, tp) for tp in filtered_tests]
+        # Wait sequentially so output order matches submission order
+        # (tests still execute in parallel across worker threads).
+        for future in futures:
+            if halt_event.is_set():
+                break
+            wr = future.result()
+            tests_completed += 1
+            idx = tests_completed
+            if wr.test_result.success:
                 num_passed += 1
                 if not verbose:
-                    print_success(f"  [{tests_run}/{total}] ✓ {test_path.stem}")
+                    print_success(f"  [{idx}/{total}] ✓ {wr.test_path.stem}")
                 else:
-                    _ts_print(f"[TEST {tests_run}/{total}] ✓ PASSED: {test_path.name}")
+                    _ts_print(f"[TEST {idx}/{total}] ✓ PASSED: {wr.test_path.name}")
+                    if wr.test_result.output:
+                        for line in wr.test_result.output.splitlines():
+                            _ts_print(f"  {line}")
             else:
                 num_failed += 1
-                failed_names.append(test_path.stem)
-                print_error(f"  [{tests_run}/{total}] ✗ {test_path.stem} FAILED")
+                failed_names.append(wr.test_path.stem)
+                if wr.error_msg:
+                    _ts_print(
+                        f"  [{idx}/{total}] ✗ {wr.test_path.stem} ERROR: {wr.error_msg}"
+                    )
+                else:
+                    print_error(f"  [{idx}/{total}] ✗ {wr.test_path.stem} FAILED")
+                # Print captured output for failed tests so failures
+                # are visible inline (output was captured silently in
+                # the worker thread to avoid interleaving).
+                if wr.test_result.output:
+                    for line in wr.test_result.output.splitlines()[-30:]:
+                        print_error(f"  {line}")
                 if max_failures > 0 and num_failed >= max_failures:
                     print_error(
                         f"\n[MESON] ⚠️  {num_failed} test failures detected — halting early"
                     )
+                    halt_event.set()
+                    if _kill_all:
+                        _kill_all()
+                    for f in futures:
+                        f.cancel()
                     break
-        except KeyboardInterrupt as ki:
-            handle_keyboard_interrupt(ki)
-            raise
-        except Exception as e:
-            _ts_print(f"  [{tests_run}/{total}] ✗ {test_path.stem} ERROR: {e}")
-            num_failed += 1
-            failed_names.append(test_path.stem)
-            if max_failures > 0 and num_failed >= max_failures:
-                print_error(
-                    f"\n[MESON] ⚠️  {num_failed} test failures detected — halting early"
-                )
-                break
+    except KeyboardInterrupt as ki:
+        halt_event.set()
+        if _kill_all:
+            _kill_all()
+        for f in futures:
+            f.cancel()
+        handle_keyboard_interrupt(ki)
+        raise
+    finally:
+        # wait=False so Ctrl+C and max_failures exit immediately.
+        # NOTE: ThreadPoolExecutor threads are non-daemon, so Python's
+        # shutdown will wait for running workers to finish.  This is
+        # acceptable because each test has a 600s RunningProcess timeout.
+        executor.shutdown(wait=False, cancel_futures=True)
 
     # Show test summary
-    if tests_run > 0:
+    if tests_completed > 0:
         _ts_print(f"[MESON] Test execution complete:")
-        _ts_print(f"  Tests run: {tests_run}")
+        _ts_print(f"  Tests run: {tests_completed}")
         if num_passed > 0:
             print_success(f"  Passed: {num_passed}")
         else:
