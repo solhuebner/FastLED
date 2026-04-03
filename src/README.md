@@ -124,7 +124,7 @@ void loop() {
 
 ```cpp
 #include <FastLED.h>
-#include "fl/leds.h"
+#include "fl/gfx/leds.h"
 #include "fl/xymap.h"
 
 constexpr uint16_t WIDTH  = 16;

@@ -12,7 +12,7 @@
 #include "fl/remote/rpc/rpc_mode.h"
 #include "fl/remote/rpc/server.h"
 #include "fl/remote/types.h"
-#include "fl/scheduler.h"
+#include "fl/net/rpc_scheduler.h"
 #include "fl/stl/noexcept.h"
 
 namespace fl {
@@ -206,7 +206,7 @@ protected:
     fl::Rpc mRpc;
 
     // Generic task scheduler
-    fl::RpcScheduler<> mScheduler;
+    fl::net::RpcScheduler<> mScheduler;
 
     // RPC-specific result tracking
     fl::vector<RpcResult> mResults;

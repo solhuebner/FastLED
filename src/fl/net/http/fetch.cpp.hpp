@@ -4,7 +4,7 @@
 #include "fl/task/executor.h"
 #include "fl/stl/unique_ptr.h"  // For make_unique
 #include "fl/task/task.h"  // For fl::task::every_ms
-#include "fl/scheduler.h"  // For fl::RpcScheduler
+#include "fl/net/rpc_scheduler.h"  // For fl::net::RpcScheduler
 #include "fl/net/http/fetch_request.h"  // For fl::net::http::FetchRequest
 
 // IWYU pragma: begin_keep

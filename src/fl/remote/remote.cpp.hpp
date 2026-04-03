@@ -5,7 +5,7 @@
 #include "fl/remote/rpc/rpc.h"
 #include "fl/remote/rpc/server.h"
 #include "fl/remote/types.h"
-#include "fl/scheduler.h"
+#include "fl/net/rpc_scheduler.h"
 #include "fl/stl/chrono.h"
 #include "fl/stl/cstddef.h"
 #include "fl/stl/function.h"

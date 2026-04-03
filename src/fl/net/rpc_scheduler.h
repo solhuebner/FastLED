@@ -6,6 +6,7 @@
 #include "fl/stl/noexcept.h"
 
 namespace fl {
+namespace net {
 
 /**
  * @brief Generic time-based task scheduler
@@ -89,4 +90,5 @@ private:
     fl::priority_queue_stable<ScheduledTask> mQueue;
 };
 
+} // namespace net
 } // namespace fl
