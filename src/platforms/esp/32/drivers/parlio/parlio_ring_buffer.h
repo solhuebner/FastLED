@@ -86,7 +86,7 @@
 #include "fl/stl/noexcept.h"
 
 // Forward declarations
-extern "C" void heap_caps_free(void *ptr);
+extern "C" void heap_caps_free(void *ptr) FL_NOEXCEPT;
 
 namespace fl {
 namespace detail {
