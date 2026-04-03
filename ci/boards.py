@@ -541,12 +541,36 @@ class Board:
             (self.defines and qemu_markers & set(self.defines))
             or (additional_defines and qemu_markers & set(additional_defines))
         )
+        # Collect extra build_unflags needed for QEMU overrides
+        qemu_build_unflags: list[str] = []
+        # Collect extra build flags needed for QEMU overrides
+        qemu_build_flags: list[str] = []
+
         if is_qemu_build and (
             self.board_name.startswith("esp32")
             or (self.real_board_name and self.real_board_name.startswith("esp32"))
         ):
             lines.append("board_build.flash_mode = dio")
             lines.append("board_upload.flash_mode = dio")
+
+            # Force UART0 serial output for QEMU compatibility
+            # QEMU only captures UART0 via -serial mon:stdio, not USB CDC/JTAG.
+            # Many ESP32-S3 boards define ARDUINO_USB_MODE=1 in their board JSON,
+            # which routes Serial to USB CDC that QEMU cannot emulate.
+            # We must unflag the board default and force UART0 mode.
+            qemu_build_unflags.extend(
+                [
+                    "-DARDUINO_USB_MODE=1",
+                    "-DARDUINO_USB_CDC_ON_BOOT=1",
+                ]
+            )
+            qemu_build_flags.extend(
+                [
+                    "-DARDUINO_USB_MODE=0",
+                    "-DARDUINO_USB_CDC_ON_BOOT=0",
+                    "-DCORE_DEBUG_LEVEL=1",
+                ]
+            )
 
         if self.board_partitions:
             lines.append(f"board_build.partitions = {self.board_partitions}")
@@ -570,16 +594,24 @@ class Board:
                 f"-I{include_dir}" for include_dir in additional_include_dirs
             )
 
+        # Add QEMU-specific build flags (e.g., force UART0 serial)
+        if qemu_build_flags:
+            build_flags_elements.extend(qemu_build_flags)
+
         if build_flags_elements:
             # Put each build flag on a separate line for better readability and debugging
             lines.append("build_flags =")
             for flag in build_flags_elements:
                 lines.append(f"    {flag}")
 
-        if self.build_unflags:
+        # Merge board-level and QEMU-level build_unflags
+        all_build_unflags = list(self.build_unflags) if self.build_unflags else []
+        if qemu_build_unflags:
+            all_build_unflags.extend(qemu_build_unflags)
+        if all_build_unflags:
             # PlatformIO accepts multiple *build_unflags* separated by spaces.
             # Emit a single line for readability.
-            lines.append(f"build_unflags = {' '.join(self.build_unflags)}")
+            lines.append(f"build_unflags = {' '.join(all_build_unflags)}")
 
         # Custom ESP-IDF sdkconfig override (ESP32-family boards)
         if self.customsdk:
