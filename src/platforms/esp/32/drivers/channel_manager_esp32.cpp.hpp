@@ -27,11 +27,12 @@
 #include "fl/channels/adapters/spi_channel_adapter.h"
 #include "fl/stl/noexcept.h"
 
-// Include SpiHw16 only on platforms that support it (ESP32, ESP32-S2)
+// Include SpiHw16 only on platforms that support I2S parallel mode (ESP32, ESP32-S2)
 // ESP32-S3 and newer use LCD_CAM peripheral instead of I2S parallel mode
+// Users can disable with -D FASTLED_ESP32_HAS_I2S=0
 #include "platforms/esp/is_esp.h"
 
-#if defined(FL_IS_ESP32) && !defined(FL_IS_ESP_32S3) && !defined(FL_IS_ESP_32C2) && !defined(FL_IS_ESP_32C3) && !defined(FL_IS_ESP_32C5) && !defined(FL_IS_ESP_32C6) && !defined(FL_IS_ESP_32H2) && !defined(FL_IS_ESP_32P4)
+#if FASTLED_ESP32_HAS_I2S
 #include "platforms/esp/32/drivers/i2s/spi_hw_i2s_esp32.h"
 #define FASTLED_HAS_SPI_HW_16 1
 #else

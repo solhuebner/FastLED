@@ -7,16 +7,19 @@
 #pragma once
 
 #include "platforms/esp/is_esp.h"
+#include "platforms/esp/esp_version.h"
+#include "platforms/esp/32/feature_flags/enabled.h"
 
 // This I2S parallel mode driver only works on ESP32 and ESP32-S2
 // ESP32-S3, ESP32-P4: Use LCD_CAM peripheral instead (see lcd_driver_i80.h and bulk_lcd_i80.h)
 // ESP32-C3, C2, C5, C6, H2: Have completely different I2S peripheral architecture (no parallel mode)
+// Users can disable with -D FASTLED_ESP32_HAS_I2S=0
 //
 // Technical note: ESP32-S3 and ESP32-P4 removed parallel LCD mode from I2S peripheral and moved it to
 // dedicated LCD_CAM peripheral with different register structure and API. The register-level
 // i2s_dev_t struct fields (conf, conf2, sample_rate_conf, clkm_conf, etc.) are incompatible
 // with ESP32-S3/P4. FastLED provides LCD_CAM-based drivers for these chips that are more efficient.
-#if !defined(FL_IS_ESP_32S3) && !defined(FL_IS_ESP_32P4) && !defined(FL_IS_ESP_32C3) && !defined(FL_IS_ESP_32C2) && !defined(FL_IS_ESP_32C5) && !defined(FL_IS_ESP_32C6) && !defined(FL_IS_ESP_32H2)
+#if FASTLED_ESP32_HAS_I2S
 
 #include "esp_heap_caps.h"
 #include "soc/soc.h"
@@ -829,7 +832,9 @@ Show pixels classiques
         (&I2S0)->conf.tx_fifo_reset = 0;
     }
 
-    void IRAM_ATTR i2sStop()
+    // noinline required to prevent l32r literal pool placement issues with
+    // newer GCC toolchains (14.x+) when this IRAM function is defined in a header.
+    void __attribute__((noinline)) IRAM_ATTR i2sStop()
     {
 
         ets_delay_us(16);
@@ -933,7 +938,9 @@ Show pixels classiques
         isDisplaying = true;
     }
 
-    void IRAM_ATTR i2sReset()
+    // noinline required to prevent l32r literal pool placement issues with
+    // newer GCC toolchains (14.x+) when this IRAM function is defined in a header.
+    void __attribute__((noinline)) IRAM_ATTR i2sReset()
     {
         const unsigned long lc_conf_reset_flags = I2S_IN_RST_M | I2S_OUT_RST_M | I2S_AHBM_RST_M | I2S_AHBM_FIFO_RST_M;
         (&I2S0)->lc_conf.val |= lc_conf_reset_flags;
@@ -945,7 +952,7 @@ Show pixels classiques
 
     // static void IRAM_ATTR interruptHandler(void *arg);
 };
-static void IRAM_ATTR _I2SClockBasedLedDriverinterruptHandler(void *arg)
+static void __attribute__((noinline)) IRAM_ATTR _I2SClockBasedLedDriverinterruptHandler(void *arg)
 {
 #ifdef DO_NOT_USE_INTERUPT
     REG_WRITE(I2S_INT_CLR_REG(0), (REG_READ(I2S_INT_RAW_REG(0)) & 0xffffffc0) | 0x3f);
@@ -1352,4 +1359,4 @@ static void IRAM_ATTR loadAndTranspose(uint8_t *ledt, int led_per_strip, int num
 #endif
 }
 
-#endif // !defined(FL_IS_ESP_32S3) && !defined(FL_IS_ESP_32C3) && ...
+#endif // FASTLED_ESP32_HAS_I2S
