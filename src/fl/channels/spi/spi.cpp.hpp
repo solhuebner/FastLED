@@ -1,6 +1,6 @@
 // ok no header
-#include "fl/spi.h"
-#include "fl/spi/multi_lane_device.h"
+#include "fl/channels/spi.h"
+#include "fl/channels/spi/multi_lane_device.h"
 #include "fl/system/log.h"
 #include "fl/system/log.h"
 #include "fl/stl/noexcept.h"

@@ -109,13 +109,13 @@
   { include: ['"fl/net/http/stream_client.h"', 'private', '"fl/net/http.h"', 'public'] },
   { include: ['"fl/net/http/stream_server.h"', 'private', '"fl/net/http.h"', 'public'] },
 
-  # fl/spi.h umbrella
-  { include: ['"fl/spi/config.h"', 'private', '"fl/spi.h"', 'public'] },
-  { include: ['"fl/spi/transaction.h"', 'private', '"fl/spi.h"', 'public'] },
-  { include: ['"fl/spi/device.h"', 'private', '"fl/spi.h"', 'public'] },
-  { include: ['"fl/spi/lane.h"', 'private', '"fl/spi.h"', 'public'] },
-  { include: ['"fl/spi/write_result.h"', 'private', '"fl/spi.h"', 'public'] },
-  { include: ['"fl/spi/multi_lane_device.h"', 'private', '"fl/spi.h"', 'public'] },
+  # fl/channels/spi.h umbrella
+  { include: ['"fl/channels/spi/config.h"', 'private', '"fl/channels/spi.h"', 'public'] },
+  { include: ['"fl/channels/spi/transaction.h"', 'private', '"fl/channels/spi.h"', 'public'] },
+  { include: ['"fl/channels/spi/device.h"', 'private', '"fl/channels/spi.h"', 'public'] },
+  { include: ['"fl/channels/spi/lane.h"', 'private', '"fl/channels/spi.h"', 'public'] },
+  { include: ['"fl/channels/spi/write_result.h"', 'private', '"fl/channels/spi.h"', 'public'] },
+  { include: ['"fl/channels/spi/multi_lane_device.h"', 'private', '"fl/channels/spi.h"', 'public'] },
 
   # fl/fx/2d/animartrix_detail/ sub-headers → animartrix_detail.h
   { include: ['@"fl/fx/2d/animartrix_detail/.*"', 'private', '"fl/fx/2d/animartrix_detail.h"', 'public'] },

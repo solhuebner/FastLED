@@ -12,12 +12,12 @@
 #include "fl/stl/span.h"
 
 // SPI components
-#include "fl/spi/config.h"             // IWYU pragma: export
-#include "fl/spi/transaction.h"        // IWYU pragma: export
-#include "fl/spi/device.h"             // IWYU pragma: export
-#include "fl/spi/lane.h"               // IWYU pragma: export
-#include "fl/spi/write_result.h"       // IWYU pragma: export
-#include "fl/spi/multi_lane_device.h"  // IWYU pragma: export
+#include "fl/channels/spi/config.h"             // IWYU pragma: export
+#include "fl/channels/spi/transaction.h"        // IWYU pragma: export
+#include "fl/channels/spi/device.h"             // IWYU pragma: export
+#include "fl/channels/spi/lane.h"               // IWYU pragma: export
+#include "fl/channels/spi/write_result.h"       // IWYU pragma: export
+#include "fl/channels/spi/multi_lane_device.h"  // IWYU pragma: export
 // IWYU pragma: begin_keep
 #include "platforms/shared/spi_types.h"  // ok platform headers
 #include "fl/stl/noexcept.h"

@@ -16,3 +16,4 @@
 // begin sub directory includes
 #include "fl/channels/adapters/_build.cpp.hpp"
 #include "fl/channels/detail/_build.cpp.hpp"
+#include "fl/channels/spi/_build.cpp.hpp"

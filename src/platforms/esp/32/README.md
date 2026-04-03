@@ -359,7 +359,7 @@ build_flags =
 
 ### Implementation Files
 
-- Public API: `src/fl/spi.h` (unified 1-16 lane SPI API)
+- Public API: `src/fl/channels/spi.h` (unified 1-16 lane SPI API)
 - 16-lane interface: `src/platforms/shared/spi_hw_16.h`
 - ESP32 I2S backend: `src/platforms/esp/32/drivers/i2s/spi_hw_i2s_esp32.{h,cpp}`
 - Bus manager: `src/platforms/shared/spi_manager.h` (automatic promotion to 16-lane mode)

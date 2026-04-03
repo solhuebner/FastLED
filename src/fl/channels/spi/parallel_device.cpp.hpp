@@ -1,5 +1,5 @@
-#include "fl/spi/parallel_device.h"
-#include "fl/spi/device_impl_base.h"
+#include "fl/channels/spi/parallel_device.h"
+#include "fl/channels/spi/device_impl_base.h"
 #include "fl/system/log.h"
 #include "fl/system/log.h"
 

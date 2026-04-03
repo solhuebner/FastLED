@@ -1,5 +1,5 @@
-#include "fl/spi.h"
-#include "fl/spi/impl.h"
+#include "fl/channels/spi.h"
+#include "fl/channels/spi/impl.h"
 #include "fl/system/log.h"
 #include "fl/system/log.h"
 #include "fl/stl/chrono.h"

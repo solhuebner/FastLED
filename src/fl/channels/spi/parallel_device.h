@@ -8,7 +8,7 @@
 #include "fl/stl/unique_ptr.h"
 #include "fl/stl/optional.h"
 #include "fl/task/promise.h"  // for fl::task::Error
-#include "fl/spi/transaction.h"
+#include "fl/channels/spi/transaction.h"
 // IWYU pragma: begin_keep
 #include "platforms/shared/spi_types.h"  // ok platform headers
 #include "fl/stl/noexcept.h"
