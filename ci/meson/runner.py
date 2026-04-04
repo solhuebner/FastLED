@@ -224,8 +224,45 @@ def _purge_trash(trash_dir: Path) -> None:
             pass  # Still locked, skip
 
 
+def _kill_zombie_zccache(build_dir: Path) -> None:
+    """Kill zccache processes whose CWD is inside build_dir.
+
+    When ninja is interrupted, zccache.exe wrappers can survive because they
+    communicate through a daemon and are not direct children of ninja. Their
+    CWD remains set to the build directory, which on Windows holds a kernel
+    handle that prevents directory deletion.
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import psutil  # noqa: PLC0415 - lazy import, only needed on Windows cleanup
+    except ImportError:
+        return
+    build_str = str(build_dir.resolve())
+    killed = 0
+    for proc in psutil.process_iter(["pid", "name"]):
+        try:
+            name = proc.info["name"] or ""
+            if "zccache" not in name.lower() or "daemon" in name.lower():
+                continue
+            cwd = proc.cwd()
+            if cwd and (cwd == build_str or cwd.startswith(build_str + os.sep)):
+                proc.kill()
+                killed += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied, OSError):
+            continue
+    if killed:
+        _ts_print(
+            f"[MESON] 🧹 Killed {killed} zombie zccache process(es) holding build directory"
+        )
+        time.sleep(0.5)  # Brief wait for Windows to release handles
+
+
 def _safe_rmtree(build_dir: Path) -> None:
     """Remove build directory, relocating locked files to .trash/ for later cleanup."""
+    # Kill zombie zccache processes that may hold CWD handles on the build dir
+    _kill_zombie_zccache(build_dir)
+
     trash_dir = build_dir.parent / ".trash"
     # Purge any previously trashed files that are now unlocked
     _purge_trash(trash_dir)

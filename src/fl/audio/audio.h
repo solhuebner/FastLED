@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fl/math/math.h"
-#include "fl/math/math.h"
 #include "fl/stl/shared_ptr.h"         // For FASTLED_SHARED_PTR macros
 #include "fl/stl/span.h"
 #include "fl/stl/vector.h"
@@ -196,7 +195,7 @@ class SampleImpl {
     }
 
     VectorPCM mSignedPcm;
-    fl::i16 mZeroCrossings = 0;
+    fl::u16 mZeroCrossings = 0;
     float mRms = 0.0f;  // Lazily computed RMS value
     fl::u32 mTimestamp = 0;
     mutable bool mRmsComputed = false;  // Track if RMS has been computed
