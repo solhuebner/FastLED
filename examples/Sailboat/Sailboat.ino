@@ -71,7 +71,7 @@ fl::ScreenMap screenMap =
         pt_out.x = 15.0f + t * 80.0f;
         float straight_y = 5.0f + t * 90.0f;
         // Sag: catenary droop, subtract to bulge downward visually
-        float sag = 15.0f * fl::sin(t * PI);
+        float sag = 15.0f * fl::sin(t * FL_M_PI);
         pt_out.y = straight_y - sag;
     });
 

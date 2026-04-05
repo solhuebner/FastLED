@@ -1956,6 +1956,29 @@ FL_TEST_CASE("Loud - gain amplified signal still bounded") {
     // Should not crash and all values stay bounded (checked in callback).
 }
 
+// Regression test: BUG1 / GitHub #2193 — dominant frequency used linear bin
+// centers instead of log-spaced CQ bin centers. For a 1 kHz tone the old
+// linear formula reported ~6600-7500 Hz; the correct log formula gives ~1000-1400 Hz.
+FL_TEST_CASE("audio::Reactive - dominant frequency uses log-spaced bin centers") {
+    audio::Reactive audio;
+    audio::ReactiveConfig config;
+    config.sampleRate = 44100;
+    audio.begin(config);
+
+    // Feed a 1 kHz tone — well-resolved with 512 samples (~11.6 cycles)
+    for (int i = 0; i < 20; ++i) {
+        audio::Sample s = makeSample(1000.0f, i * 12, 16000.0f, 512, 44100.0f);
+        audio.processSample(s);
+    }
+
+    const auto& data = audio.getData();
+    // With log-spaced bins, a 1 kHz tone lands in a CQ bin with center
+    // frequency in the low thousands. The old linear formula mapped the
+    // same bin to ~9000+ Hz. Accept anything under 4000 Hz as correct.
+    FL_CHECK_GT(data.dominantFrequency, 100.0f);
+    FL_CHECK_LT(data.dominantFrequency, 4000.0f);
+}
+
 FL_TEST_CASE("audio::detector::EqualizerConfig - default values match previous hardcoded") {
     audio::detector::EqualizerConfig config;
     FL_CHECK(config.minFreq == 90.0f);
