@@ -24,7 +24,7 @@ enum class FFTScalingMode : u8 {
 /// Configuration for the equalizer detector.
 /// All fields have sensible defaults matching the original hardcoded values.
 struct EqualizerConfig {
-    float minFreq = 60.0f;           ///< Low end of spectrum (Hz)
+    float minFreq = 90.0f;           ///< Low end of spectrum (Hz). Must be >= FFT bin width (sampleRate/fftSize, e.g. 86 Hz at 44100/512) to ensure bin 0 receives data.
     float maxFreq = 5120.0f;         ///< High end of spectrum (Hz)
     float smoothing = 0.05f;         ///< Bin temporal smoothing (ExponentialSmoother tau, used as attack)
     float normAttack = 0.001f;       ///< Normalization attack time (seconds)

@@ -11,7 +11,7 @@ namespace detector {
 
 namespace {
 // Bin-to-band mapping (WLED style):
-// Bass:   bins 0-3   (~60-320 Hz)
+// Bass:   bins 0-3   (~90-320 Hz)
 // Mid:    bins 4-10  (~320-2560 Hz)
 // Treble: bins 11-15 (~2560-5120 Hz)
 const int kBassStart = 0;

@@ -80,6 +80,25 @@ FL_TEST_CASE("audio::detector::EqualizerDetector - bass signal activates bass bi
     FL_CHECK(anyBassBin);
 }
 
+// Regression test: GitHub #2193 — getEqBin(0) was always zero.
+// With 512-sample FFT at 44100 Hz (86 Hz resolution), the narrow
+// lowest output bin (60-70 Hz) contained no FFT bins. The LUT fix
+// ensures FFT bin 1 (86 Hz) contributes to output bin 0.
+FL_TEST_CASE("audio::detector::EqualizerDetector - bin 0 is nonzero for bass tone") {
+    auto eq = make_shared<audio::detector::EqualizerDetector>();
+
+    // 80 Hz bass tone — should activate bin 0
+    auto sample = makeSample(80.0f, 0, 16000.0f, 512);
+    auto context = make_shared<audio::Context>(sample);
+
+    for (int i = 0; i < 30; ++i) {
+        eq->update(context);
+    }
+
+    // Bin 0 must have nonzero energy — was always 0 before the fix
+    FL_CHECK_GT(eq->getBin(0), 0.0f);
+}
+
 FL_TEST_CASE("audio::detector::EqualizerDetector - treble signal activates treble bins") {
     auto eq = make_shared<audio::detector::EqualizerDetector>();
 

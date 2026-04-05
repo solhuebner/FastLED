@@ -1958,7 +1958,7 @@ FL_TEST_CASE("Loud - gain amplified signal still bounded") {
 
 FL_TEST_CASE("audio::detector::EqualizerConfig - default values match previous hardcoded") {
     audio::detector::EqualizerConfig config;
-    FL_CHECK(config.minFreq == 60.0f);
+    FL_CHECK(config.minFreq == 90.0f);
     FL_CHECK(config.maxFreq == 5120.0f);
     FL_CHECK(config.smoothing == 0.05f);
     FL_CHECK(config.normAttack == 0.001f);
