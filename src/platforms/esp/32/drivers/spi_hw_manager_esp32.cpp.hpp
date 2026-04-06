@@ -3,13 +3,11 @@
 /// @file spi_hw_manager_esp32.cpp.hpp
 /// @brief ESP32-specific SPI hardware initialization
 ///
-/// This file provides lazy initialization of ESP32-specific SPI hardware drivers
-/// (SpiHw1, SpiHw16) in priority order. Drivers are registered on first access
-/// via platforms::initSpiHardware().
+/// This file provides lazy initialization of ESP32-specific SPI hardware drivers.
+/// SpiHw1 (single-lane SPI) is registered on first access via platforms::initSpiHardware().
 ///
-/// Priority Order:
-/// - SpiHw16 (9): Highest priority, 16-lane I2S parallel mode (ESP32, ESP32-S2 only)
-/// - SpiHw1 (5): Standard single-lane SPI (all ESP32 variants)
+/// Note: SpiHw16 (16-lane I2S parallel mode) has been replaced by
+/// I2S_SPI and LCD_SPI channel drivers.
 
 #include "fl/stl/compiler_control.h"
 #include "platforms/esp/is_esp.h"
@@ -22,16 +20,7 @@
 #include "fl/stl/shared_ptr.h"
 #include "fl/stl/noexcept.h"
 
-// Include SpiHw16 only on platforms that support I2S parallel mode
-// ESP32-S3 and newer use LCD_CAM peripheral instead of I2S parallel mode
-// Users can disable with -D FASTLED_ESP32_HAS_I2S=0
-#if FASTLED_ESP32_HAS_I2S
-#include "platforms/shared/spi_hw_16.h"
-#include "platforms/esp/32/drivers/i2s/spi_hw_i2s_esp32.h"
-#define FASTLED_ESP32_HAS_SPI_HW_16 1
-#else
-#define FASTLED_ESP32_HAS_SPI_HW_16 0
-#endif
+// SpiHw16 (I2S parallel) removed - replaced by I2S_SPI/LCD_SPI channel drivers
 
 namespace fl {
 
@@ -45,8 +34,6 @@ extern fl::shared_ptr<SpiHw1>& getController3() FL_NOEXCEPT;
 namespace detail {
 
 /// @brief SPI hardware priority constants for ESP32
-/// @note Higher values = higher precedence (SpiHw16: 9, SpiHw1: 5)
-constexpr int PRIORITY_HW_16 = 9;   ///< Highest (16-lane I2S parallel mode)
 constexpr int PRIORITY_HW_1 = 5;    ///< Standard single-lane SPI
 
 /// @brief Add SpiHw1 (single-lane SPI) if supported
@@ -74,19 +61,6 @@ static void addSpiHw1IfPossible() FL_NOEXCEPT {
 #endif
 }
 
-/// @brief Add SpiHw16 (16-lane I2S parallel mode) if supported
-static void addSpiHw16IfPossible() FL_NOEXCEPT {
-#if FASTLED_ESP32_HAS_SPI_HW_16
-    FL_DBG("ESP32: Registering SpiHw16 (I2S parallel mode)");
-
-    // Create single I2S0 controller instance
-    static auto i2s0_controller = fl::make_shared<SpiHwI2SESP32>(0);
-    SpiHw16::registerInstance(i2s0_controller);
-
-    FL_DBG("ESP32: Registered SpiHw16 controller (I2S0)");
-#endif
-}
-
 }  // namespace detail
 
 namespace platforms {
@@ -108,8 +82,8 @@ void initSpiHardware() FL_NOEXCEPT {
 
     FL_DBG("ESP32: Initializing SPI hardware");
 
-    // Register in priority order (highest to lowest)
-    detail::addSpiHw16IfPossible();  // Priority 9 (16-lane I2S)
+    // Register SPI hardware
+    // Note: SpiHw16 (I2S parallel) replaced by I2S_SPI/LCD_SPI channel drivers
     detail::addSpiHw1IfPossible();   // Priority 5 (single-lane SPI)
 
     FL_DBG("ESP32: SPI hardware initialized");

@@ -135,17 +135,49 @@ FL_EXTERN_C_END
 #endif
 #endif
 
+// LCD_SPI driver availability for clocked SPI LED output via LCD_CAM (ESP32-S3)
+// Uses the LCD_CAM I80 bus with PCLK as SPI clock for parallel SPI chipsets (APA102, SK9822)
+#if !defined(FASTLED_ESP32_HAS_LCD_SPI)
+#if defined(FL_IS_ESP_32S3)
+#define FASTLED_ESP32_HAS_LCD_SPI 1
+#else
+#define FASTLED_ESP32_HAS_LCD_SPI 0
+#endif
+#endif
+
 // I2S parallel mode driver availability
-// I2S parallel mode is only available on original ESP32 and ESP32-S2.
+// I2S parallel mode is only available on original ESP32 (ESP32dev).
+// ESP32-S2 has an I2S peripheral but with different register layout (no clka_en).
 // Other variants (S3, C2, C3, C5, C6, H2, P4) have completely different I2S architecture.
 // Also disabled on ESP-IDF 6.0+ (PERIPH_I2S1_MODULE removed, needs LL API port).
 // Users can override with -D FASTLED_ESP32_HAS_I2S=0 to disable.
 #if !defined(FASTLED_ESP32_HAS_I2S)
-#if defined(FL_IS_ESP32) && !defined(FL_IS_ESP_32S3) && !defined(FL_IS_ESP_32C2) && !defined(FL_IS_ESP_32C3) && !defined(FL_IS_ESP_32C5) && !defined(FL_IS_ESP_32C6) && !defined(FL_IS_ESP_32H2) && !defined(FL_IS_ESP_32P4) && !ESP_IDF_VERSION_6_OR_HIGHER
+#if defined(FL_IS_ESP32) && !defined(FL_IS_ESP_32S2) && !defined(FL_IS_ESP_32S3) && !defined(FL_IS_ESP_32C2) && !defined(FL_IS_ESP_32C3) && !defined(FL_IS_ESP_32C5) && !defined(FL_IS_ESP_32C6) && !defined(FL_IS_ESP_32H2) && !defined(FL_IS_ESP_32P4) && !ESP_IDF_VERSION_6_OR_HIGHER
 #define FASTLED_ESP32_HAS_I2S 1
 #else
 #define FASTLED_ESP32_HAS_I2S 0
 #endif
+#endif
+
+// ============================================================================
+// Channel driver force macros
+// ============================================================================
+// These macros force a specific channel driver to be the highest priority,
+// overriding the default priority-based selection. Define before including
+// FastLED.h to force a specific driver for all LED output.
+//
+// FASTLED_ESP32_FORCE_I2S_LCD_CAM - Force I2S LCD_CAM driver (ESP32-S3 clockless)
+// FASTLED_ESP32_FORCE_I2S_SPI    - Force I2S parallel SPI driver (ESP32dev, true SPI chipsets)
+// FASTLED_ESP32_FORCE_LCD_SPI    - Force LCD_CAM SPI driver (ESP32-S3, true SPI chipsets)
+
+// Legacy macro migration: map old macros to new channel driver force macros
+// FASTLED_USES_ESP32S3_I2S (removed) → now forces I2S LCD_CAM channel driver
+// FASTLED_ESP32_LCD_DRIVER (broken)  → now forces I2S LCD_CAM channel driver
+#if defined(FASTLED_USES_ESP32S3_I2S) && !defined(FASTLED_ESP32_FORCE_I2S_LCD_CAM)
+#define FASTLED_ESP32_FORCE_I2S_LCD_CAM 1
+#endif
+#if defined(FASTLED_ESP32_LCD_DRIVER) && !defined(FASTLED_ESP32_FORCE_I2S_LCD_CAM)
+#define FASTLED_ESP32_FORCE_I2S_LCD_CAM 1
 #endif
 
 #endif  // FL_IS_ESP32

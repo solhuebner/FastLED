@@ -566,6 +566,29 @@ FL_TEST_CASE("my test") {
 1. In the diff, check if deleted code was the only reader of a variable that remains declared
 2. If the variable is now write-only or unreferenced: Remove it and report
 
+### src/** changes - DMA/POLL WAIT LOOPS MUST YIELD VIA fl::task::run()
+
+**Core Principle**: Any busy-wait loop that polls for hardware completion (DMA, SPI, I2S, etc.) must yield to the OS scheduler using `fl::task::run()`. Never use bare `fl::yield()`, `vTaskDelay()`, `taskYIELD()`, or spin without yielding.
+
+**Rules**:
+1. ❌ **NEVER spin without yielding**
+   - ❌ Bad: `while (mBusy) { poll(); }`
+   - ✅ Good: `while (mBusy) { poll(); fl::task::run(250, fl::task::ExecFlags::SYSTEM); }`
+2. ❌ **NEVER use bare OS yield primitives** — `fl::task::run()` is the unified API
+   - ❌ Bad: `fl::yield();`, `vTaskDelay(0);`, `taskYIELD();`
+   - ✅ Good: `fl::task::run(250, fl::task::ExecFlags::SYSTEM);`
+3. ✅ **Use `ExecFlags::SYSTEM`** for tight DMA polling (minimal overhead, OS yield only)
+4. ✅ **Use `ExecFlags::ALL`** for longer waits where pumping coroutines/tasks is beneficial
+5. ✅ **Include `fl/task/executor.h`** for `fl::task::run()` and `ExecFlags`
+
+**Rationale**: On ESP32 (FreeRTOS), spinning without yield starves WiFi/BT/system tasks and triggers the task watchdog timer (TWDT). `fl::task::run()` calls `vTaskDelay(0)` on ESP32 and `std::this_thread::yield()` on host platforms.
+
+**Check Process**:
+1. Scan for `while (` loops in driver/peripheral code that contain `poll()`, `isBusy()`, or similar status checks
+2. Verify the loop body includes `fl::task::run(...)` or equivalent
+3. Scan for bare `fl::yield()`, `vTaskDelay(`, `taskYIELD()` — should be `fl::task::run()`
+4. If found: Report violation and fix
+
 ### src/** changes - PERFORMANCE ATTRIBUTES ON HOT-PATH FUNCTIONS
 
 **Core Principle**: Performance-critical functions should use FastLED's optimization macros rather than relying on global optimization settings.
@@ -616,6 +639,7 @@ FL_TEST_CASE("my test") {
   - Platform version guards missing: N
   - Unused variables after refactoring: N
   - Missing performance attributes: N
+  - DMA/poll wait loops missing yield: N
   - Other: N
 - Violations fixed: N
 - User confirmations needed: N

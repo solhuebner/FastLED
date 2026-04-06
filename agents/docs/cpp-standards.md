@@ -172,6 +172,10 @@ The names make roles explicit: `.impl.cpp.hpp` = "implementation router, include
 
 ## Channel Engine DMA Wait Pattern
 - **`onBeginFrame()` / `show()` must wait for `poll() == READY` before starting a new frame** — use a simple `while (poll() != READY)` loop
+- **Yield in wait loops with `fl::task::run()`** — never busy-spin without yielding. Use `fl::task::run(250, fl::task::ExecFlags::SYSTEM)` inside wait loops to yield to the OS scheduler (FreeRTOS `vTaskDelay(0)` on ESP32, `std::this_thread::yield()` on host). This prevents watchdog timeouts and starvation of WiFi/BT/system tasks. Include `fl/task/executor.h`.
+  - **Do NOT use** bare `fl::yield()`, `vTaskDelay()`, or `taskYIELD()` — `fl::task::run()` is the unified API
+  - For tight DMA polling use `ExecFlags::SYSTEM` (OS yield only, minimal overhead)
+  - For longer waits use `ExecFlags::ALL` (also pumps coroutines and scheduled tasks)
 - **Do NOT branch on DRAINING or other intermediate states** inside the wait loop in `show()` or `onBeginFrame()`. The `poll()` method drives the state machine to READY; callers just wait for it.
 - **`onEndFrame()` may wait for READY *or* DRAINING** — after `show()` kicks off DMA, it's fine to return once DMA is running (DRAINING). `onBeginFrame()` will ensure READY before the next frame.
 - **Rationale**: Branching on intermediate states in the "wait for previous frame" path splits logic across multiple places and makes the code harder to reason about.

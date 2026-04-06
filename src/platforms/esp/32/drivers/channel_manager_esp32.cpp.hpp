@@ -7,13 +7,22 @@
 /// (LCD_RGB, PARLIO, RMT, I2S, SPI, UART) in priority order. Engines are registered
 /// on first access to ChannelManager::instance().
 ///
-/// Priority Order:
-/// - PARLIO (4): Highest priority, best timing (ESP32-P4, C6, H2, C5)
+/// Priority Order (default, can be overridden with FASTLED_ESP32_FORCE_* macros):
+/// - I2S_SPI (10): Native I2S parallel SPI (ESP32dev, true SPI chipsets)
+/// - LCD_SPI (10): Native LCD_CAM SPI (ESP32-S3, true SPI chipsets)
+/// - PARLIO (4): Highest clockless priority (ESP32-P4, C6, H2, C5)
 /// - LCD_RGB (3): High performance, parallel LED output via LCD peripheral (ESP32-P4 only)
 /// - RMT (2): Good performance, reliable (all ESP32 variants, recommended default)
 /// - I2S (1): Experimental, LCD_CAM via I80 bus (ESP32-S3 only)
 /// - SPI (0): Deprioritized due to reliability issues (ESP32-S3, others)
 /// - UART (-1): Lowest priority, broken (all ESP32 variants, not recommended)
+///
+/// Force macros (define before including FastLED.h):
+/// - FASTLED_ESP32_FORCE_I2S_LCD_CAM: Boost I2S LCD_CAM to priority 100
+/// - FASTLED_ESP32_FORCE_I2S_SPI: Boost I2S parallel SPI to priority 100
+/// - FASTLED_ESP32_FORCE_LCD_SPI: Boost LCD_CAM SPI to priority 100
+/// Legacy macros FASTLED_USES_ESP32S3_I2S and FASTLED_ESP32_LCD_DRIVER
+/// are automatically mapped to FASTLED_ESP32_FORCE_I2S_LCD_CAM.
 
 #include "fl/stl/compiler_control.h"
 #include "platforms/is_platform.h"
@@ -27,17 +36,8 @@
 #include "fl/channels/adapters/spi_channel_adapter.h"
 #include "fl/stl/noexcept.h"
 
-// Include SpiHw16 only on platforms that support I2S parallel mode (ESP32, ESP32-S2)
-// ESP32-S3 and newer use LCD_CAM peripheral instead of I2S parallel mode
-// Users can disable with -D FASTLED_ESP32_HAS_I2S=0
+// Platform detection for I2S/LCD_SPI drivers
 #include "platforms/esp/is_esp.h"
-
-#if FASTLED_ESP32_HAS_I2S
-#include "platforms/esp/32/drivers/i2s/spi_hw_i2s_esp32.h"
-#define FASTLED_HAS_SPI_HW_16 1
-#else
-#define FASTLED_HAS_SPI_HW_16 0
-#endif
 
 // Include concrete driver implementations
 #if FASTLED_ESP32_HAS_PARLIO
@@ -80,6 +80,16 @@
 #include "i2s/channel_driver_i2s.h"
 // IWYU pragma: end_keep
 #endif
+#if FASTLED_ESP32_HAS_I2S
+// IWYU pragma: begin_keep
+#include "i2s_spi/channel_driver_i2s_spi.h"
+// IWYU pragma: end_keep
+#endif
+#if FASTLED_ESP32_HAS_LCD_SPI
+// IWYU pragma: begin_keep
+#include "lcd_spi/channel_driver_lcd_spi.h"
+// IWYU pragma: end_keep
+#endif
 
 namespace fl {
 
@@ -87,12 +97,31 @@ namespace detail {
 
 /// @brief Engine priority constants for ESP32
 /// @note Higher values = higher precedence (PARLIO 4 > LCD_RGB 3 > RMT 2 > I2S 1 > SPI 0 > UART -1)
+/// Force macros (FASTLED_ESP32_FORCE_*) boost a driver to priority 100.
+constexpr int PRIORITY_FORCE = 100;  ///< Priority used by FASTLED_ESP32_FORCE_* macros
 constexpr int PRIORITY_PARLIO = 4;   ///< Highest priority (PARLIO driver - ESP32-P4/C6/H2/C5)
 constexpr int PRIORITY_LCD_RGB = 3;  ///< High priority (LCD RGB driver - ESP32-P4 only, parallel LED output via LCD peripheral)
 constexpr int PRIORITY_RMT = 2;      ///< Medium priority (RMT driver - all ESP32 variants, recommended default)
+#if defined(FASTLED_ESP32_FORCE_I2S_LCD_CAM)
+constexpr int PRIORITY_I2S = PRIORITY_FORCE; ///< FORCED highest by FASTLED_ESP32_FORCE_I2S_LCD_CAM
+#else
 constexpr int PRIORITY_I2S = 1;      ///< Low priority (I2S LCD_CAM driver - ESP32-S3 only, experimental)
+#endif
 constexpr int PRIORITY_SPI = 0;      ///< Lower priority (SPI driver - deprioritized due to reliability issues)
 constexpr int PRIORITY_UART = -1;    ///< Lowest priority (UART driver - broken, not recommended)
+// Note: I2S_SPI and LCD_SPI are mutually exclusive -- I2S_SPI targets
+// ESP32dev only (original ESP32), LCD_SPI targets ESP32-S3 only.
+// Equal priorities are safe since they never coexist on the same platform.
+#if defined(FASTLED_ESP32_FORCE_I2S_SPI)
+constexpr int PRIORITY_I2S_SPI = PRIORITY_FORCE; ///< FORCED highest by FASTLED_ESP32_FORCE_I2S_SPI
+#else
+constexpr int PRIORITY_I2S_SPI = 10; ///< Native I2S parallel SPI driver (ESP32dev, true SPI chipsets)
+#endif
+#if defined(FASTLED_ESP32_FORCE_LCD_SPI)
+constexpr int PRIORITY_LCD_SPI = PRIORITY_FORCE; ///< FORCED highest by FASTLED_ESP32_FORCE_LCD_SPI
+#else
+constexpr int PRIORITY_LCD_SPI = 10; ///< Native LCD_CAM SPI driver (ESP32-S3, true SPI chipsets)
+#endif
 
 /// @brief Add HW SPI drivers if supported by platform (UNIFIED VERSION)
 static void addSpiHardwareIfPossible(ChannelManager& manager) FL_NOEXCEPT {
@@ -103,23 +132,8 @@ static void addSpiHardwareIfPossible(ChannelManager& manager) FL_NOEXCEPT {
     fl::vector<const char*> names;
 
     // ========================================================================
-    // Collect SpiHw16 controllers (highest priority: 9)
-    // ========================================================================
-#if FASTLED_HAS_SPI_HW_16
-    const auto& hw16Controllers = SpiHw16::getAll();
-    FL_DBG("ESP32: Found " << hw16Controllers.size() << " SpiHw16 controllers");
-
-    for (const auto& ctrl : hw16Controllers) {
-        if (ctrl) {
-            controllers.push_back(ctrl);
-            priorities.push_back(9);
-            names.push_back("SPI_HEXADECA");
-        }
-    }
-#endif
-
-    // ========================================================================
-    // Collect SpiHw1 controllers (lower priority: 5)
+    // Collect SpiHw1 controllers (priority: 5)
+    // Note: SpiHw16 (I2S parallel) replaced by I2S_SPI/LCD_SPI channel drivers
     // ========================================================================
     const auto& hw1Controllers = SpiHw1::getAll();
     FL_DBG("ESP32: Found " << hw1Controllers.size() << " SpiHw1 controllers");
@@ -236,6 +250,36 @@ static void addRmtIfPossible(ChannelManager& manager) FL_NOEXCEPT {
 #endif
 }
 
+/// @brief Add I2S_SPI driver if supported by platform (ESP32dev true SPI)
+static void addI2sSpiIfPossible(ChannelManager& manager) FL_NOEXCEPT {
+#if FASTLED_ESP32_HAS_I2S
+    auto driver = createI2sSpiEngine();
+    if (driver) {
+        manager.addDriver(PRIORITY_I2S_SPI, driver);
+        FL_DBG("ESP32: Added I2S_SPI driver (priority " << PRIORITY_I2S_SPI << ")");
+    } else {
+        FL_DBG("ESP32: I2S_SPI driver creation deferred (no ESP peripheral yet)");
+    }
+#else
+    (void)manager;
+#endif
+}
+
+/// @brief Add LCD_SPI driver if supported by platform (ESP32-S3 true SPI)
+static void addLcdSpiIfPossible(ChannelManager& manager) FL_NOEXCEPT {
+#if FASTLED_ESP32_HAS_LCD_SPI
+    auto driver = createLcdSpiEngine();
+    if (driver) {
+        manager.addDriver(PRIORITY_LCD_SPI, driver);
+        FL_DBG("ESP32-S3: Added LCD_SPI driver (priority " << PRIORITY_LCD_SPI << ")");
+    } else {
+        FL_DBG("ESP32-S3: LCD_SPI driver creation deferred (no ESP peripheral yet)");
+    }
+#else
+    (void)manager;
+#endif
+}
+
 /// @brief Add I2S LCD_CAM driver if supported by platform
 static void addI2sIfPossible(ChannelManager& manager) FL_NOEXCEPT {
 #if FASTLED_ESP32_HAS_I2S_LCD_CAM
@@ -267,15 +311,16 @@ void initChannelDrivers() FL_NOEXCEPT {
     auto& manager = channelManager();
 
     // Add drivers in priority order (each function handles platform-specific ifdefs)
-    // CRITICAL: HW SPI drivers (priority 5-9) MUST be registered FIRST
-    // This ensures true SPI chipsets (APA102, SK9822) route to hardware SPI, not clockless-over-SPI
-    detail::addSpiHardwareIfPossible(manager);  // Priority 5-9 (unified, true SPI)
+    // CRITICAL: Native SPI drivers (priority 10) registered first, then HW SPI fallback
+    detail::addI2sSpiIfPossible(manager);       // Priority 10 (native I2S parallel SPI, ESP32dev)
+    detail::addLcdSpiIfPossible(manager);       // Priority 10 (native LCD_CAM SPI, ESP32-S3)
+    detail::addSpiHardwareIfPossible(manager);  // Priority 5-9 (unified, true SPI fallback)
     detail::addParlioIfPossible(manager);       // Priority 4 (clockless)
     detail::addLcdRgbIfPossible(manager);       // Priority 3 (clockless)
-    detail::addSpiIfPossible(manager);          // Priority 2 (clockless-over-SPI)
-    detail::addUartIfPossible(manager);         // Priority 0 (clockless)
-    detail::addRmtIfPossible(manager);          // Priority 1 (clockless)
-    detail::addI2sIfPossible(manager);          // Priority -1 (clockless)
+    detail::addSpiIfPossible(manager);          // Priority 0 (clockless-over-SPI)
+    detail::addUartIfPossible(manager);         // Priority -1 (clockless)
+    detail::addRmtIfPossible(manager);          // Priority 2 (clockless)
+    detail::addI2sIfPossible(manager);          // Priority 1 (clockless)
 
     FL_DBG("ESP32: Channel drivers initialized");
 }

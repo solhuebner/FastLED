@@ -108,10 +108,7 @@ void esp32_compile_tests() {
     #error "ESP32-S3 F_CPU should be at least 80MHz"
     #endif
     
-    // ESP32-S3 specific features
-    #ifdef FASTLED_USES_ESP32S3_I2S
-    // I2S driver is being used - this is a valid configuration
-    #endif
+    // ESP32-S3 specific features (I2S_SPI and LCD_SPI channel drivers)
 #endif
 }
 #endif // FL_IS_ESP32
