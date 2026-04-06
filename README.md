@@ -168,6 +168,27 @@ Most Docker images contain pre-cached toolchains for all boards in their platfor
 
 Tracks compilation speed and performance of FastLED header files across different platforms.
 
+## 🤖 AI-Driven Driver Development
+
+FastLED includes an automated research and validation framework for developing hardware drivers using real devices. An AI agent edits code, flashes firmware, and uses an RX device to score LED signal accuracy against expected timings — iterating until the driver works.
+
+```bash
+#!/usr/bin/env bash
+
+PROMPT="Use the auto research framework to implement I2S driver for esp32dev
+on the attached device. Don't stop until it works."
+
+# solder pin 1 to pin 2 on esp32dev, then attach it to the computer through the USB port.
+git clone https://github.com/fastled/fastled
+cd fastled
+
+claude --dangerously-skip-permissions -m "$PROMPT"
+
+# now get a cup of coffee and come back in an hour
+```
+
+This works because FastLED's drivers are split into two layers: a **platform-neutral channel driver** (waveform generation, buffering, scheduling) that can be unit tested in isolation, and a thin **platform-specific peripheral layer** (ESP32 RMT, PARLIO, I2S, LCD_CAM) that just transmits the bitstream. The AI agent is effective because most complex logic lives in the testable layer, while the hardware-specific code is small enough to reason about at the datasheet level.
+
 ## ⭐ Community Growth
 
 <a href="https://star-history.com/#fastled/fastled&Date">
