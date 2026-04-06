@@ -136,7 +136,7 @@ jobs:
 
 
       - name: Build summary and failure logs
-        if: always()
+        if: failure()
         working-directory: trusted
         run: |
           SUMMARY_FILE="build-summary.txt"
@@ -356,7 +356,7 @@ jobs:
           path: trusted/build.log
 
       - name: Upload build summary
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-summary-${{ steps.generate_id.outputs.timestamp }}-${{ github.sha }}-${{ steps.generate_id.outputs.random_hex }}

@@ -6,18 +6,16 @@
 # Supported platforms (fbuild orchestrator must exist):
 #   - atmelavr  -> AvrOrchestrator  (avr-gcc with -mmcu=)
 #   - espressif32 (pioarduino) -> Esp32Orchestrator (metadata-driven toolchain)
-#   - teensy    -> TeensyOrchestrator (arm-none-eabi-gcc, Cortex-M7 only)
+#   - teensy    -> TeensyOrchestrator (arm-none-eabi-gcc)
 #
 # NOT supported by fbuild (must stay on PlatformIO):
-#   - atmelmegaavr boards (ATtiny1604, ATtiny1616, nano_every) -- platform not recognized
-#   - esp32s2, esp32h2 -- missing MCU config in fbuild
-#   - Teensy 3.x/LC (teensy30..36, teensylc) -- only Cortex-M7 config exists
-#   - Specialized ESP32 variants (qemu, idf33, idf44, i2s) -- custom IDF versions
+#   - atmelmegaavr boards (ATtiny1604, ATtiny1616, nano_every) -- orchestrator not implemented
+#   - Teensy boards -- lib/ discovery fails + command-line quoting broken on Windows
+#   - atmega8a -- MiniCore framework: core path + board name mapping broken
+#   - Specialized ESP32 variants (qemu, idf33, idf44, i2s, rmt_51) -- custom IDF/driver configs
 #   - uno_r4_wifi -- uses renesas-ra platform, no fbuild orchestrator
-#   - atmega8a -- uses MiniCore framework (not registered in fbuild)
-#   - leonardo (ATmega32U4) -- USB VID/PID defines not handled by fbuild
-#   - ESP32 boards (Windows) -- zccache hits OS error 206 (path too long) on Windows
-#   - teensy40, teensy41 -- lib/ discovery fails + command-line quoting broken
+#   - esp8266 -- no orchestrator
+#   - STM32, RP2040/RP2350, NRF52, Apollo3, SAM/SAMD, MGM240 -- no orchestrators
 FBUILD_BOARDS: frozenset[str] = frozenset(
     {
         # AVR (atmelavr)
@@ -25,5 +23,18 @@ FBUILD_BOARDS: frozenset[str] = frozenset(
         "attiny85",
         "attiny88",
         "attiny4313",
+        "leonardo",
+        # ESP32 (pioarduino espressif32)
+        "esp32dev",
+        "esp32s3",
+        "esp32c3",
+        "esp32c6",
+        "esp32c2",
+        "esp32c5",
+        "esp32p4",
+        "esp32s2",
+        "esp32h2",
+        "upesy_wroom",
+        "seeed_xiao_esp32s3",
     }
 )
