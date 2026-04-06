@@ -312,6 +312,14 @@ inline void computePinkNoiseGains(const float* binCenters, int numBins, float* o
         out[i] = computePinkNoiseGain(binCenters[i], f_ref);
     }
 
+    // Cap individual gains to prevent extreme boosting of high-frequency bins
+    static constexpr float kMaxPinkNoiseGain = 3.0f;
+    for (int i = 0; i < numBins; ++i) {
+        if (out[i] > kMaxPinkNoiseGain) {
+            out[i] = kMaxPinkNoiseGain;
+        }
+    }
+
     // Normalize so geometric mean of output gains = 1.0
     float outLogSum = 0.0f;
     for (int i = 0; i < numBins; ++i) {

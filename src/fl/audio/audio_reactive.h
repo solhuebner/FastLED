@@ -228,7 +228,8 @@ private:
     void detectEnhancedBeats(fl::u32 currentTimeMs);
     void calculateBandEnergies();
     void updateSpectralFlux();
-    void applyPerceptualWeighting();
+    void applyAWeighting();
+    void applyLoudnessCompensation();
     void applySpectralEqualization();
     
     // Helper methods

@@ -188,14 +188,21 @@ void Reactive::processSample(const Sample& sample) {
         }
     }
 
+    // Apply A-weighting BEFORE spectral flux and beat detection so that
+    // high-frequency attenuation is visible to onset/beat algorithms.
+    // Previously this ran after beat detection, causing bin 15 to appear
+    // disproportionately active (boosted by pink noise but not yet attenuated).
+    applyAWeighting();
+
     updateSpectralFlux();
 
     // Enhanced beat detection (includes original)
     detectBeat(currentTimeMs);
     detectEnhancedBeats(currentTimeMs);
 
-    // Apply perceptual weighting if enabled
-    applyPerceptualWeighting();
+    // Loudness compensation stays after beat detection — it is a global
+    // level adjustment that should not affect relative frequency balance.
+    applyLoudnessCompensation();
 
     applyGain();
     applyScaling();
@@ -634,12 +641,14 @@ void Reactive::detectEnhancedBeats(fl::u32 currentTimeMs) {
     }
 }
 
-void Reactive::applyPerceptualWeighting() {
-    // Apply perceptual weighting if available
+void Reactive::applyAWeighting() {
     if (mPerceptualWeighting) {
         mPerceptualWeighting->applyAWeighting(mCurrentData);
-        
-        // Apply loudness compensation with reference level of 50.0f
+    }
+}
+
+void Reactive::applyLoudnessCompensation() {
+    if (mPerceptualWeighting) {
         mPerceptualWeighting->applyLoudnessCompensation(mCurrentData, 50.0f);
     }
 }
