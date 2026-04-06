@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxNoiseRing.ino
 /// @brief   Noise effect on circular ring with ScreenMap

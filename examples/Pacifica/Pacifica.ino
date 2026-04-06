@@ -1,3 +1,4 @@
+// @filter: (mem is large)
 /// @file    Pacifica.ino
 /// @brief   Gentle, blue-green ocean wave animation
 /// @example Pacifica.ino

@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxGfx2Video.ino
 /// @brief   Demonstrates graphics to video conversion

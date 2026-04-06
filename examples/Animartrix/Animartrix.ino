@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    Animartrix.ino
 /// @brief   Demo of the Animatrix effects

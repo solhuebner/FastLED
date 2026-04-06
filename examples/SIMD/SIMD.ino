@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 //
 // examples/SIMD/SIMD.ino
 //

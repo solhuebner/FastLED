@@ -1,4 +1,4 @@
-// @filter: (mem is high)
+// @filter: (mem is large)
 #include "FastLED.h"
 #include "fl/fx/1d/twinklefox.h"
 

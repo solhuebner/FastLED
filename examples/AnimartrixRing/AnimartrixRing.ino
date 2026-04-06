@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 // AnimartrixRing: Sample a circle from an Animartrix rectangular grid
 // Uses Processor's Vibe for self-normalizing bass/mid/treb

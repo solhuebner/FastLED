@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxDemoReel100.ino
 /// @brief   DemoReel100 effects collection with ScreenMap

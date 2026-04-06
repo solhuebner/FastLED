@@ -1,4 +1,4 @@
-// @filter: (platform is teensy) and (memory is high)
+// @filter: (platform is teensy) and (memory is large)
 
 /// @file    SmartMatrix.ino
 /// @brief   SmartMatrix example with platform detection

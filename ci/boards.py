@@ -226,12 +226,12 @@ class Board:
 
     @property
     def memory_class(self) -> str:
-        """Return memory classification: 'low', 'high', or 'huge'.
+        """Return memory classification: 'low', 'large', or 'huge'.
 
         Three-tier system matching sketch_macros.h:
-        - 'low':  SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
-        - 'high': SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=0
-        - 'huge': SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=1
+        - 'low':   SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
+        - 'large': SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=0
+        - 'huge':  SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=1
         """
         # Low-memory board list (matches sketch_macros.h)
         low_memory_boards = {
@@ -304,8 +304,8 @@ class Board:
         if "giga" in board_lower:
             return "huge"
 
-        # Default to high memory (Apollo3, nRF52, SAMD21, generic ARM)
-        return "high"
+        # Default to large memory (Apollo3, nRF52, SAMD21, generic ARM)
+        return "large"
 
     @property
     def platform_family(self) -> str:

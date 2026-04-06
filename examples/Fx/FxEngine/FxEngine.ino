@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxEngine.ino
 /// @brief   Demonstrates FxEngine for switching between effects

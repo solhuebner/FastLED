@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    MultiArrays.ino
 /// @brief   Demonstrates how to use multiple LED strips, each with their own data

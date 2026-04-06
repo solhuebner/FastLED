@@ -1,4 +1,4 @@
-// @filter: (platform is teensy) and (memory is high)
+// @filter: (platform is teensy) and (memory is large)
 
 /// @file    ParallelOutputDemo.ino
 /// @brief   ParallelOutputDemo example with platform detection

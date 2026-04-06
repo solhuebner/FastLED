@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    BlinkParallel.ino
 /// @brief   Shows parallel usage of WS2812 strips. Blinks once for red, twice for green, thrice for blue.

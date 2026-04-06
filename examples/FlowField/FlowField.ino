@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FlowField.ino
 /// @brief   2D flow field visualization: emitters paint color, noise advects it

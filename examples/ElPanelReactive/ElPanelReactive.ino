@@ -12,7 +12,7 @@
 //   - Panel 1 (D2): higher threshold + squared signal → only strong hits
 //   - Panel 2 (D1): lower threshold + linear signal → more responsive
 
-// @filter: (mem is high)
+// @filter: (mem is large)
 
 #include <FastLED.h>
 #include "el_panel.h"

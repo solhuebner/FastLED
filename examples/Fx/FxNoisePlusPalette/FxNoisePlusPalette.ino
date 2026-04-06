@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxNoisePlusPalette.ino
 /// @brief   Noise plus palette effect with XYMap

@@ -1,6 +1,6 @@
 
 
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /*
 This demo is best viewed using the FastLED compiler.

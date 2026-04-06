@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    Overclock.ino
 /// @brief   High performance LED display example

@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    SdCard.ino
 /// @brief   Demonstrates playing a video on FastLED.

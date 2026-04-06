@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 // codec.ino - Comprehensive Multimedia Codec Demonstration
 // Click buttons to decode JPEG, WebP, GIF, and MPEG1 formats

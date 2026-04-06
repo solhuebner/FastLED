@@ -2,7 +2,7 @@
 /// @brief   Audio reactive 180-LED circle with 3 segments responding to bass/mid/treble
 /// @example Audio.ino
 
-// @filter: (mem is high) and ((platform is teensy) or (platform is esp32))
+// @filter: (mem is large) and ((platform is teensy) or (platform is esp32))
 
 #include <FastLED.h>
 

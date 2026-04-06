@@ -5,8 +5,8 @@ from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
 This module provides parsing and evaluation of @filter blocks in .ino files.
 
-Memory tiers (ordered: low < high < huge):
-    - (memory is high) matches boards with 'high' or 'huge' memory
+Memory tiers (ordered: low < large < huge):
+    - (memory is large) matches boards with 'large' or 'huge' memory
     - (memory is huge) matches only boards with 'huge' memory
     - (memory is low)  matches all boards (everything is >= low)
 
@@ -22,15 +22,15 @@ YAML-style (multi-line):
     // @end-filter
 
 One-liner (compact) - Natural language styles:
-    // @filter (memory is high) and (platform is esp32s3)
+    // @filter (memory is large) and (platform is esp32s3)
     // @filter (memory is huge) and (platform is esp32)
-    // @filter (mem is high) and (plat is esp32*)
-    // @filter (mem=high) and (plat=esp32)
+    // @filter (mem is large) and (plat is esp32*)
+    // @filter (mem=large) and (plat=esp32)
     // @filter (target is -D__AVR__) or (board is uno)
 
 Optional colon after @filter - all styles work:
-    // @filter: (mem is high)
-    // @filter (mem is high)
+    // @filter: (mem is large)
+    // @filter (mem is large)
     // @filter: (mem=huge)
     // @filter (mem=huge)
 
@@ -94,11 +94,11 @@ def parse_oneline_filter(filter_line: str) -> Optional[SketchFilter]:
     """Parse one-liner @filter syntax with multiple operator styles.
 
     Examples - all equivalent:
-        // @filter (memory is high) and (platform is esp32s3)
-        // @filter (mem is high) and (plat is esp32s3)
-        // @filter (memory: high) and (platform: esp32s3)
-        // @filter (mem=high) and (plat=esp32s3)
-        // @filter (mem:high) and (plat:esp32s3)
+        // @filter (memory is large) and (platform is esp32s3)
+        // @filter (mem is large) and (plat is esp32s3)
+        // @filter (memory: large) and (platform: esp32s3)
+        // @filter (mem=large) and (plat=esp32s3)
+        // @filter (mem:large) and (plat:esp32s3)
         // @filter (target is -D__AVR__) or (memory is low)
         // @filter (platform is teensy) and not (board is teensylc)
 
@@ -301,19 +301,19 @@ def should_skip_sketch(
     return False, ""
 
 
-# Ordered memory tiers: low < high < huge.
-# (memory is high) matches boards with "high" or "huge" memory.
+# Ordered memory tiers: low < large < huge.
+# (memory is large) matches boards with "large" or "huge" memory.
 # (memory is huge) matches only boards with "huge" memory.
-MEMORY_TIERS: dict[str, int] = {"low": 0, "high": 1, "huge": 2}
+MEMORY_TIERS: dict[str, int] = {"low": 0, "large": 1, "huge": 2}
 
 
 def _memory_tier_matches(board_memory: str, filter_values: list[str]) -> bool:
     """Check if board memory tier meets the required minimum tier.
 
-    Uses ordered comparison: (memory is high) matches high AND huge boards.
+    Uses ordered comparison: (memory is large) matches large AND huge boards.
 
     Args:
-        board_memory: Board's memory class ("low", "high", or "huge")
+        board_memory: Board's memory class ("low", "large", or "huge")
         filter_values: Required memory values (OR logic)
 
     Returns:

@@ -1,4 +1,4 @@
-// @filter: (platform is teensy) and (memory is high)
+// @filter: (platform is teensy) and (memory is large)
 
 /// @file    PJRCSpectrumAnalyzer.ino
 /// @brief   PJRCSpectrumAnalyzer example with platform detection

@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    MirroringSample.ino
 /// @brief   Demonstrates how to use multiple LED strips, each with the same data

@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    Blur2d.ino
 /// @brief   Demonstrates 2D blur effects on LED matrix

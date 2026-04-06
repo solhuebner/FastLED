@@ -7,7 +7,7 @@
 // The effect logic lives in PerlinParticlePunch (Fx1d); this sketch wires up
 // hardware, audio detector callbacks, and color palettes.
 
-// @filter: (mem is high)
+// @filter: (mem is large)
 
 #include <FastLED.h>
 

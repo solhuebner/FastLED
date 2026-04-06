@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxPacifica.ino
 /// @brief   Pacifica ocean effect with fl::ScreenMap

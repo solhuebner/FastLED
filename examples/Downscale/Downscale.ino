@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 #include <Arduino.h>
 #include <FastLED.h>

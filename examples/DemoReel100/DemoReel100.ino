@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    DemoReel100.ino
 /// @brief   FastLED "100 lines of code" demo reel, showing off some effects

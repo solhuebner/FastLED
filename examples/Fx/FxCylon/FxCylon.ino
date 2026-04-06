@@ -1,3 +1,4 @@
+// @filter: (mem is large)
 /// @file    FxCylon.ino
 /// @brief   Cylon eye effect with ScreenMap
 /// @example FxCylon.ino

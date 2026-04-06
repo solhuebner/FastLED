@@ -58,9 +58,9 @@ class TestParseOnelineFilterOperators:
 
     def test_is_operator(self) -> None:
         """Test 'is' operator."""
-        result = parse_oneline_filter("(memory is high)")
+        result = parse_oneline_filter("(memory is large)")
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
         assert result.exclude == {}
 
     def test_is_not_operator(self) -> None:
@@ -72,25 +72,25 @@ class TestParseOnelineFilterOperators:
 
     def test_equals_operator(self) -> None:
         """Test '=' operator as shorthand for 'is'."""
-        result = parse_oneline_filter("(mem=high)")
+        result = parse_oneline_filter("(mem=large)")
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
         assert result.exclude == {}
 
     def test_colon_operator(self) -> None:
         """Test ':' operator as shorthand for 'is'."""
-        result = parse_oneline_filter("(mem:high)")
+        result = parse_oneline_filter("(mem:large)")
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
         assert result.exclude == {}
 
     def test_all_operator_styles_equivalent(self) -> None:
         """All three operator styles should produce equivalent results."""
         filters = [
-            "(memory is high)",
-            "(mem is high)",
-            "(mem=high)",
-            "(mem:high)",
+            "(memory is large)",
+            "(mem is large)",
+            "(mem=large)",
+            "(mem:large)",
         ]
         results = [parse_oneline_filter(f) for f in filters]
 
@@ -111,10 +111,10 @@ class TestParseOnelineFilterShortcuts:
 
     def test_memory_shortcut(self) -> None:
         """Test 'mem' shortcut for 'memory'."""
-        result = parse_oneline_filter("(mem is high)")
+        result = parse_oneline_filter("(mem is large)")
         assert result is not None
         assert "memory" in result.require
-        assert result.require["memory"] == ["high"]
+        assert result.require["memory"] == ["large"]
 
     def test_platform_shortcut(self) -> None:
         """Test 'plat' shortcut for 'platform'."""
@@ -143,10 +143,10 @@ class TestParseOnelineFilterCompound:
 
     def test_and_logic(self) -> None:
         """Test 'and' operator combining multiple conditions."""
-        result = parse_oneline_filter("(mem is high) and (plat is esp32)")
+        result = parse_oneline_filter("(mem is large) and (plat is esp32)")
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32"],
         }
 
@@ -160,19 +160,19 @@ class TestParseOnelineFilterCompound:
 
     def test_mixed_requires_and_excludes(self) -> None:
         """Test mixture of require and exclude conditions."""
-        result = parse_oneline_filter("(mem is high) and (plat is not avr)")
+        result = parse_oneline_filter("(mem is large) and (plat is not avr)")
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
         assert result.exclude == {"platform": ["avr"]}
 
     def test_complex_filter(self) -> None:
         """Test complex filter with multiple conditions."""
         result = parse_oneline_filter(
-            "(mem is high) and (plat is esp32*) and (tgt is not esp32p4)"
+            "(mem is large) and (plat is esp32*) and (tgt is not esp32p4)"
         )
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32*"],
         }
         assert result.exclude == {"target": ["esp32p4"]}
@@ -227,41 +227,41 @@ class TestParseFilterFromSketchOneliners:
 
     def test_filter_with_colon(self) -> None:
         """Test @filter: syntax with colon."""
-        sketch_content = "// @filter: (mem is high)"
+        sketch_content = "// @filter: (mem is large)"
         result = self._write_and_parse(sketch_content)
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
 
     def test_filter_without_colon(self) -> None:
         """Test @filter syntax without colon."""
-        sketch_content = "// @filter (mem is high)"
+        sketch_content = "// @filter (mem is large)"
         result = self._write_and_parse(sketch_content)
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
 
     def test_filter_with_equals(self) -> None:
         """Test @filter with = operator."""
-        sketch_content = "// @filter (mem=high)"
+        sketch_content = "// @filter (mem=large)"
         result = self._write_and_parse(sketch_content)
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
 
     def test_filter_with_colon_operator(self) -> None:
         """Test @filter with : operator."""
-        sketch_content = "// @filter (mem:high)"
+        sketch_content = "// @filter (mem:large)"
         result = self._write_and_parse(sketch_content)
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
 
     def test_filter_compound_logic(self) -> None:
         """Test compound filter with multiple conditions."""
         sketch_content = (
-            "// @filter (mem is high) and (plat is esp32*) and (tgt is not esp32p4)"
+            "// @filter (mem is large) and (plat is esp32*) and (tgt is not esp32p4)"
         )
         result = self._write_and_parse(sketch_content)
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32*"],
         }
         assert result.exclude == {"target": ["esp32p4"]}
@@ -292,14 +292,14 @@ class TestParseFilterFromSketchYAML:
         """Test YAML-style @filter: with colon."""
         sketch_content = """// @filter:
 // require:
-//   - memory: high
+//   - memory: large
 //   - platform: esp32
 // @end-filter
 """
         result = self._write_and_parse(sketch_content)
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32"],
         }
 
@@ -307,14 +307,14 @@ class TestParseFilterFromSketchYAML:
         """Test YAML-style @filter without colon."""
         sketch_content = """// @filter
 // require:
-//   - memory: high
+//   - memory: large
 //   - platform: esp32
 // @end-filter
 """
         result = self._write_and_parse(sketch_content)
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32"],
         }
 
@@ -322,14 +322,14 @@ class TestParseFilterFromSketchYAML:
         """Test YAML-style using property shortcuts."""
         sketch_content = """// @filter
 // require:
-//   - mem: high
+//   - mem: large
 //   - plat: esp32
 // @end-filter
 """
         result = self._write_and_parse(sketch_content)
         assert result is not None
         assert result.require == {
-            "memory": ["high"],
+            "memory": ["large"],
             "platform": ["esp32"],
         }
 
@@ -337,14 +337,14 @@ class TestParseFilterFromSketchYAML:
         """Test YAML-style with exclude section."""
         sketch_content = """// @filter
 // require:
-//   - memory: high
+//   - memory: large
 // exclude:
 //   - platform: avr
 // @end-filter
 """
         result = self._write_and_parse(sketch_content)
         assert result is not None
-        assert result.require == {"memory": ["high"]}
+        assert result.require == {"memory": ["large"]}
         assert result.exclude == {"platform": ["avr"]}
 
 
@@ -364,12 +364,12 @@ class TestShouldSkipSketch:
 
     @pytest.fixture
     def apollo3_board(self) -> Board:
-        """Create a mock Apollo3 board (high memory, not huge)."""
+        """Create a mock Apollo3 board (large memory, not huge)."""
         from unittest.mock import MagicMock
 
         board = MagicMock()
         board.platform_family = "apollo3"
-        board.memory_class = "high"
+        board.memory_class = "large"
         board.get_mcu_target = MagicMock(return_value="Apollo3")
         return board
 
@@ -397,15 +397,15 @@ class TestShouldSkipSketch:
         assert not should_skip
         assert reason == ""
 
-    def test_require_high_memory_on_esp32(self, esp32_board: Board) -> None:
-        """ESP32 (huge memory) should not be skipped for high memory requirement."""
-        filter_obj = SketchFilter(require={"memory": ["high"]})
+    def test_require_large_memory_on_esp32(self, esp32_board: Board) -> None:
+        """ESP32 (huge memory) should not be skipped for large memory requirement."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
         should_skip, reason = should_skip_sketch(esp32_board, filter_obj)
         assert not should_skip
 
-    def test_require_high_memory_on_avr(self, avr_board: Board) -> None:
-        """AVR (low memory) should be skipped for high memory requirement."""
-        filter_obj = SketchFilter(require={"memory": ["high"]})
+    def test_require_large_memory_on_avr(self, avr_board: Board) -> None:
+        """AVR (low memory) should be skipped for large memory requirement."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
         should_skip, reason = should_skip_sketch(avr_board, filter_obj)
         assert should_skip
         assert "memory" in reason
@@ -466,13 +466,13 @@ class TestEdgeCases:
 
     def test_unmatched_parenthesis(self) -> None:
         """Unmatched parenthesis should be handled gracefully."""
-        result = parse_oneline_filter("(memory is high")
+        result = parse_oneline_filter("(memory is large")
         assert result is None  # Regex won't match
 
     def test_multiple_filters_only_first_used(self) -> None:
         """File with multiple @filter directives uses first match."""
         sketch_content = """
-// @filter (mem is high)
+// @filter (mem is large)
 some code
 // @filter (plat is avr)
 """
@@ -485,7 +485,7 @@ some code
             result = parse_filter_from_sketch(Path(temp_path))
             assert result is not None
             # Should use the first @filter found
-            assert result.require == {"memory": ["high"]}
+            assert result.require == {"memory": ["large"]}
         finally:
             Path(temp_path).unlink(missing_ok=True)
 
@@ -646,7 +646,7 @@ class TestPintestFilter:
 
 
 class TestMemoryTierMatching:
-    """Test three-tier memory classification: low < high < huge."""
+    """Test three-tier memory classification: low < large < huge."""
 
     @pytest.fixture
     def huge_board(self) -> Board:
@@ -661,13 +661,13 @@ class TestMemoryTierMatching:
         return board
 
     @pytest.fixture
-    def high_board(self) -> Board:
-        """Apollo3 board with high (but not huge) memory."""
+    def large_board(self) -> Board:
+        """Apollo3 board with large (but not huge) memory."""
         from unittest.mock import MagicMock
 
         board = MagicMock()
         board.platform_family = "apollo3"
-        board.memory_class = "high"
+        board.memory_class = "large"
         board.get_mcu_target = MagicMock(return_value="Apollo3")
         board.board_name = "apollo3_red_board"
         return board
@@ -684,21 +684,21 @@ class TestMemoryTierMatching:
         board.board_name = "uno"
         return board
 
-    def test_require_high_matches_huge(self, huge_board: Board) -> None:
-        """(memory is high) should match huge boards (ordered comparison)."""
-        filter_obj = SketchFilter(require={"memory": ["high"]})
+    def test_require_large_matches_huge(self, huge_board: Board) -> None:
+        """(memory is large) should match huge boards (ordered comparison)."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
         skip, _ = should_skip_sketch(huge_board, filter_obj)
         assert not skip
 
-    def test_require_high_matches_high(self, high_board: Board) -> None:
-        """(memory is high) should match high boards."""
-        filter_obj = SketchFilter(require={"memory": ["high"]})
-        skip, _ = should_skip_sketch(high_board, filter_obj)
+    def test_require_large_matches_large(self, large_board: Board) -> None:
+        """(memory is large) should match large boards."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
+        skip, _ = should_skip_sketch(large_board, filter_obj)
         assert not skip
 
-    def test_require_high_skips_low(self, low_board: Board) -> None:
-        """(memory is high) should skip low boards."""
-        filter_obj = SketchFilter(require={"memory": ["high"]})
+    def test_require_large_skips_low(self, low_board: Board) -> None:
+        """(memory is large) should skip low boards."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
         skip, _ = should_skip_sketch(low_board, filter_obj)
         assert skip
 
@@ -708,10 +708,10 @@ class TestMemoryTierMatching:
         skip, _ = should_skip_sketch(huge_board, filter_obj)
         assert not skip
 
-    def test_require_huge_skips_high(self, high_board: Board) -> None:
-        """(memory is huge) should skip high boards (huge is stricter)."""
+    def test_require_huge_skips_large(self, large_board: Board) -> None:
+        """(memory is huge) should skip large boards (huge is stricter)."""
         filter_obj = SketchFilter(require={"memory": ["huge"]})
-        skip, _ = should_skip_sketch(high_board, filter_obj)
+        skip, _ = should_skip_sketch(large_board, filter_obj)
         assert skip
 
     def test_require_huge_skips_low(self, low_board: Board) -> None:
@@ -721,36 +721,36 @@ class TestMemoryTierMatching:
         assert skip
 
     def test_require_low_matches_all(
-        self, low_board: Board, high_board: Board, huge_board: Board
+        self, low_board: Board, large_board: Board, huge_board: Board
     ) -> None:
         """(memory is low) should match all boards (every board is >= low)."""
         filter_obj = SketchFilter(require={"memory": ["low"]})
-        for board in [low_board, high_board, huge_board]:
+        for board in [low_board, large_board, huge_board]:
             skip, _ = should_skip_sketch(board, filter_obj)
             assert not skip
 
     def test_exclude_low_skips_low_only(
-        self, low_board: Board, high_board: Board, huge_board: Board
+        self, low_board: Board, large_board: Board, huge_board: Board
     ) -> None:
         """Exclude memory=low should skip only low boards (exact match)."""
         filter_obj = SketchFilter(exclude={"memory": ["low"]})
         skip_low, _ = should_skip_sketch(low_board, filter_obj)
-        skip_high, _ = should_skip_sketch(high_board, filter_obj)
+        skip_large, _ = should_skip_sketch(large_board, filter_obj)
         skip_huge, _ = should_skip_sketch(huge_board, filter_obj)
         assert skip_low
-        assert not skip_high
+        assert not skip_large
         assert not skip_huge
 
     def test_exclude_huge_skips_huge_only(
-        self, low_board: Board, high_board: Board, huge_board: Board
+        self, low_board: Board, large_board: Board, huge_board: Board
     ) -> None:
         """Exclude memory=huge should skip only huge boards (exact match)."""
         filter_obj = SketchFilter(exclude={"memory": ["huge"]})
         skip_low, _ = should_skip_sketch(low_board, filter_obj)
-        skip_high, _ = should_skip_sketch(high_board, filter_obj)
+        skip_large, _ = should_skip_sketch(large_board, filter_obj)
         skip_huge, _ = should_skip_sketch(huge_board, filter_obj)
         assert not skip_low
-        assert not skip_high
+        assert not skip_large
         assert skip_huge
 
     def test_oneliner_huge_filter(self) -> None:
@@ -764,6 +764,12 @@ class TestMemoryTierMatching:
         result = parse_oneline_filter("(memory is huge) and (platform is esp32)")
         assert result is not None
         assert result.require == {"memory": ["huge"], "platform": ["esp32"]}
+
+    def test_huge_board_passes_large_filter(self, huge_board: Board) -> None:
+        """A board with huge memory should pass (mem is large) filter."""
+        filter_obj = SketchFilter(require={"memory": ["large"]})
+        skip, _ = should_skip_sketch(huge_board, filter_obj)
+        assert not skip, "huge memory board should pass large memory filter"
 
 
 if __name__ == "__main__":

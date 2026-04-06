@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    FxPride2015.ino
 /// @brief   Pride2015 effect with fl::ScreenMap

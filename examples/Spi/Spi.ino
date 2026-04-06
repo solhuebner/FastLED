@@ -1,6 +1,6 @@
 // Multi-lane SPI example for FastLED
 // Demonstrates using 4 independent SPI lanes to drive 4 LED strips
-// @filter (mem is high)
+// @filter (mem is large)
 
 #include "FastLED.h"
 #include "fl/system/log.h"

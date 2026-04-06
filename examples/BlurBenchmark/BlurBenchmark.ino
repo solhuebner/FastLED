@@ -1,3 +1,4 @@
+// @filter: (mem is large)
 // Gaussian blur AVR benchmark — run in avr8js emulator.
 // Exercises blurGaussian<R,R> on an 8x8 CRGB matrix and prints
 // microseconds per iteration over Serial.

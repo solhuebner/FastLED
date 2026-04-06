@@ -1,4 +1,4 @@
-// @filter: (memory is high)
+// @filter: (memory is large)
 
 /// @file    Chromancer.ino
 /// @brief   Hexagonal LED display visualization
