@@ -241,9 +241,9 @@ def kill_port_users(port: str) -> None:
 
     # Python scripts that are safe to kill if orphaned (known serial port users)
     safe_python_scripts = [
-        "validate.py",
+        "autoresearch.py",
         "debug_attached.py",
-        "validation_loop.py",
+        "autoresearch_loop.py",
         "monitor.py",
     ]
 

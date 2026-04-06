@@ -26,15 +26,15 @@ The hook blocks these commands to prevent bypassing the build system. Use the re
 | `g++` | Compiler | ❌ **Not supported** | FastLED requires Clang 21.1.5 - GCC is not supported |
 | `gdb` | Debugger | `clang-tool-chain-lldb` | Use FastLED's LLDB wrapper for debugging |
 | `lldb` | Debugger | `clang-tool-chain-lldb` | Use FastLED's LLDB wrapper for debugging |
-| `pio` | PlatformIO | `bash compile`, `bash debug`, `bash validate` | Use FastLED's platform compilation wrappers |
-| `platformio` | PlatformIO | `bash compile`, `bash debug`, `bash validate` | Use FastLED's platform compilation wrappers |
+| `pio` | PlatformIO | `bash compile`, `bash debug`, `bash autoresearch` | Use FastLED's platform compilation wrappers |
+| `platformio` | PlatformIO | `bash compile`, `bash debug`, `bash autoresearch` | Use FastLED's platform compilation wrappers |
 
 **Key Points:**
 - ✅ **Build Tools (ninja/meson)**: Always use `bash test` - the build system manages these internally
 - ✅ **Compilers (clang/clang++)**: Always use `bash test` - the build system uses clang-tool-chain wrappers
 - ❌ **GCC/G++**: Not supported by FastLED - project requires Clang 21.1.5 for MSVC compatibility
 - 🔍 **Debuggers (gdb/lldb)**: Use `clang-tool-chain-lldb` for consistent debugging experience
-- 🔌 **PlatformIO**: Use `bash compile` (build), `bash debug` (interactive debugging), or `bash validate` (hardware testing)
+- 🔌 **PlatformIO**: Use `bash compile` (build), `bash debug` (interactive debugging), or `bash autoresearch` (hardware testing)
 
 ### Forbidden Patterns
 

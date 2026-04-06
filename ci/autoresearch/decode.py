@@ -1,4 +1,4 @@
-"""Decode validation for FastLED codec testing.
+"""Decode autoresearch for FastLED codec testing.
 
 Validates media file decoding by reading the file, base64-encoding it,
 constructing a JSON-RPC payload, and writing it to .build/decode_payload.json.
@@ -139,7 +139,7 @@ def _print_pixel_table(pixels: list[list[int]]) -> None:
         print(f"  {i:<8}{r:<6}{g:<6}{b:<6}")
 
 
-async def run_device_decode_validation(
+async def run_device_decode_autoresearch(
     decode_path: str,
     port: str,
     timeout: float = 120.0,
@@ -161,7 +161,7 @@ async def run_device_decode_validation(
 
     print()
     print("=" * 60)
-    print("DEVICE DECODE VALIDATION MODE")
+    print("DEVICE DECODE AUTORESEARCH MODE")
     print("=" * 60)
     print()
 
@@ -245,7 +245,7 @@ async def run_device_decode_validation(
 
         print()
         print(
-            f"{Fore.GREEN}DEVICE DECODE VALIDATION PASSED ({codec_name}){Style.RESET_ALL}"
+            f"{Fore.GREEN}DEVICE DECODE AUTORESEARCH PASSED ({codec_name}){Style.RESET_ALL}"
         )
         return 0
 
@@ -265,8 +265,8 @@ async def run_device_decode_validation(
             os.unlink(temp_download)
 
 
-async def run_decode_validation(decode_path: str) -> int:
-    """Run decode validation on a local file or URL (host-only mode).
+async def run_decode_autoresearch(decode_path: str) -> int:
+    """Run decode autoresearch on a local file or URL (host-only mode).
 
     Args:
         decode_path: Local file path or URL to a media file.
@@ -276,7 +276,7 @@ async def run_decode_validation(decode_path: str) -> int:
     """
     print()
     print("=" * 60)
-    print("DECODE VALIDATION MODE")
+    print("DECODE AUTORESEARCH MODE")
     print("=" * 60)
     print()
 
@@ -344,10 +344,12 @@ async def run_decode_validation(decode_path: str) -> int:
         print()
         if result.returncode == 0:
             print(
-                f"{Fore.GREEN}DECODE VALIDATION PASSED ({codec_name}){Style.RESET_ALL}"
+                f"{Fore.GREEN}DECODE AUTORESEARCH PASSED ({codec_name}){Style.RESET_ALL}"
             )
         else:
-            print(f"{Fore.RED}DECODE VALIDATION FAILED ({codec_name}){Style.RESET_ALL}")
+            print(
+                f"{Fore.RED}DECODE AUTORESEARCH FAILED ({codec_name}){Style.RESET_ALL}"
+            )
 
         return result.returncode
 

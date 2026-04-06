@@ -1,6 +1,6 @@
-// examples/Validation/ValidationRemote.h
+// examples/AutoResearch/AutoResearchRemote.h
 //
-// Remote RPC control system for Validation sketch.
+// Remote RPC control system for AutoResearch sketch.
 // Provides JSON-RPC interface for dynamic test control via serial commands.
 //
 // ARCHITECTURE:
@@ -31,8 +31,8 @@ namespace net { namespace ble { struct TransportState; } }
 /// @return A shared_ptr to the created RxDevice, or nullptr on failure
 using RxDeviceFactory = fl::shared_ptr<fl::RxDevice>(*)(int pin);
 
-/// @brief Validation runtime state (shared between main loop and RPC handlers)
-struct ValidationState {
+/// @brief AutoResearch runtime state (shared between main loop and RPC handlers)
+struct AutoResearchState {
     fl::vector<fl::DriverInfo> drivers_available;
     fl::shared_ptr<fl::RxDevice> rx_channel;
     fl::span<uint8_t> rx_buffer;
@@ -43,9 +43,9 @@ struct ValidationState {
     RxDeviceFactory rx_factory;
     bool gpio_baseline_test_done = false;  // Track whether GPIO baseline test has run in loop()
     bool debug_enabled = false;  // Runtime debug logging toggle (default: off)
-    bool net_server_active = false;  // Network server validation active
-    bool net_client_active = false;  // Network client validation active
-    bool ble_server_active = false;  // BLE GATT server validation active
+    bool net_server_active = false;  // Network server autoresearch active
+    bool net_client_active = false;  // Network client autoresearch active
+    bool ble_server_active = false;  // BLE GATT server autoresearch active
 };
 
 /// @brief Print JSON directly to Serial, bypassing fl::println and ScopedLogDisable
@@ -59,19 +59,19 @@ void printJsonRaw(const fl::json& json, const char* prefix = "REMOTE: ");
 /// @param data JSON object containing message data
 void printStreamRaw(const char* messageType, const fl::json& data);
 
-/// @brief Remote RPC control system for test validation
+/// @brief Remote RPC control system for test autoresearch
 /// Encapsulates all RPC function registration and processing logic
-class ValidationRemoteControl {
+class AutoResearchRemoteControl {
 public:
     /// @brief Constructor
-    ValidationRemoteControl();
+    AutoResearchRemoteControl();
 
     /// @brief Destructor
-    ~ValidationRemoteControl();
+    ~AutoResearchRemoteControl();
 
-    /// @brief Register all RPC functions with shared validation state
-    /// @param state Shared pointer to validation runtime state
-    void registerFunctions(fl::shared_ptr<ValidationState> state);
+    /// @brief Register all RPC functions with shared autoresearch state
+    /// @param state Shared pointer to autoresearch runtime state
+    void registerFunctions(fl::shared_ptr<AutoResearchState> state);
 
     /// @brief Process RPC system (pull + tick + push)
     /// @param current_millis Current timestamp in milliseconds
@@ -93,7 +93,7 @@ private:
     fl::unique_ptr<fl::Remote> mRemote;      // Serial Remote RPC system instance
     fl::unique_ptr<fl::Remote> mBleRemote;   // BLE Remote RPC system instance (created by startBle)
     fl::net::ble::TransportState* mBleState = nullptr; // Opaque BLE state (heap-allocated by ble::createTransport, nullptr on stub platforms)
-    fl::shared_ptr<ValidationState> mState;  // Shared validation state
+    fl::shared_ptr<AutoResearchState> mState;  // Shared autoresearch state
     bool mPendingBleStop = false;            // Deferred BLE teardown flag (set by stopBle RPC)
 
     /// @brief Register all RPC methods on a given Remote instance

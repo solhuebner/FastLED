@@ -17,7 +17,7 @@ bash test <test_name>                # Run specific test
 bash compile wasm --examples Blink   # Compile for WASM (default target)
 bash compile <platform> --examples X # Only when user requests specific platform
 bash lint                            # Run linting
-bash validate --parlio               # Hardware validation
+bash autoresearch --parlio               # Hardware validation
 
 # ⚠️ AVOID - Only when bash scripts don't provide needed functionality
 uv run test.py <test_name>           # Direct Python script
@@ -149,7 +149,7 @@ bash test --clean tests/fl/async     # Selective clean rebuild
 ### Command Hierarchy Summary
 
 **Tier 1: Bash Scripts (ALWAYS USE)** - Primary interface:
-- `bash test`, `bash compile`, `bash lint`, `bash validate`
+- `bash test`, `bash compile`, `bash lint`, `bash autoresearch`
 
 **Tier 2: Direct Python (AVOID)** - Only when bash doesn't provide functionality:
 - `uv run test.py` (use `bash test` instead when possible)

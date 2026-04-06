@@ -7,7 +7,7 @@
 // JSON-RPC pipeline.
 //
 // Usage:
-//   bash validate --decode tests/data/codec/test.mp4
+//   bash autoresearch --decode tests/data/codec/test.mp4
 //   bash test decode_file --cpp                          (uses default path)
 //   FASTLED_DECODE_PAYLOAD=<payload.json> bash test decode_file --cpp
 

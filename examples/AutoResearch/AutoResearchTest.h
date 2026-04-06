@@ -1,4 +1,4 @@
-// ValidationTest.h - Generic LED validation testing infrastructure
+// AutoResearchTest.h - Generic LED autoresearch testing infrastructure
 // Driver-agnostic test functions that work with any FastLED driver (RMT, SPI, PARLIO)
 
 #pragma once
@@ -9,19 +9,19 @@
 
 namespace fl {
 
-/// @brief Configuration for driver-agnostic validation testing
-/// Contains all input parameters needed for validation (excludes output parameters)
-struct ValidationConfig {
+/// @brief Configuration for driver-agnostic autoresearch testing
+/// Contains all input parameters needed for autoresearch (excludes output parameters)
+struct AutoResearchConfig {
     const fl::ChipsetTimingConfig& timing;       ///< Chipset timing configuration to test
     const char* timing_name;                     ///< Timing name for logging (e.g., "WS2812B-V5")
-    fl::span<fl::ChannelConfig> tx_configs;      ///< TX channel configurations to validate (mutable for LED manipulation)
+    fl::span<fl::ChannelConfig> tx_configs;      ///< TX channel configurations to test (mutable for LED manipulation)
     const char* driver_name;                     ///< Driver name for logging (e.g., "RMT", "SPI", "PARLIO")
     fl::shared_ptr<fl::RxDevice> rx_channel;     ///< RX channel for loopback capture (created in .ino, passed in)
     fl::span<uint8_t> rx_buffer;                 ///< Buffer to store received bytes
     int base_strip_size;                         ///< Base strip size (10 or 300 LEDs)
     fl::RxDeviceType rx_type;                    ///< RX device type (RMT or ISR)
 
-    ValidationConfig(const fl::ChipsetTimingConfig& t,
+    AutoResearchConfig(const fl::ChipsetTimingConfig& t,
                      const char* tn,
                      fl::span<fl::ChannelConfig> tc,
                      const char* dn,
@@ -112,48 +112,48 @@ struct MultiRunConfig {
 // Returns number of bytes captured, or 0 on error
 size_t capture(fl::shared_ptr<fl::RxDevice> rx_channel, fl::span<uint8_t> rx_buffer, const fl::ChipsetTimingConfig& timing, const char* driver_name);
 
-// Generic driver-agnostic validation test runner (single run)
-// Validates all channels using the specified configuration
+// Generic driver-agnostic autoresearch test runner (single run)
+// Tests all channels using the specified configuration
 // @param test_name Test name for logging (e.g., "Solid Red", "Solid Green")
-// @param config All validation configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
+// @param config All autoresearch configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
 // @param total Output parameter - total tests run (incremented)
 // @param passed Output parameter - tests passed (incremented)
 void runTest(const char* test_name,
-             fl::ValidationConfig& config,
+             fl::AutoResearchConfig& config,
              int& total, int& passed);
 
-// Multi-run validation test runner
+// Multi-run autoresearch test runner
 // Runs the same test multiple times and tracks errors across runs
 // @param test_name Test name for logging (e.g., "Pattern A", "Pattern B")
-// @param config All validation configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
+// @param config All autoresearch configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
 // @param multi_config Multi-run configuration (num runs, print settings)
 // @param total Output parameter - total tests run (incremented)
 // @param passed Output parameter - tests passed (incremented)
 // @param out_results Optional output for per-run results with LED error details
 void runMultiTest(const char* test_name,
-                  fl::ValidationConfig& config,
+                  fl::AutoResearchConfig& config,
                   const fl::MultiRunConfig& multi_config,
                   int& total, int& passed,
                   fl::vector<fl::RunResult>* out_results = nullptr);
 
-// Validate a specific chipset timing configuration
+// AutoResearch a specific chipset timing configuration
 // Creates channels, runs tests, destroys channels
-// @param config All validation configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
+// @param config All autoresearch configuration (timing, channels, driver, RX, buffer) - non-const for LED manipulation
 // @param total Output parameter - total tests run (incremented)
 // @param passed Output parameter - tests passed (incremented)
 // @param out_results Optional output for per-pattern results with LED error details
-void validateChipsetTiming(fl::ValidationConfig& config,
+void autoResearchChipsetTiming(fl::AutoResearchConfig& config,
                            int& total, int& passed,
                            uint32_t& out_show_duration_ms,
                            fl::vector<fl::RunResult>* out_results = nullptr);
 
-// Validate using the legacy template addLeds API (supports multi-lane)
+// AutoResearch using the legacy template addLeds API (supports multi-lane)
 // Uses LegacyClocklessProxy to map runtime pin to WS2812B<PIN> template instantiation
-// @param config All validation configuration (one or more tx_configs, pins must be 0-8)
+// @param config All autoresearch configuration (one or more tx_configs, pins must be 0-8)
 // @param total Output parameter - total tests run (incremented)
 // @param passed Output parameter - tests passed (incremented)
 // @param out_results Optional output for per-pattern results with LED error details
-void validateChipsetTimingLegacy(fl::ValidationConfig& config,
+void autoResearchChipsetTimingLegacy(fl::AutoResearchConfig& config,
                                  int& total, int& passed,
                                  uint32_t& out_show_duration_ms,
                                  fl::vector<fl::RunResult>* out_results = nullptr);

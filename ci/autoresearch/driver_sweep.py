@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Driver sweep test — tests multiple LED strip sizes and lane configurations.
 
-This script connects to an already-flashed device running the Validation.ino
+This script connects to an already-flashed device running the AutoResearch.ino
 sketch and runs a comprehensive test matrix via JSON-RPC for any driver type.
 
 Test matrix:
@@ -12,18 +12,18 @@ Test matrix:
 
 Usage:
     # Run sweep for a specific driver:
-    uv run python -m ci.validate.driver_sweep --driver PARLIO
-    uv run python -m ci.validate.driver_sweep --driver RMT
-    uv run python -m ci.validate.driver_sweep --driver SPI
+    uv run python -m ci.autoresearch.driver_sweep --driver PARLIO
+    uv run python -m ci.autoresearch.driver_sweep --driver RMT
+    uv run python -m ci.autoresearch.driver_sweep --driver SPI
 
     # With explicit port:
-    uv run python -m ci.validate.driver_sweep --driver PARLIO --port COM5
+    uv run python -m ci.autoresearch.driver_sweep --driver PARLIO --port COM5
 
     # Skip compile/upload (device already flashed):
-    uv run python -m ci.validate.driver_sweep --driver RMT --skip-flash
+    uv run python -m ci.autoresearch.driver_sweep --driver RMT --skip-flash
 
     # Verbose mode:
-    uv run python -m ci.validate.driver_sweep --driver PARLIO --verbose
+    uv run python -m ci.autoresearch.driver_sweep --driver PARLIO --verbose
 """
 
 from __future__ import annotations
@@ -528,14 +528,14 @@ def main() -> int:
 
     # Optionally compile and upload
     if not args.skip_flash:
-        print(f"\nCompiling and uploading Validation sketch...")
+        print(f"\nCompiling and uploading AutoResearch sketch...")
         print("(Use --skip-flash to skip this step if already flashed)\n")
         compile_cmd = [
             "bash",
             "compile",
             "esp32c6",
             "--examples",
-            "Validation",
+            "AutoResearch",
         ]
         print(f"Running: {' '.join(compile_cmd)}")
         compile_result = subprocess.run(compile_cmd, cwd=str(PROJECT_ROOT))

@@ -1,6 +1,6 @@
-// examples/Validation/ValidationRemote.cpp
+// examples/AutoResearch/AutoResearchRemote.cpp
 //
-// Remote RPC control system implementation for Validation sketch.
+// Remote RPC control system implementation for AutoResearch sketch.
 //
 // ARCHITECTURE:
 // - RPC responses use printJsonRaw()/printStreamRaw() which bypass fl::println
@@ -11,15 +11,15 @@
 #define DEBUG_PRINT(x) do {} while(0)
 #define DEBUG_PRINTLN(x) do {} while(0)
 
-#include "ValidationRemote.h"
-#include "ValidationBle.h"
-#include "ValidationNet.h"
-#include "ValidationOta.h"
+#include "AutoResearchRemote.h"
+#include "AutoResearchBle.h"
+#include "AutoResearchNet.h"
+#include "AutoResearchOta.h"
 #include "fl/control/transport/serial.h"
 #include "fl/system/heap.h"
 #include "Common.h"
-#include "ValidationTest.h"
-#include "ValidationHelpers.h"
+#include "AutoResearchTest.h"
+#include "AutoResearchHelpers.h"
 #include "fl/stl/sstream.h"
 #include "fl/stl/unique_ptr.h"
 #include "fl/stl/optional.h"
@@ -29,7 +29,7 @@
 #include "fl/stl/atomic.h"
 #include "fl/task/promise.h"
 #include "fl/math/simd.h"
-#include "ValidationSimd.h"
+#include "AutoResearchSimd.h"
 #include "fl/system/heap.h"
 #include <Arduino.h>
 
@@ -101,10 +101,10 @@ fl::json makeResponse(bool success, ReturnCode returnCode, const char* message,
 // No forward declarations needed - using one-test-per-RPC architecture
 
 // ============================================================================
-// ValidationRemoteControl Private Helper Functions
+// AutoResearchRemoteControl Private Helper Functions
 // ============================================================================
 
-fl::json ValidationRemoteControl::runSingleTestImpl(const fl::json& args) {
+fl::json AutoResearchRemoteControl::runSingleTestImpl(const fl::json& args) {
     fl::json response = fl::json::object();
 
     // RPC system unwraps single-element arrays, so args is the config object directly
@@ -321,7 +321,7 @@ fl::json ValidationRemoteControl::runSingleTestImpl(const fl::json& args) {
     }
 
     // Create validation configuration
-    fl::ValidationConfig validation_config(
+    fl::AutoResearchConfig autoresearch_config(
         timing_config.timing,
         timing_config.name,
         tx_configs,
@@ -348,7 +348,7 @@ fl::json ValidationRemoteControl::runSingleTestImpl(const fl::json& args) {
             // Legacy API path: WS2812B<PIN> template instantiation
             for (int iter = 0; iter < iterations; iter++) {
                 int iter_total = 0, iter_passed = 0;
-                validateChipsetTimingLegacy(validation_config, iter_total, iter_passed, show_duration_ms, &run_results);
+                autoResearchChipsetTimingLegacy(autoresearch_config, iter_total, iter_passed, show_duration_ms, &run_results);
                 total_tests += iter_total;
                 passed_tests += iter_passed;
             }
@@ -356,7 +356,7 @@ fl::json ValidationRemoteControl::runSingleTestImpl(const fl::json& args) {
             // Channel API path: FastLED.add(channel_config)
             for (int iter = 0; iter < iterations; iter++) {
                 int iter_total = 0, iter_passed = 0;
-                validateChipsetTiming(validation_config, iter_total, iter_passed, show_duration_ms, &run_results);
+                autoResearchChipsetTiming(autoresearch_config, iter_total, iter_passed, show_duration_ms, &run_results);
                 total_tests += iter_total;
                 passed_tests += iter_passed;
             }
@@ -434,7 +434,7 @@ fl::json ValidationRemoteControl::runSingleTestImpl(const fl::json& args) {
     return response;
 }
 
-fl::json ValidationRemoteControl::runParallelTestImpl(const fl::json& args) {
+fl::json AutoResearchRemoteControl::runParallelTestImpl(const fl::json& args) {
     fl::json response = fl::json::object();
 
     // Expects: {drivers: [{driver: "PARLIO", laneSizes: [100]}, {driver: "LCD_RGB", laneSizes: [100]}],
@@ -686,7 +686,7 @@ fl::json ValidationRemoteControl::runParallelTestImpl(const fl::json& args) {
                 ));
             }
 
-            fl::ValidationConfig validation_config(
+            fl::AutoResearchConfig autoresearch_config(
                 timing_config.timing,
                 timing_config.name,
                 tx_configs,
@@ -701,7 +701,7 @@ fl::json ValidationRemoteControl::runParallelTestImpl(const fl::json& args) {
             int passed_tests = 0;
             uint32_t val_show_duration_ms = 0;
 
-            validateChipsetTiming(validation_config, total_tests, passed_tests,
+            autoResearchChipsetTiming(autoresearch_config, total_tests, passed_tests,
                                   val_show_duration_ms, nullptr);
 
             rx_validation_passed = (total_tests > 0) && (passed_tests == total_tests);
@@ -742,7 +742,7 @@ fl::json ValidationRemoteControl::runParallelTestImpl(const fl::json& args) {
     return response;
 }
 
-fl::json ValidationRemoteControl::findConnectedPinsImpl(const fl::json& args) {
+fl::json AutoResearchRemoteControl::findConnectedPinsImpl(const fl::json& args) {
     fl::json response = fl::json::object();
 
     // Parse optional arguments: [{startPin: int, endPin: int, autoApply: bool}]
@@ -892,7 +892,7 @@ fl::json ValidationRemoteControl::findConnectedPinsImpl(const fl::json& args) {
     return response;
 }
 
-ValidationRemoteControl::ValidationRemoteControl()
+AutoResearchRemoteControl::AutoResearchRemoteControl()
     : mRemote(fl::make_unique<fl::Remote>(
         fl::createSerialRequestSource(),
         fl::createSerialResponseSink("REMOTE: ")
@@ -900,9 +900,9 @@ ValidationRemoteControl::ValidationRemoteControl()
     // mState will be set by registerFunctions()
 }
 
-ValidationRemoteControl::~ValidationRemoteControl() = default;
+AutoResearchRemoteControl::~AutoResearchRemoteControl() = default;
 
-void ValidationRemoteControl::registerFunctions(fl::shared_ptr<ValidationState> state) {
+void AutoResearchRemoteControl::registerFunctions(fl::shared_ptr<AutoResearchState> state) {
     // Store shared state
     mState = state;
 
@@ -1509,10 +1509,10 @@ void ValidationRemoteControl::registerFunctions(fl::shared_ptr<ValidationState> 
         fl::json response = fl::json::object();
 
         // Run the full test suite and collect per-test results
-        using validation::simd_check::SimdTestEntry;
+        using autoresearch::simd_check::SimdTestEntry;
         const SimdTestEntry* tests = nullptr;
         int num_tests = 0;
-        validation::simd_check::getTests(&tests, &num_tests);
+        autoresearch::simd_check::getTests(&tests, &num_tests);
 
         int passed_count = 0;
         int failed_count = 0;
@@ -1556,7 +1556,7 @@ void ValidationRemoteControl::registerFunctions(fl::shared_ptr<ValidationState> 
             if (iters > 1000000) iters = 1000000;
         }
 
-        auto result = validation::simd_check::runMultiplyBenchmark(iters);
+        auto result = autoresearch::simd_check::runMultiplyBenchmark(iters);
 
         response.set("success", true);
         response.set("iterations", result.iterations);
@@ -2365,7 +2365,7 @@ void ValidationRemoteControl::registerFunctions(fl::shared_ptr<ValidationState> 
     });
 }
 
-void ValidationRemoteControl::tick(uint32_t current_millis) {
+void AutoResearchRemoteControl::tick(uint32_t current_millis) {
     if (mRemote) {
         // Remote::update() does pull + tick + push
         mRemote->update(current_millis);
@@ -2386,7 +2386,7 @@ void ValidationRemoteControl::tick(uint32_t current_millis) {
     }
 }
 
-void ValidationRemoteControl::registerAllMethods(fl::Remote* remote) {
+void AutoResearchRemoteControl::registerAllMethods(fl::Remote* remote) {
     // Register the core methods that BLE remote needs.
     // This registers a subset of methods — enough for ping/pong PoC.
 
@@ -2413,18 +2413,18 @@ void ValidationRemoteControl::registerAllMethods(fl::Remote* remote) {
     });
 }
 
-fl::json ValidationRemoteControl::startBleRemote() {
+fl::json AutoResearchRemoteControl::startBleRemote() {
     if (mBleRemote) {
         fl::json response = fl::json::object();
         response.set("success", true);
         response.set("message", "BLE remote already active");
-        response.set("device_name", VALIDATION_BLE_DEVICE_NAME);
+        response.set("device_name", AUTORESEARCH_BLE_DEVICE_NAME);
         return response;
     }
 
     // Create BLE GATT server (heap-allocates transport state)
     // On stub platforms, createTransport returns nullptr and logs FL_ERROR.
-    mBleState = fl::net::ble::createTransport(VALIDATION_BLE_DEVICE_NAME);
+    mBleState = fl::net::ble::createTransport(AUTORESEARCH_BLE_DEVICE_NAME);
     if (!mBleState) {
         fl::json response = fl::json::object();
         response.set("success", false);
@@ -2446,7 +2446,7 @@ fl::json ValidationRemoteControl::startBleRemote() {
 
     fl::json response = fl::json::object();
     response.set("success", true);
-    response.set("device_name", VALIDATION_BLE_DEVICE_NAME);
+    response.set("device_name", AUTORESEARCH_BLE_DEVICE_NAME);
     response.set("service_uuid", FL_BLE_SERVICE_UUID);
     response.set("rx_uuid", FL_BLE_CHAR_RX_UUID);
     response.set("tx_uuid", FL_BLE_CHAR_TX_UUID);
@@ -2454,7 +2454,7 @@ fl::json ValidationRemoteControl::startBleRemote() {
     return response;
 }
 
-fl::json ValidationRemoteControl::stopBleRemote() {
+fl::json AutoResearchRemoteControl::stopBleRemote() {
     // Defer actual BLE teardown to tick() so the RPC response is sent first.
     // BLEDevice::deinit(true) blocks long enough to prevent the response
     // from being transmitted over serial before the device resets BLE state.

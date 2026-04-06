@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Four-phase device workflow: Package Install → Lint → Compile → Upload+Monitor.
 
-⚠️ NOTE FOR AI AGENTS: For live device testing, prefer 'bash validate' which provides
-a complete hardware validation framework. This script is for advanced/custom workflows.
+⚠️ NOTE FOR AI AGENTS: For live device testing, prefer 'bash autoresearch' which provides
+a complete hardware autoresearch framework. This script is for advanced/custom workflows.
 
 This script orchestrates a complete device development workflow in four distinct phases:
 
@@ -11,7 +11,7 @@ Phase 0: Package Installation (GLOBAL SINGLETON LOCK via daemon)
     - Uses singleton daemon to serialize package installations globally
     - Lock scope: System-wide (~/.platformio/packages/ shared by all projects)
     - Daemon survives agent termination and completes installation atomically
-    - Fast path: ~3.8s validation when packages already installed
+    - Fast path: ~3.8s autoresearch when packages already installed
     - Prevents corruption from concurrent package downloads
 
 Phase 1: Linting (C++ linting only - catches ISR errors)
@@ -45,7 +45,7 @@ Concurrency Control:
     - No legacy file-based locking required
 
 Usage:
-    ⚠️ AI agents should use 'bash validate' for device testing (see CLAUDE.md)
+    ⚠️ AI agents should use 'bash autoresearch' for device testing (see CLAUDE.md)
 
     uv run ci/debug_attached.py                          # Auto-detect env & sketch (default: 60s timeout, waits until timeout)
     uv run ci/debug_attached.py RX                       # Compile RX sketch (examples/RX), auto-detect env
@@ -112,7 +112,7 @@ def run_cpp_lint() -> bool:
     """Run C++ linting using unified runner (matches 'bash lint' behavior).
 
     This function mirrors the C++ linting approach from the 'lint' script to ensure
-    consistent behavior between 'bash validate' and 'bash lint'.
+    consistent behavior between 'bash autoresearch' and 'bash lint'.
 
     Returns:
         True if linting succeeded, False otherwise
@@ -328,7 +328,7 @@ def format_test_summary(result_events: list[dict[str, Any]]) -> str:
     """Format RESULT JSON events into compact test summary.
 
     Extracts meaningful test results from the RESULT JSON lines emitted by
-    the Validation firmware and formats them into a concise summary.
+    the AutoResearch firmware and formats them into a concise summary.
 
     Args:
         result_events: List of parsed RESULT JSON events
@@ -1125,7 +1125,7 @@ Examples:
     parser.add_argument(
         "--check-usage",
         action="store_true",
-        help="Enable sketch usage checks (e.g., block 'bash debug Validation' without wrapper)",
+        help="Enable sketch usage checks (e.g., block 'bash debug AutoResearch' without wrapper)",
     )
     parser.add_argument(
         "--json-rpc",
@@ -1199,22 +1199,22 @@ def main() -> int:
         try:
             resolved_sketch = resolve_sketch_path(args.sketch, build_dir)
 
-            # Detect if user is trying to run Validation sketch directly (only with --check-usage)
+            # Detect if user is trying to run AutoResearch sketch directly (only with --check-usage)
             sketch_name = Path(resolved_sketch).name
-            if args.check_usage and sketch_name.lower() == "validation":
+            if args.check_usage and sketch_name.lower() == "autoresearch":
                 # Display red banner error
                 print()
                 print(f"{Fore.RED}{'=' * 60}")
-                print(f"{Fore.RED}⚠️  ERROR: DO NOT USE 'bash debug Validation'")
+                print(f"{Fore.RED}⚠️  ERROR: DO NOT USE 'bash debug AutoResearch'")
                 print(f"{Fore.RED}{'=' * 60}")
                 print(
-                    f"{Fore.RED}The Validation sketch requires specific --expect and --fail-on"
+                    f"{Fore.RED}The AutoResearch sketch requires specific --expect and --fail-on"
                 )
                 print(
                     f"{Fore.RED}patterns to work correctly. Use the dedicated wrapper instead:"
                 )
                 print()
-                print(f"{Fore.YELLOW}  bash validate{Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}  bash autoresearch{Style.RESET_ALL}")
                 print()
                 print(
                     f"{Fore.RED}This ensures proper pattern matching and prevents false positives."
@@ -1223,7 +1223,7 @@ def main() -> int:
                 print()
                 return 1
 
-            # Use absolute path for PLATFORMIO_SRC_DIR (matches validate.py behavior)
+            # Use absolute path for PLATFORMIO_SRC_DIR (matches autoresearch.py behavior)
             absolute_sketch_path = str(build_dir / resolved_sketch)
             os.environ["PLATFORMIO_SRC_DIR"] = absolute_sketch_path
             print(f"📁 Sketch: {resolved_sketch}")

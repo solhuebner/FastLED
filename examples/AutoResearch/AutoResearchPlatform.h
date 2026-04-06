@@ -1,12 +1,12 @@
-// ValidationPlatform.h - Platform-specific defaults for Validation example
+// AutoResearchPlatform.h - Platform-specific defaults for AutoResearch example
 //
-// Encapsulates all platform #ifdefs so Validation.ino stays clean.
+// Encapsulates all platform #ifdefs so AutoResearch.ino stays clean.
 
 #pragma once
 
 #include "platforms/is_platform.h"
 
-namespace validation {
+namespace autoresearch {
 
 // Default TX pin for each platform
 constexpr int defaultTxPin() {
@@ -71,4 +71,4 @@ constexpr const char* chipName() {
 #endif
 }
 
-} // namespace validation
+} // namespace autoresearch

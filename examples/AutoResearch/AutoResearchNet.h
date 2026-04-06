@@ -1,35 +1,35 @@
-// examples/Validation/ValidationNet.h
+// examples/AutoResearch/AutoResearchNet.h
 //
-// Network validation for ESP32: WiFi Soft AP + HTTP server/client testing.
-// Used by `bash validate --net-server` and `bash validate --net-client`.
+// Network autoresearch for ESP32: WiFi Soft AP + HTTP server/client testing.
+// Used by `bash autoresearch --net-server` and `bash autoresearch --net-client`.
 //
 // The ESP32 creates a WiFi Soft AP with known credentials.
-// The host Python script connects to the AP and validates HTTP endpoints.
+// The host Python script connects to the AP and tests HTTP endpoints.
 
 #pragma once
 
 #include "fl/stl/stdint.h"
 
 // WiFi AP configuration constants
-#define VALIDATION_NET_SSID "FastLED-Validation"
-#define VALIDATION_NET_PASSWORD "fastled123"
-#define VALIDATION_NET_AP_IP "192.168.4.1"
-#define VALIDATION_NET_SERVER_PORT 80
-#define VALIDATION_NET_CLIENT_PORT 8080
-#define VALIDATION_NET_MAX_CONNECTIONS 4
+#define AUTORESEARCH_NET_SSID "FastLED-AutoResearch"
+#define AUTORESEARCH_NET_PASSWORD "fastled123"
+#define AUTORESEARCH_NET_AP_IP "192.168.4.1"
+#define AUTORESEARCH_NET_SERVER_PORT 80
+#define AUTORESEARCH_NET_CLIENT_PORT 8080
+#define AUTORESEARCH_NET_MAX_CONNECTIONS 4
 
 // Forward declarations
 namespace fl {
 class json;
 }
 
-/// @brief State for network validation
-struct ValidationNetState {
+/// @brief State for network autoresearch
+struct AutoResearchNetState {
     bool wifi_ap_active = false;
     bool http_server_active = false;
     bool http_client_active = false;
-    uint16_t server_port = VALIDATION_NET_SERVER_PORT;
-    uint16_t client_target_port = VALIDATION_NET_CLIENT_PORT;
+    uint16_t server_port = AUTORESEARCH_NET_SERVER_PORT;
+    uint16_t client_target_port = AUTORESEARCH_NET_CLIENT_PORT;
 };
 
 /// @brief Start WiFi Soft AP and HTTP server with test endpoints.
@@ -55,6 +55,6 @@ fl::json runNetLoopback();
 /// @return JSON with {success: true} on success
 fl::json stopNet();
 
-/// @brief Get current network validation state.
+/// @brief Get current network autoresearch state.
 /// @return Reference to the global net state
-ValidationNetState& getNetState();
+AutoResearchNetState& getNetState();

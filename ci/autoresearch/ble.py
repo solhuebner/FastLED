@@ -1,6 +1,6 @@
-"""BLE validation helpers for FastLED hardware-in-the-loop testing.
+"""BLE autoresearch helpers for FastLED hardware-in-the-loop testing.
 
-Provides BLE GATT communication validation flows for --ble mode.
+Provides BLE GATT communication autoresearch flows for --ble mode.
 Tests bidirectional JSON-RPC over BLE by:
   - Sending startBle RPC over serial to start GATT server
   - Connecting to device via Bleak (BLE)
@@ -25,12 +25,12 @@ if TYPE_CHECKING:
     from ci.util.serial_interface import SerialInterface
 
 
-async def run_ble_validation(
+async def run_ble_autoresearch(
     upload_port: str,
     serial_iface: "SerialInterface | None",
     timeout: float = 60.0,
 ) -> int:
-    """Run BLE validation (--ble).
+    """Run BLE autoresearch (--ble).
 
     1. Send startBle RPC over serial -> device starts BLE GATT server + advertising
     2. Scan for "FastLED-C6" via Bleak, connect
@@ -48,7 +48,7 @@ async def run_ble_validation(
     """
     print()
     print("=" * 60)
-    print("BLE VALIDATION MODE")
+    print("BLE AUTORESEARCH MODE")
     print("=" * 60)
     print()
 
@@ -203,12 +203,12 @@ async def run_ble_validation(
         print("=" * 60)
         if tests_failed == 0:
             print(
-                f"{Fore.GREEN}BLE VALIDATION PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
+                f"{Fore.GREEN}BLE AUTORESEARCH PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
             )
             return 0
         else:
             print(
-                f"{Fore.RED}BLE VALIDATION FAILED ({tests_passed}/{total} passed, "
+                f"{Fore.RED}BLE AUTORESEARCH FAILED ({tests_passed}/{total} passed, "
                 f"{tests_failed} failed){Style.RESET_ALL}"
             )
             return 1
@@ -221,7 +221,7 @@ async def run_ble_validation(
         print(f"\n  {Fore.RED}Timeout waiting for BLE response{Style.RESET_ALL}")
         return 1
     except Exception as e:
-        print(f"\n  {Fore.RED}BLE validation error: {e}{Style.RESET_ALL}")
+        print(f"\n  {Fore.RED}BLE autoresearch error: {e}{Style.RESET_ALL}")
         import traceback
 
         traceback.print_exc()

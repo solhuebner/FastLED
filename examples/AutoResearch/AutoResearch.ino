@@ -5,9 +5,9 @@
 //   - memory: low
 // @end-filter
 
-// examples/Validation/Validation.ino
+// examples/AutoResearch/AutoResearch.ino
 //
-// FastLED LED Timing Validation Sketch for ESP32.
+// FastLED LED Timing AutoResearch Sketch for ESP32.
 //
 // This sketch validates LED output by reading back timing values using the
 // RMT peripheral in receive mode. It performs TX→RX loopback testing to verify
@@ -17,7 +17,7 @@
 // 1. Runtime Channel API (FastLED.add) for iterating through all available
 //    drivers (RMT, SPI, PARLIO) and testing multiple chipset timings dynamically
 //    by creating and destroying controllers for each driver.
-// 2. Multi-channel validation support: Pass span<const ChannelConfig> to validate
+// 2. Multi-channel autoresearch support: Pass span<const ChannelConfig> to validate
 //    multiple LED strips/channels simultaneously. Each channel is independently
 //    validated with its own RX loopback channel.
 //
@@ -27,7 +27,7 @@
 // MULTI-CHANNEL MODE:
 // - Single-channel: Pass one ChannelConfig - uses shared RX channel object (created in setup())
 // - Multi-channel: Pass multiple ChannelConfigs - creates dynamic RX channels
-//   on each TX pin for independent jumper wire validation
+//   on each TX pin for independent jumper wire autoresearch
 // - Each channel in the span is validated sequentially with its own RX channel
 
 // Hardware Setup:
@@ -56,7 +56,7 @@
 //   - List of discovered drivers (RMT, SPI, PARLIO - availability depends on platform)
 //   - Test results for each driver with PASS/FAIL status for each chipset timing
 //   - Each driver is tested independently by creating/destroying channels
-//   - In multi-channel mode: Separate validation results for each channel/pin
+//   - In multi-channel mode: Separate autoresearch results for each channel/pin
 //
 // MULTI-CHANNEL EXAMPLE:
 //   ```cpp
@@ -71,7 +71,7 @@
 //   };
 //
 //   // Validate all 3 channels (each gets its own RX loopback)
-//   validateChipsetTiming(timing, "WS2812", fl::span(configs, 3), nullptr, buffer);
+//   autoResearchChipsetTiming(timing, "WS2812", fl::span(configs, 3), nullptr, buffer);
 //   ```
 //
 // ASYNC ARCHITECTURE:
@@ -83,7 +83,7 @@
 // ============================================================================
 // AGENT INSTRUCTIONS
 // ============================================================================
-// This sketch is a validation test that uses the "ERROR" keyword in FL_ERROR
+// This sketch is an autoresearch test that uses the "ERROR" keyword in FL_ERROR
 // statements to signal test failures. The `bash debug` command monitors for
 // the "ERROR" keyword and fails the test when detected (exit code 1).
 //
@@ -91,7 +91,7 @@
 //    - DO NOT change "ERROR" to "FAIL", "WARNING", "FAILURE", or any other
 //      keyword to avoid test detection
 //    - DO NOT modify FL_ERROR statements unless explicitly requested by the user
-//    - The "ERROR" keyword is INTENTIONAL and part of the validation contract
+//    - The "ERROR" keyword is INTENTIONAL and part of the autoresearch contract
 //
 // ✅ VALID MODIFICATIONS (only if explicitly requested):
 //    - User asks: "Change the error message format"
@@ -101,7 +101,7 @@
 // ❌ INVALID MODIFICATIONS (considered "cheating"):
 //    - Changing "ERROR" to avoid `bash debug --fail-on ERROR` detection
 //    - Renaming to bypass automated test failure detection
-//    - Any modification that circumvents the validation contract
+//    - Any modification that circumvents the autoresearch contract
 //
 // If the test is failing, investigate and FIX THE ACTUAL BUG that causes
 // the "ERROR" message to be printed. Do not hide the symptom by changing
@@ -110,8 +110,8 @@
 // JSON-RPC SCRIPTING LANGUAGE:
 // This sketch uses JSON-RPC for all test orchestration. Examples:
 //
-//   # Run validation with pure JSON-RPC (no text patterns needed)
-//   bash validate --all
+//   # Run autoresearch with pure JSON-RPC (no text patterns needed)
+//   bash autoresearch --all
 //
 //   # Custom JSON-RPC workflow
 //   uv run python -c "
@@ -156,7 +156,7 @@
 //    // #define MAX_LANES 8  // Maximum number of lanes to test
 //    - Default: MIN_LANES=1, MAX_LANES=8 (tests all lane counts)
 //    - Each lane has decreasing LED count: Lane 0=base, Lane 1=base-1, ..., Lane N=base-N
-//    - Multi-lane RX validation: Only Lane 0 is validated (hardware limitation)
+//    - Multi-lane RX autoresearch: Only Lane 0 is validated (hardware limitation)
 //
 // 3. STRIP SIZE (2 options):
 //    - Uncomment to test ONLY a specific strip size:
@@ -185,14 +185,14 @@
 #include "fl/stl/undef.h"  // Undefine Arduino macros (DEFAULT, INPUT, OUTPUT)
 #include "fl/stl/sstream.h"
 #include "Common.h"
-#include "ValidationTest.h"
-#include "ValidationHelpers.h"
-#include "ValidationRemote.h"
-#include "ValidationBle.h"
-#include "ValidationNet.h"
-#include "ValidationAsync.h"
-#include "ValidationPlatform.h"
-#include "ValidationSimd.h"
+#include "AutoResearchTest.h"
+#include "AutoResearchHelpers.h"
+#include "AutoResearchRemote.h"
+#include "AutoResearchBle.h"
+#include "AutoResearchNet.h"
+#include "AutoResearchAsync.h"
+#include "AutoResearchPlatform.h"
+#include "AutoResearchSimd.h"
 
 // ============================================================================
 // Teensy Hardware Watchdog (crash recovery) - DISABLED
@@ -221,12 +221,12 @@ const fl::RxDeviceType RX_TYPE = fl::RxDeviceType::PLATFORM_DEFAULT;
 // These defaults are chosen based on hardware constraints of each platform.
 // They can be overridden at runtime via JSON-RPC (setPins, setTxPin, setRxPin).
 
-constexpr int DEFAULT_PIN_TX = validation::defaultTxPin();
-constexpr int DEFAULT_PIN_RX = validation::defaultRxPin();
+constexpr int DEFAULT_PIN_TX = autoresearch::defaultTxPin();
+constexpr int DEFAULT_PIN_RX = autoresearch::defaultRxPin();
 
 // Legacy macros for backward compatibility in existing code
-#define PIN_TX g_validation_state->pin_tx
-#define PIN_RX g_validation_state->pin_rx
+#define PIN_TX g_autoresearch_state->pin_tx
+#define PIN_RX g_autoresearch_state->pin_rx
 
 #define CHIPSET WS2812B
 #define COLOR_ORDER RGB  // No reordering needed.
@@ -235,21 +235,21 @@ constexpr int DEFAULT_PIN_RX = validation::defaultRxPin();
 // Each LED = 24 bits = 24 symbols, plus headroom for RESET pulses
 // Maximum: 3000 LEDs (hardcoded for ESP32/S3 with PSRAM support)
 #if defined(FL_IS_TEENSY_4X) || defined(FL_IS_ESP_32C6) || defined(FL_IS_ESP_32H2) || defined(FL_IS_ESP_32C5)
-constexpr int RX_BUFFER_SIZE = 100 * 32 + 100;  // Memory-constrained: 100 LEDs max for validation
+constexpr int RX_BUFFER_SIZE = 100 * 32 + 100;  // Memory-constrained: 100 LEDs max for autoresearch
 #else
 constexpr int RX_BUFFER_SIZE = 3000 * 32 + 100;  // LEDs × 32:1 expansion + headroom
 #endif
 
 // Factory function for creating RxDevice instances
-// This allows ValidationRemoteControl to recreate the RX channel when the pin changes
+// This allows AutoResearchRemoteControl to recreate the RX channel when the pin changes
 fl::shared_ptr<fl::RxDevice> createRxDevice(int pin) {
     return fl::RxDevice::create<RX_TYPE>(pin);
 }
 
-// Global validation state (shared between main loop and RPC handlers)
+// Global autoresearch state (shared between main loop and RPC handlers)
 // Use PSRAM-backed vector for RX buffer to avoid DRAM overflow on ESP32S2
 fl::vector_psram<uint8_t> g_rx_buffer_storage;  // Actual buffer storage (falls back to SRAM without PSRAM)
-fl::shared_ptr<ValidationState> g_validation_state;  // Shared state pointer
+fl::shared_ptr<AutoResearchState> g_autoresearch_state;  // Shared state pointer
 
 // ============================================================================
 // Serial Initialization Helper
@@ -269,11 +269,11 @@ void init_serial_buffers() {
 
 // Remote RPC system for dynamic test control via JSON commands
 // Using Singleton pattern for thread-safe lazy initialization
-using RemoteControlSingleton = fl::Singleton<ValidationRemoteControl>;
+using RemoteControlSingleton = fl::Singleton<AutoResearchRemoteControl>;
 
 
 // ============================================================================
-// Global Validation State (Simplified - No Test Matrix)
+// Global AutoResearch State (Simplified - No Test Matrix)
 // ============================================================================
 
 // Frame counter - tracks which iteration of loop() we're on (diagnostic)
@@ -287,33 +287,33 @@ void setup() {
     Serial.begin(115200);
     while (!Serial && millis() < SERIAL_TIMEOUT_MS);  // Wait for serial monitor (early exits when connected)
 
-    FL_WARN("[SETUP] Validation sketch starting - serial output active");
+    FL_WARN("[SETUP] AutoResearch sketch starting - serial output active");
 
     // Initialize RX buffer dynamically (uses PSRAM if available, falls back to heap)
     g_rx_buffer_storage.resize(RX_BUFFER_SIZE);
 
-    // Initialize global validation state
-    g_validation_state = fl::make_shared<ValidationState>();
-    g_validation_state->pin_tx = DEFAULT_PIN_TX;
-    g_validation_state->pin_rx = DEFAULT_PIN_RX;
-    g_validation_state->default_pin_tx = DEFAULT_PIN_TX;
-    g_validation_state->default_pin_rx = DEFAULT_PIN_RX;
-    g_validation_state->rx_buffer = g_rx_buffer_storage;
-    g_validation_state->rx_factory = createRxDevice;
+    // Initialize global autoresearch state
+    g_autoresearch_state = fl::make_shared<AutoResearchState>();
+    g_autoresearch_state->pin_tx = DEFAULT_PIN_TX;
+    g_autoresearch_state->pin_rx = DEFAULT_PIN_RX;
+    g_autoresearch_state->default_pin_tx = DEFAULT_PIN_TX;
+    g_autoresearch_state->default_pin_rx = DEFAULT_PIN_RX;
+    g_autoresearch_state->rx_buffer = g_rx_buffer_storage;
+    g_autoresearch_state->rx_factory = createRxDevice;
 
     const char* loop_back_mode = PIN_TX == PIN_RX ? "INTERNAL" : "JUMPER WIRE";
 
     // Build header and platform/hardware info
     fl::sstream ss;
     ss << "\n╔════════════════════════════════════════════════════════════════╗\n";
-    ss << "║ FastLED Validation - Test Matrix Configuration                ║\n";
+    ss << "║ FastLED AutoResearch - Test Matrix Configuration                ║\n";
     ss << "╚════════════════════════════════════════════════════════════════╝\n";
 
     // Platform information
     ss << "\n[PLATFORM]\n";
-    ss << "  Chip: " << validation::chipName() << "\n";
+    ss << "  Chip: " << autoresearch::chipName() << "\n";
 
-    // Hardware configuration - machine-parseable for --expect validation
+    // Hardware configuration - machine-parseable for --expect autoresearch
     ss << "\n[HARDWARE]\n";
     ss << "  TX Pin: " << PIN_TX << "\n";  // --expect "TX Pin: 0"
     ss << "  RX Pin: " << PIN_RX << "\n";  // --expect "RX Pin: 1"
@@ -324,11 +324,11 @@ void setup() {
     FL_PRINT(ss.str());
 
     // ========================================================================
-    // SIMD Validation
+    // SIMD AutoResearch
     // ========================================================================
-    int simd_failures = validation::simd_check::runSimdTests();
+    int simd_failures = autoresearch::simd_check::runSimdTests();
     if (simd_failures > 0) {
-        FL_ERROR("SIMD validation failed - " << simd_failures << " test(s) failed");
+        FL_ERROR("SIMD autoresearch failed - " << simd_failures << " test(s) failed");
     }
 
     // ========================================================================
@@ -336,14 +336,14 @@ void setup() {
     // ========================================================================
 
     ss.clear();
-    ss << "\n[RX SETUP] Creating RX channel for LED validation\n";
+    ss << "\n[RX SETUP] Creating RX channel for LED autoresearch\n";
     ss << "[RX CREATE] Creating RX channel on PIN " << PIN_RX
        << " (" << (40000000 / 1000000) << "MHz, " << RX_BUFFER_SIZE << " symbols)";
     FL_PRINT(ss.str());
 
-    g_validation_state->rx_channel = fl::RxDevice::create<RX_TYPE>(PIN_RX);
+    g_autoresearch_state->rx_channel = fl::RxDevice::create<RX_TYPE>(PIN_RX);
 
-    if (!g_validation_state->rx_channel) {
+    if (!g_autoresearch_state->rx_channel) {
         ss.clear();
         ss << "[RX SETUP]: Failed to create RX channel\n";
         ss << "[RX SETUP]: Check that RMT peripheral is available and not in use";
@@ -354,7 +354,7 @@ void setup() {
 
     ss.clear();
     ss << "[RX CREATE] ✓ RX channel created successfully (will be initialized with config in begin())\n";
-    ss << "[RX SETUP] ✓ RX channel ready for LED validation";
+    ss << "[RX SETUP] ✓ RX channel ready for LED autoresearch";
     FL_PRINT(ss.str());
 
     // ========================================================================
@@ -369,7 +369,7 @@ void setup() {
     FL_PRINT(ss.str());
 
     // Initialize RemoteControl singleton and register all RPC functions
-    RemoteControlSingleton::instance().registerFunctions(g_validation_state);
+    RemoteControlSingleton::instance().registerFunctions(g_autoresearch_state);
 
     FL_PRINT("[REMOTE RPC] ✓ RPC system initialized (testGpioConnection available)");
 
@@ -377,12 +377,12 @@ void setup() {
     // Async Task Setup - JSON-RPC Processing
     // ========================================================================
     FL_PRINT("[ASYNC] Setting up JSON-RPC async task (10ms interval)");
-    validation::setupRpcAsyncTask(RemoteControlSingleton::instance(), 10);
+    autoresearch::setupRpcAsyncTask(RemoteControlSingleton::instance(), 10);
     FL_PRINT("[ASYNC] ✓ JSON-RPC task registered with scheduler");
 
-    // Stub: register self-running validation client (no-op on ESP32)
-    validation::maybeRegisterStubAutorun(RemoteControlSingleton::instance(),
-                                          g_validation_state);
+    // Stub: register self-running autoresearch client (no-op on ESP32)
+    autoresearch::maybeRegisterStubAutorun(RemoteControlSingleton::instance(),
+                                          g_autoresearch_state);
 
     // ========================================================================
     // GPIO Baseline Test - Verify GPIO→GPIO path works before testing PARLIO
@@ -396,31 +396,31 @@ void setup() {
     FL_WARN("[GPIO BASELINE TEST] Deferred to loop() - waiting for RPC start signal");
 
     // List all available drivers and store globally
-    g_validation_state->drivers_available = FastLED.getDriverInfos();
+    g_autoresearch_state->drivers_available = FastLED.getDriverInfos();
     ss.clear();
     ss << "\n[DRIVER DISCOVERY]\n";
-    ss << "  Found " << g_validation_state->drivers_available.size() << " driver(s) available:\n";
-    for (fl::size i = 0; i < g_validation_state->drivers_available.size(); i++) {
-        ss << "    " << (i+1) << ". " << g_validation_state->drivers_available[i].name.c_str()
-           << " (priority: " << g_validation_state->drivers_available[i].priority
-           << ", enabled: " << (g_validation_state->drivers_available[i].enabled ? "yes" : "no") << ")\n";
+    ss << "  Found " << g_autoresearch_state->drivers_available.size() << " driver(s) available:\n";
+    for (fl::size i = 0; i < g_autoresearch_state->drivers_available.size(); i++) {
+        ss << "    " << (i+1) << ". " << g_autoresearch_state->drivers_available[i].name.c_str()
+           << " (priority: " << g_autoresearch_state->drivers_available[i].priority
+           << ", enabled: " << (g_autoresearch_state->drivers_available[i].enabled ? "yes" : "no") << ")\n";
     }
     FL_PRINT(ss.str());
 
     // Validate that expected drivers are available for this platform
-    validateExpectedEngines();
+    autoResearchExpectedEngines();
 
     // Emit JSON-RPC ready event for Python orchestration
     fl::json readyData = fl::json::object();
     readyData.set("ready", true);
     readyData.set("setupTimeMs", static_cast<int64_t>(millis()));
-    readyData.set("drivers", static_cast<int64_t>(g_validation_state->drivers_available.size()));
+    readyData.set("drivers", static_cast<int64_t>(g_autoresearch_state->drivers_available.size()));
     readyData.set("pinTx", static_cast<int64_t>(PIN_TX));
     readyData.set("pinRx", static_cast<int64_t>(PIN_RX));
     printStreamRaw("ready", readyData);
 
     // Human-readable diagnostics (not machine-parsed)
-    FL_PRINT("\n[SETUP COMPLETE] Validation ready - awaiting JSON-RPC commands");
+    FL_PRINT("\n[SETUP COMPLETE] AutoResearch ready - awaiting JSON-RPC commands");
     delay(2000);
 }
 
@@ -448,17 +448,17 @@ void loop() {
 
     // Run GPIO baseline test once after device is ready (allows JSON-RPC to be operational first)
     // This test is informational only - we continue regardless of pass/fail
-    if (!g_validation_state->gpio_baseline_test_done) {
+    if (!g_autoresearch_state->gpio_baseline_test_done) {
         // Wait 500ms after boot to ensure JSON-RPC is fully operational
         if (millis() > 500) {
-            g_validation_state->gpio_baseline_test_done = true;
+            g_autoresearch_state->gpio_baseline_test_done = true;
 
             FL_PRINT("\n[GPIO BASELINE TEST] Testing GPIO " << PIN_TX << " → GPIO " << PIN_RX << " connectivity");
 
             // Test RX channel with manual GPIO toggle to confirm hardware path works
             // This isolates GPIO/hardware issues from PARLIO driver issues
-            // Buffer size = 100 symbols, hz = 40MHz (same as LED validation)
-            if (!testRxChannel(g_validation_state->rx_channel, PIN_TX, PIN_RX, 40000000, 100)) {
+            // Buffer size = 100 symbols, hz = 40MHz (same as LED autoresearch)
+            if (!testRxChannel(g_autoresearch_state->rx_channel, PIN_TX, PIN_RX, 40000000, 100)) {
                 FL_WARN("[GPIO BASELINE TEST] FAILED - RX did not capture manual GPIO toggles");
                 FL_WARN("[GPIO BASELINE TEST] Possible causes:");
                 FL_WARN("  1. GPIO " << PIN_TX << " and GPIO " << PIN_RX << " are not physically connected");

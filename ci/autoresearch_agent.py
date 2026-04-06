@@ -1,12 +1,12 @@
 """
-Bidirectional JSON-RPC agent for LED validation testing.
+Bidirectional JSON-RPC agent for LED autoresearch testing.
 
-This module provides a Python agent that communicates with the Validation.ino
+This module provides a Python agent that communicates with the AutoResearch.ino
 sketch via JSON-RPC over serial. It enables programmatic control of hardware
-validation tests with variable lane sizes and comprehensive result reporting.
+autoresearch tests with variable lane sizes and comprehensive result reporting.
 
 Usage:
-    agent = ValidationAgent("/dev/ttyUSB0")
+    agent = AutoResearchAgent("/dev/ttyUSB0")
     config = TestConfig.uniform("PARLIO", led_count=100, lane_count=2, pattern="MSB_LSB_A")
     agent.configure(config)
     result = agent.run_test()
@@ -112,13 +112,13 @@ class TestResult:
     lane_results: list[LaneResult]  # Per-lane details with sizes
 
 
-class ValidationAgent:
-    """Bidirectional JSON-RPC agent for LED validation testing."""
+class AutoResearchAgent:
+    """Bidirectional JSON-RPC agent for LED autoresearch testing."""
 
     REMOTE_PREFIX = "REMOTE: "
 
     def __init__(self, port: str, baudrate: int = 115200, timeout: float = 30.0):
-        """Initialize validation agent.
+        """Initialize autoresearch agent.
 
         Args:
             port: Serial port path (e.g., "/dev/ttyUSB0", "COM3")

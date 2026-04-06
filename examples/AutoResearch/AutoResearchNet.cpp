@@ -1,18 +1,18 @@
-// examples/Validation/ValidationNet.cpp
+// examples/AutoResearch/AutoResearchNet.cpp
 //
-// Network validation implementation for ESP32.
+// Network autoresearch implementation for ESP32.
 // Uses fl::asio::http::Server (unified HTTP API) for the HTTP server.
 // Uses ESP-IDF native APIs for WiFi Soft AP and HTTP client.
 // Guarded with FL_IS_ESP32 - no-op stubs on other platforms.
 
-#include "ValidationNet.h"
+#include "AutoResearchNet.h"
 #include "fl/stl/json.h"
 #include "fl/system/log.h"
 
 // Global net state
-static ValidationNetState s_net_state;
+static AutoResearchNetState s_net_state;
 
-ValidationNetState& getNetState() {
+AutoResearchNetState& getNetState() {
     return s_net_state;
 }
 
@@ -93,10 +93,10 @@ static bool initWifiAP() {
 
     // Configure AP
     wifi_config_t wifi_config = {};
-    memcpy(wifi_config.ap.ssid, VALIDATION_NET_SSID, strlen(VALIDATION_NET_SSID));
-    wifi_config.ap.ssid_len = strlen(VALIDATION_NET_SSID);
-    memcpy(wifi_config.ap.password, VALIDATION_NET_PASSWORD, strlen(VALIDATION_NET_PASSWORD));
-    wifi_config.ap.max_connection = VALIDATION_NET_MAX_CONNECTIONS;
+    memcpy(wifi_config.ap.ssid, AUTORESEARCH_NET_SSID, strlen(AUTORESEARCH_NET_SSID));
+    wifi_config.ap.ssid_len = strlen(AUTORESEARCH_NET_SSID);
+    memcpy(wifi_config.ap.password, AUTORESEARCH_NET_PASSWORD, strlen(AUTORESEARCH_NET_PASSWORD));
+    wifi_config.ap.max_connection = AUTORESEARCH_NET_MAX_CONNECTIONS;
     wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.ap.channel = 1;
 
@@ -119,7 +119,7 @@ static bool initWifiAP() {
     }
 
     s_net_state.wifi_ap_active = true;
-    FL_WARN("[NET] WiFi AP started: SSID=" << VALIDATION_NET_SSID << " IP=" << VALIDATION_NET_AP_IP);
+    FL_WARN("[NET] WiFi AP started: SSID=" << AUTORESEARCH_NET_SSID << " IP=" << AUTORESEARCH_NET_AP_IP);
     return true;
 }
 
@@ -270,9 +270,9 @@ fl::json startNetServer() {
     }
 
     response.set("success", true);
-    response.set("ssid", VALIDATION_NET_SSID);
-    response.set("password", VALIDATION_NET_PASSWORD);
-    response.set("ip", VALIDATION_NET_AP_IP);
+    response.set("ssid", AUTORESEARCH_NET_SSID);
+    response.set("password", AUTORESEARCH_NET_PASSWORD);
+    response.set("ip", AUTORESEARCH_NET_AP_IP);
     response.set("port", static_cast<int64_t>(s_net_state.server_port));
     return response;
 }
@@ -287,9 +287,9 @@ fl::json startNetClient() {
     }
 
     response.set("success", true);
-    response.set("ssid", VALIDATION_NET_SSID);
-    response.set("password", VALIDATION_NET_PASSWORD);
-    response.set("gateway_ip", VALIDATION_NET_AP_IP);
+    response.set("ssid", AUTORESEARCH_NET_SSID);
+    response.set("password", AUTORESEARCH_NET_PASSWORD);
+    response.set("gateway_ip", AUTORESEARCH_NET_AP_IP);
     return response;
 }
 
@@ -446,14 +446,14 @@ fl::json stopNet() {
 fl::json startNetServer() {
     fl::json response = fl::json::object();
     response.set("success", false);
-    response.set("error", "Net validation only supported on ESP32");
+    response.set("error", "Net autoresearch only supported on ESP32");
     return response;
 }
 
 fl::json startNetClient() {
     fl::json response = fl::json::object();
     response.set("success", false);
-    response.set("error", "Net validation only supported on ESP32");
+    response.set("error", "Net autoresearch only supported on ESP32");
     return response;
 }
 
@@ -462,14 +462,14 @@ fl::json runNetClientTest(const char* host_ip, uint16_t port) {
     (void)port;
     fl::json response = fl::json::object();
     response.set("success", false);
-    response.set("error", "Net validation only supported on ESP32");
+    response.set("error", "Net autoresearch only supported on ESP32");
     return response;
 }
 
 fl::json runNetLoopback() {
     fl::json response = fl::json::object();
     response.set("success", false);
-    response.set("error", "Net loopback validation only supported on ESP32");
+    response.set("error", "Net loopback autoresearch only supported on ESP32");
     return response;
 }
 

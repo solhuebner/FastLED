@@ -1,6 +1,6 @@
-"""OTA validation helpers for FastLED hardware-in-the-loop testing.
+"""OTA autoresearch helpers for FastLED hardware-in-the-loop testing.
 
-Provides WiFi management and HTTP validation flows for --ota mode.
+Provides WiFi management and HTTP autoresearch flows for --ota mode.
 Tests the fl::OTA web-based firmware update interface by verifying:
   - Authentication (Basic Auth: admin:<password>)
   - Unauthenticated access is rejected (401)
@@ -18,22 +18,22 @@ from typing import TYPE_CHECKING
 import httpx
 from colorama import Fore, Style
 
+from ci.autoresearch.net import create_wifi_manager
 from ci.rpc_client import RpcClient, RpcTimeoutError
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
-from ci.validate.net import create_wifi_manager
 
 
 if TYPE_CHECKING:
     from ci.util.serial_interface import SerialInterface
 
 
-async def run_ota_validation(
+async def run_ota_autoresearch(
     upload_port: str,
     serial_iface: "SerialInterface | None",
     timeout: float = 60.0,
     firmware_path: Path | None = None,
 ) -> int:
-    """Run OTA validation (--ota).
+    """Run OTA autoresearch (--ota).
 
     1. Send startOta RPC to ESP32 (starts WiFi AP + OTA HTTP server)
     2. Connect host to ESP32's WiFi AP
@@ -55,7 +55,7 @@ async def run_ota_validation(
 
     print()
     print("=" * 60)
-    print("OTA VALIDATION MODE")
+    print("OTA AUTORESEARCH MODE")
     print("=" * 60)
     print()
 
@@ -340,12 +340,12 @@ async def run_ota_validation(
         print("=" * 60)
         if tests_failed == 0:
             print(
-                f"{Fore.GREEN}OTA VALIDATION PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
+                f"{Fore.GREEN}OTA AUTORESEARCH PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
             )
             return 0
         else:
             print(
-                f"{Fore.RED}OTA VALIDATION FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
+                f"{Fore.RED}OTA AUTORESEARCH FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
             )
             return 1
 
@@ -357,7 +357,7 @@ async def run_ota_validation(
         print(f"\n  {Fore.RED}Timeout waiting for OTA response{Style.RESET_ALL}")
         return 1
     except Exception as e:
-        print(f"\n  {Fore.RED}OTA validation error: {e}{Style.RESET_ALL}")
+        print(f"\n  {Fore.RED}OTA autoresearch error: {e}{Style.RESET_ALL}")
         return 1
     finally:
         # Cleanup: stop OTA on device (only if client is still connected

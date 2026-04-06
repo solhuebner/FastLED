@@ -366,7 +366,7 @@ struct FL_ALIGNAS(64) ParlioIsrContext {
     bool transmission_active;       ///< Debug: Transmission currently active
     u64 end_time_us;           ///< Debug: Transmission end timestamp (microseconds)
 
-    // Debug: DMA buffer output tracking (main thread writes, Validation.ino reads)
+    // Debug: DMA buffer output tracking (main thread writes, AutoResearch.ino reads)
     fl::deque<u8> mDebugDmaOutput; ///< Copy of all DMA buffer data for validation (uses deque to avoid large contiguous allocation)
 
     // Constructor: Initialize all fields to safe defaults

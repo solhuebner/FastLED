@@ -60,7 +60,7 @@ Multi-agent PR review: launches 4 parallel agents (2x CLAUDE.md compliance, 1x b
 - Non-blocking serial with stateful sessions
 - DTR/RTS control, hex/base64 formats, protocol specs
 - Install: `pip install serial-mcp-server && claude mcp add serial -- serial_mcp`
-- **Verdict: OPTIONAL.** Useful for interactive serial debugging but `bash validate` already handles this.
+- **Verdict: OPTIONAL.** Useful for interactive serial debugging but `bash autoresearch` already handles this.
 
 ### Arduino (Not Applicable)
 

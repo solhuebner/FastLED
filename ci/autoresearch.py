@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FastLED Validation Test Runner - JSON-RPC Scripting Language.
+"""FastLED AutoResearch Test Runner - JSON-RPC Scripting Language.
 
 This script orchestrates hardware-in-the-loop testing using a JSON-RPC scripting
 model. All test coordination happens via RPC commands and responses:
@@ -13,7 +13,7 @@ JSON-RPC Workflow (Fail-Fast Model):
        → Returns: {connected: true/false, rxWhenTxLow, rxWhenTxHigh}
        → Fail-fast: Exit if connection test fails
 
-    3. runSingleTest({driver, laneSizes, pattern?, iterations?}) - Run one validation test
+    3. runSingleTest({driver, laneSizes, pattern?, iterations?}) - Run one autoresearch test
        → Args: Single test configuration with driver (required), laneSizes (required), pattern (optional), iterations (optional)
        → Returns: {success, passed, totalTests, passedTests, duration_ms, driver, laneCount, laneSizes, pattern}
        → Python orchestrates test matrix by calling runSingleTest multiple times
@@ -25,21 +25,21 @@ Legacy Text Patterns:
     - No grep/regex parsing for control flow decisions
 
 Usage:
-    🎯 AI agents should use 'bash validate' wrapper (see CLAUDE.md)
+    🎯 AI agents should use 'bash autoresearch' wrapper (see CLAUDE.md)
 
     # GPIO-only mode (no driver flag)
-    uv run ci/validate.py teensy41              # GPIO toggle capture test on Teensy
-    uv run ci/validate.py                       # Auto-detect device, GPIO-only
+    uv run ci/autoresearch.py teensy41           # GPIO toggle capture test on Teensy
+    uv run ci/autoresearch.py                    # Auto-detect device, GPIO-only
 
     # Driver selection (optional)
-    uv run ci/validate.py --parlio              # Test only PARLIO driver
-    uv run ci/validate.py --rmt --spi           # Test RMT and SPI drivers
-    uv run ci/validate.py --all                 # Test all drivers
+    uv run ci/autoresearch.py --parlio           # Test only PARLIO driver
+    uv run ci/autoresearch.py --rmt --spi       # Test RMT and SPI drivers
+    uv run ci/autoresearch.py --all             # Test all drivers
 
     # Options
-    uv run ci/validate.py --parlio --skip-lint  # Skip linting
-    uv run ci/validate.py --rmt --timeout 120   # Custom timeout
-    uv run ci/validate.py --help                # Show help
+    uv run ci/autoresearch.py --parlio --skip-lint  # Skip linting
+    uv run ci/autoresearch.py --rmt --timeout 120   # Custom timeout
+    uv run ci/autoresearch.py --help                # Show help
 
 Architecture:
     This script orchestrates the same 4-phase workflow as debug_attached.py:
@@ -47,7 +47,7 @@ Architecture:
     Phase 1: Linting (C++ linting - catches ISR errors)
     Phase 2: Compile (NO LOCK - parallelizable)
     Phase 3: Upload
-    Phase 4: Monitor (with validation-specific patterns and JSON-RPC)
+    Phase 4: Monitor (with autoresearch-specific patterns and JSON-RPC)
 """
 
 import argparse
@@ -62,6 +62,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from colorama import Fore, Style, init
+
+from ci.autoresearch.ble import run_ble_autoresearch
+from ci.autoresearch.decode import (
+    run_decode_autoresearch,
+    run_device_decode_autoresearch,
+)
+from ci.autoresearch.net import run_net_autoresearch, run_net_loopback_autoresearch
+from ci.autoresearch.ota import run_ota_autoresearch
 
 # Import phase functions from debug_attached
 from ci.debug_attached import (
@@ -85,10 +93,6 @@ from ci.util.port_utils import (
     kill_port_users,
 )
 from ci.util.sketch_resolver import parse_timeout
-from ci.validate.ble import run_ble_validation
-from ci.validate.decode import run_decode_validation, run_device_decode_validation
-from ci.validate.net import run_net_loopback_validation, run_net_validation
-from ci.validate.ota import run_ota_validation
 
 
 if TYPE_CHECKING:
@@ -100,7 +104,7 @@ init(autoreset=True)
 
 
 # ============================================================
-# Validation-Specific Configuration
+# AutoResearch-Specific Configuration
 # ============================================================
 
 # No legacy expect patterns - JSON-RPC test_complete is the authoritative
@@ -112,7 +116,7 @@ DEFAULT_EXPECT_PATTERNS: list[str] = []
 # Firmware emits either:
 #   TEST_COMPLETED_EXIT_OK (all tests passed)
 #   TEST_COMPLETED_EXIT_ERROR (some tests failed)
-# After detection, validate script queries getTestSummary RPC for final status
+# After detection, autoresearch script queries getTestSummary RPC for final status
 STOP_PATTERN = "TEST_COMPLETED_EXIT_(OK|ERROR)"
 
 # Default fail-on pattern
@@ -167,11 +171,11 @@ class CrashPatternInterceptor:
 
 
 # Input-on-trigger configuration
-# Wait for VALIDATION_READY pattern before proceeding
+# Wait for AUTORESEARCH_READY pattern before proceeding
 # NOTE: Tests are triggered via runSingleTest RPC commands (in json_rpc_commands)
 INPUT_ON_TRIGGER = None  # No legacy START command needed
 
-# GPIO pin definitions (must match Validation.ino)
+# GPIO pin definitions (must match AutoResearch.ino)
 # Note: ESP32-C6 uses RX=0, ESP32 uses RX=2 (different defaults per platform)
 PIN_TX = 1  # TX pin used by FastLED drivers
 PIN_RX = 0  # RX pin used by RMT receiver (ESP32-C6 default; ESP32 uses 2)
@@ -291,7 +295,7 @@ async def run_gpio_pretest(
     timeout: float = 15.0,
     serial_interface: "SerialInterface | None" = None,
 ) -> bool:
-    """Test GPIO connectivity between TX and RX pins before running validation (async).
+    """Test GPIO connectivity between TX and RX pins before running autoresearch (async).
 
     This pre-test uses a simple pullup/drive-low pattern to verify that
     the TX and RX pins are physically connected via a jumper wire.
@@ -575,7 +579,7 @@ async def run_pin_discovery(
 
 @dataclass
 class Args:
-    """Parsed command-line arguments for validation test runner."""
+    """Parsed command-line arguments for autoresearch test runner."""
 
     # Positional argument
     environment_positional: str | None
@@ -634,28 +638,28 @@ class Args:
     # Chipset selection
     chipset: str
 
-    # Network validation modes
+    # Network autoresearch modes
     net_server: bool
     net_client: bool
     net: bool
 
-    # OTA validation mode
+    # OTA autoresearch mode
     ota: bool
 
-    # BLE validation mode
+    # BLE autoresearch mode
     ble: bool
 
     # Parallel driver testing
     parallel: bool
 
-    # Decode validation mode (host-only, no device needed)
+    # Decode autoresearch mode (host-only, no device needed)
     decode: str | None
 
     @staticmethod
     def parse_args() -> "Args":
         """Parse command-line arguments and return Args dataclass instance."""
         parser = argparse.ArgumentParser(
-            description="FastLED Validation Test Runner with JSON-RPC support",
+            description="FastLED AutoResearch Test Runner with JSON-RPC support",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
@@ -686,7 +690,7 @@ Driver Selection (JSON-RPC):
     --all         Test all drivers
 
 Strip Size Configuration:
-  Configure LED strip sizes for validation testing via JSON-RPC:
+  Configure LED strip sizes for autoresearch testing via JSON-RPC:
     --strip-sizes <preset or custom>   Set strip sizes (preset or comma-separated counts)
 
   Presets (shortcuts for common configurations):
@@ -702,7 +706,7 @@ Strip Size Configuration:
     --strip-sizes 500             Test with single 500 LED strip
 
 Lane Configuration:
-  Configure number of lanes for validation testing via JSON-RPC:
+  Configure number of lanes for autoresearch testing via JSON-RPC:
     --lanes <N or MIN-MAX>   Set lane count or range
     --lane-counts <LED1,LED2,...>  Set per-lane LED counts (comma-separated)
 
@@ -713,7 +717,7 @@ Lane Configuration:
     Default: 1-8 lanes (firmware default)
 
 Color Pattern Configuration:
-  Configure custom color pattern for validation testing:
+  Configure custom color pattern for autoresearch testing:
     --color-pattern <HEX>  Set RGB color pattern (hex format: RRGGBB or 0xRRGGBB)
 
   Examples:
@@ -726,7 +730,7 @@ Exit Codes:
   130 User interrupt (Ctrl+C)
 
 See Also:
-  - examples/Validation/Validation.ino - Validation sketch documentation
+  - examples/AutoResearch/AutoResearch.ino - AutoResearch sketch documentation
   - CLAUDE.md Section "Live Device Testing (AI Agents)" - Usage guidelines
         """,
         )
@@ -798,9 +802,9 @@ See Also:
             help="Test multiple drivers in parallel (e.g., --parlio --lcd-rgb --parallel --lanes 1)",
         )
 
-        # Network validation modes
+        # Network autoresearch modes
         net_group = parser.add_argument_group(
-            "Network Validation (ESP32 WiFi + HTTP)",
+            "Network AutoResearch (ESP32 WiFi + HTTP)",
             "Test ESP32 WiFi soft AP and HTTP server/client functionality.",
         )
         net_group.add_argument(
@@ -819,9 +823,9 @@ See Also:
             help="Self-contained loopback test: ESP32 starts HTTP server, then GETs localhost (no WiFi needed)",
         )
 
-        # OTA validation mode
+        # OTA autoresearch mode
         ota_group = parser.add_argument_group(
-            "OTA Validation (ESP32 WiFi + OTA HTTP)",
+            "OTA AutoResearch (ESP32 WiFi + OTA HTTP)",
             "Test ESP32 OTA (Over-The-Air) firmware update web interface.",
         )
         ota_group.add_argument(
@@ -830,9 +834,9 @@ See Also:
             help="ESP32 starts WiFi AP + OTA HTTP server; host validates auth and update endpoints",
         )
 
-        # BLE validation mode
+        # BLE autoresearch mode
         ble_group = parser.add_argument_group(
-            "BLE Validation (ESP32 BLE GATT)",
+            "BLE AutoResearch (ESP32 BLE GATT)",
             "Test ESP32 BLE GATT server with JSON-RPC ping/pong over BLE.",
         )
         ble_group.add_argument(
@@ -841,9 +845,9 @@ See Also:
             help="ESP32 starts BLE GATT server; host connects via Bleak and validates ping/pong",
         )
 
-        # Decode validation mode (host-only or device)
+        # Decode autoresearch mode (host-only or device)
         decode_group = parser.add_argument_group(
-            "Decode Validation",
+            "Decode AutoResearch",
             "Test codec decoding of a local file or URL. "
             "Without --env: runs host-only C++ test. "
             "With --env: sends file to device via JSON-RPC for on-device decoding.",
@@ -897,7 +901,7 @@ See Also:
         # Pattern overrides (for advanced usage)
         pattern_group = parser.add_argument_group(
             "Pattern Overrides (advanced)",
-            "Override default validation patterns. Use with caution.",
+            "Override default autoresearch patterns. Use with caution.",
         )
         pattern_group.add_argument(
             "--no-expect",
@@ -971,7 +975,7 @@ See Also:
         # Strip size configuration (NEW - Phase 8)
         strip_size_group = parser.add_argument_group(
             "Strip Size Configuration",
-            "Configure LED strip sizes for validation testing.",
+            "Configure LED strip sizes for autoresearch testing.",
         )
         strip_size_group.add_argument(
             "--strip-sizes",
@@ -983,7 +987,7 @@ See Also:
         # Lane configuration (NEW)
         lane_group = parser.add_argument_group(
             "Lane Configuration",
-            "Configure number of lanes for validation testing.",
+            "Configure number of lanes for autoresearch testing.",
         )
         lane_group.add_argument(
             "--lanes",
@@ -1001,7 +1005,7 @@ See Also:
         # Color pattern configuration (NEW)
         color_group = parser.add_argument_group(
             "Color Pattern Configuration",
-            "Configure custom color pattern for validation testing.",
+            "Configure custom color pattern for autoresearch testing.",
         )
         color_group.add_argument(
             "--color-pattern",
@@ -1022,7 +1026,7 @@ See Also:
             "--chipset",
             choices=["ws2812", "ucs7604"],
             default="ws2812",
-            help="Chipset timing to use for validation (default: ws2812). ucs7604 uses UCS7604-800KHZ timing with 16-bit encoding.",
+            help="Chipset timing to use for autoresearch (default: ws2812). ucs7604 uses UCS7604-800KHZ timing with 16-bit encoding.",
         )
 
         parsed = parser.parse_args()
@@ -1120,10 +1124,10 @@ def _is_native_platform(environment: str | None) -> bool:
     return environment.lower() in ("native", "stub", "host")
 
 
-async def _run_native_validation(args: Args, build_mode: str = "quick") -> int:
-    """Run validation on native/stub platform via Meson compile + execute.
+async def _run_native_autoresearch(args: Args, build_mode: str = "quick") -> int:
+    """Run autoresearch on native/stub platform via Meson compile + execute.
 
-    Native validation is self-contained: the compiled binary discovers stub
+    Native autoresearch is self-contained: the compiled binary discovers stub
     drivers, runs validateChipsetTiming() for each, and exits 0 (pass) or 1 (fail).
     No serial port, upload, or JSON-RPC needed.
     """
@@ -1134,7 +1138,7 @@ async def _run_native_validation(args: Args, build_mode: str = "quick") -> int:
 
     # Banner
     print("─" * 60)
-    print("FastLED Validation — Native Platform")
+    print("FastLED AutoResearch — Native Platform")
     print("─" * 60)
     print(f"  Mode        Compile + Run (Meson, {build_mode})")
     print(f"  Build dir   {project_dir / '.build' / f'meson-{build_mode}'}")
@@ -1159,7 +1163,7 @@ async def _run_native_validation(args: Args, build_mode: str = "quick") -> int:
     result = run_meson_examples(
         source_dir=project_dir,
         build_dir=build_dir,
-        examples=["Validation"],
+        examples=["AutoResearch"],
         verbose=args.verbose,
         build_mode=build_mode,
         full=True,  # Compile AND execute
@@ -1168,9 +1172,9 @@ async def _run_native_validation(args: Args, build_mode: str = "quick") -> int:
     print()
     print("=" * 60)
     if result.success:
-        print(f"{Fore.GREEN}✓ NATIVE VALIDATION SUCCEEDED{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}✓ NATIVE AUTORESEARCH SUCCEEDED{Style.RESET_ALL}")
     else:
-        print(f"{Fore.RED}✗ NATIVE VALIDATION FAILED{Style.RESET_ALL}")
+        print(f"{Fore.RED}✗ NATIVE AUTORESEARCH FAILED{Style.RESET_ALL}")
     print("=" * 60)
 
     return 0 if result.success else 1
@@ -1314,18 +1318,18 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
             f"\n{Fore.CYAN}ℹ️  Parallel mode: testing {', '.join(drivers)} simultaneously{Style.RESET_ALL}"
         )
 
-    # Network validation modes
+    # Network autoresearch modes
     net_server_mode = args.net_server
     net_client_mode = args.net_client
     net_loopback_mode = args.net
 
-    # OTA validation mode
+    # OTA autoresearch mode
     ota_mode = args.ota
 
-    # BLE validation mode
+    # BLE autoresearch mode
     ble_mode = args.ble
 
-    # Decode validation mode (host-only or device)
+    # Decode autoresearch mode (host-only or device)
     decode_mode = args.decode is not None
 
     # Short-circuit: --decode bypasses driver/simd/net/ota/ble logic
@@ -1359,10 +1363,10 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
                     return 1
                 upload_port = result.selected_port
             assert upload_port is not None
-            return await run_device_decode_validation(args.decode, upload_port)
+            return await run_device_decode_autoresearch(args.decode, upload_port)
 
         # Host-only mode: no environment specified
-        return await run_decode_validation(args.decode)
+        return await run_decode_autoresearch(args.decode)
 
     # Validate mutual exclusivity of net/ota/ble modes with driver modes
     if (
@@ -1663,7 +1667,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
     # Native Platform — bypass PlatformIO/serial/RPC entirely
     # ============================================================
     if _is_native_platform(final_environment):
-        return await _run_native_validation(args)
+        return await _run_native_autoresearch(args)
 
     # ============================================================
     # Build Pattern Lists
@@ -1711,10 +1715,10 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
         print("   Make sure you're running this from a PlatformIO project directory")
         return 1
 
-    # Set sketch to Validation
-    sketch_path = build_dir / "examples" / "Validation"
+    # Set sketch to AutoResearch
+    sketch_path = build_dir / "examples" / "AutoResearch"
     if not sketch_path.exists():
-        print(f"❌ Error: Validation sketch not found at {sketch_path}")
+        print(f"❌ Error: AutoResearch sketch not found at {sketch_path}")
         return 1
 
     os.environ["PLATFORMIO_SRC_DIR"] = str(sketch_path)
@@ -1879,7 +1883,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
     # Print Compact Configuration Header
     # ============================================================
     print("─" * 60)
-    print("FastLED Validation Test Runner")
+    print("FastLED AutoResearch Test Runner")
     print("─" * 60)
     env_str = final_environment or "auto-detect"
     print(f"  Target      {env_str} @ {upload_port}")
@@ -2219,26 +2223,26 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
         ):
             print()
             print(f"{Fore.RED}=" * 60)
-            print(f"{Fore.RED}VALIDATION ABORTED - GPIO PRE-TEST FAILED")
+            print(f"{Fore.RED}AUTORESEARCH ABORTED - GPIO PRE-TEST FAILED")
             print(f"{Fore.RED}=" * 60)
             print()
-            print("The validation cannot proceed without a physical connection")
+            print("The autoresearch cannot proceed without a physical connection")
             print("between the TX and RX pins.")
             print()
             print(
                 f"Please connect a jumper wire from GPIO {effective_tx_pin} to GPIO {effective_rx_pin}"
             )
-            print("and run the validation again.")
+            print("and run the autoresearch again.")
             print()
             return 1
 
-        # Phase 4: Monitor serial output with validation patterns
+        # Phase 4: Monitor serial output with autoresearch patterns
 
         # GPIO-only mode: GPIO pre-test passed, no driver tests to run
         if gpio_only_mode:
             print()
             print("=" * 60)
-            print(f"{Fore.GREEN}✓ GPIO-ONLY VALIDATION SUCCEEDED{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}✓ GPIO-ONLY AUTORESEARCH SUCCEEDED{Style.RESET_ALL}")
             print("=" * 60)
             print("Pin discovery and GPIO connectivity pre-test passed.")
             print("No driver tests requested — skipping RPC test matrix.")
@@ -2256,10 +2260,10 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
                 net_loopback_mode = True
 
         # ============================================================
-        # Network Validation Mode (--net-server or --net-client)
+        # Network AutoResearch Mode (--net-server or --net-client)
         # ============================================================
         if net_server_mode or net_client_mode:
-            return await run_net_validation(
+            return await run_net_autoresearch(
                 upload_port=upload_port,
                 serial_iface=serial_iface,
                 net_server_mode=net_server_mode,
@@ -2268,17 +2272,17 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
             )
 
         # ============================================================
-        # Network Loopback Mode (--net)
+        # Network Loopback AutoResearch Mode (--net)
         # ============================================================
         if net_loopback_mode:
-            return await run_net_loopback_validation(
+            return await run_net_loopback_autoresearch(
                 upload_port=upload_port,
                 serial_iface=serial_iface,
                 timeout=timeout_seconds,
             )
 
         # ============================================================
-        # OTA Validation Mode (--ota)
+        # OTA AutoResearch Mode (--ota)
         # ============================================================
         if ota_mode:
             # Compute firmware path based on build system
@@ -2300,7 +2304,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
                         / final_environment
                         / "firmware.bin"
                     )
-            return await run_ota_validation(
+            return await run_ota_autoresearch(
                 upload_port=upload_port,
                 serial_iface=serial_iface,
                 timeout=timeout_seconds,
@@ -2308,10 +2312,10 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
             )
 
         # ============================================================
-        # BLE Validation Mode (--ble)
+        # BLE AutoResearch Mode (--ble)
         # ============================================================
         if ble_mode:
-            return await run_ble_validation(
+            return await run_ble_autoresearch(
                 upload_port=upload_port,
                 serial_iface=serial_iface,
                 timeout=timeout_seconds,
@@ -2494,7 +2498,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
 
         print()
         print("=" * 60)
-        print("EXECUTING VALIDATION TESTS VIA RPC")
+        print("EXECUTING AUTORESEARCH TESTS VIA RPC")
         print("=" * 60)
 
         test_failed = False
@@ -2530,7 +2534,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
 
                 try:
                     # Send RPC request with extended timeout for test execution
-                    # runSingleTest can take 5-10 seconds for validation tests
+                    # runSingleTest can take 5-10 seconds for autoresearch tests
                     response = await client.send(
                         method,
                         args=params if params else [],
@@ -2667,7 +2671,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
 
         # Check test results
         if test_failed:
-            print(f"\n{Fore.RED}❌ VALIDATION FAILED{Style.RESET_ALL}")
+            print(f"\n{Fore.RED}❌ AUTORESEARCH FAILED{Style.RESET_ALL}")
             return 1
 
         if not stop_word_found:
@@ -2676,17 +2680,17 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
             )
             return 1
 
-        # If stop word found, validation succeeded
+        # If stop word found, autoresearch succeeded
         if stop_word_found == "OK":
             print()
             print("=" * 60)
-            print(f"{Fore.GREEN}✓ VALIDATION SUCCEEDED{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}✓ AUTORESEARCH SUCCEEDED{Style.RESET_ALL}")
             print("=" * 60)
             return 0
         elif stop_word_found == "ERROR":
             print()
             print("=" * 60)
-            print(f"{Fore.RED}✗ VALIDATION FAILED{Style.RESET_ALL}")
+            print(f"{Fore.RED}✗ AUTORESEARCH FAILED{Style.RESET_ALL}")
             print("=" * 60)
             return 1
 
@@ -2802,7 +2806,7 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
                     # Return exit code based on whether all tests passed
                     if all_passed:
                         print(
-                            f"{Fore.GREEN}✓ ALL TESTS PASSED{Style.RESET_ALL} - Validation successful"
+                            f"{Fore.GREEN}✓ ALL TESTS PASSED{Style.RESET_ALL} - AutoResearch successful"
                         )
                         return 0
                     else:
@@ -2827,11 +2831,11 @@ async def run(args: Args | None = None) -> int:  # pyright: ignore[reportGeneral
         # Fallback: If no stop word found or RPC query failed
         # Use stop word type or success flag to determine exit code
         if stop_word_found == "ERROR":
-            print(f"\n{Fore.RED}FAILED{Style.RESET_ALL} Some validation tests failed")
+            print(f"\n{Fore.RED}FAILED{Style.RESET_ALL} Some autoresearch tests failed")
             return 1
         else:
             print(
-                f"\n{Fore.GREEN}PASSED{Style.RESET_ALL} All validation tests completed"
+                f"\n{Fore.GREEN}PASSED{Style.RESET_ALL} All autoresearch tests completed"
             )
             return 0
 

@@ -256,7 +256,7 @@ for (const auto& driver : drivers) {
 - Dynamically switch based on runtime conditions (Wi-Fi status, power modes)
 - Test new drivers without code changes
 
-**Documentation**: [ESP32 Runtime Driver Control](#%EF%B8%8F-runtime-driver-control) • [Release Notes](release_notes.md#new-runtime-driver-control-via-fastled-api-esp32) • [Example: Validation.ino](examples/Validation/Validation.ino)
+**Documentation**: [ESP32 Runtime Driver Control](#%EF%B8%8F-runtime-driver-control) • [Release Notes](release_notes.md#new-runtime-driver-control-via-fastled-api-esp32) • [Example: AutoResearch.ino](examples/AutoResearch/AutoResearch.ino)
 
 ## **FastLED 3.10.3: UCS7604 RGBW Chipset Support (BETA)**
 
@@ -923,7 +923,7 @@ void setup() {
 
 ### Example Sketch
 
-See the complete example in [`examples/Validation/Validation.ino`](examples/Validation/Validation.ino) which demonstrates exclusive driver selection for testing.
+See the complete example in [`examples/AutoResearch/AutoResearch.ino`](examples/AutoResearch/AutoResearch.ino) which demonstrates exclusive driver selection for testing.
 
 </details>
 

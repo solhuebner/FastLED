@@ -1,6 +1,6 @@
-"""Network validation helpers for FastLED hardware-in-the-loop testing.
+"""Network autoresearch helpers for FastLED hardware-in-the-loop testing.
 
-Provides WiFi management, HTTP server, and validation flows for
+Provides WiFi management, HTTP server, and autoresearch flows for
 --net-server and --net-client modes.
 """
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from ci.util.serial_interface import SerialInterface
 
 # WiFi AP credentials (must match firmware constants)
-NET_SSID = "FastLED-Validation"
+NET_SSID = "FastLED-AutoResearch"
 NET_PASSWORD = "fastled123"
 NET_AP_IP = "192.168.4.1"
 NET_SERVER_PORT = 80
@@ -277,7 +277,7 @@ def create_wifi_manager() -> HostWifiManager:
 
 
 class _HostHttpServer:
-    """Simple HTTP server for net-client validation.
+    """Simple HTTP server for net-client autoresearch.
 
     Runs in a background thread and provides test endpoints.
     """
@@ -328,12 +328,12 @@ class _HostHttpServer:
         print("  Host HTTP server stopped")
 
 
-async def run_net_loopback_validation(
+async def run_net_loopback_autoresearch(
     upload_port: str,
     serial_iface: "SerialInterface | None",
     timeout: float = 60.0,
 ) -> int:
-    """Run self-contained loopback network validation (--net).
+    """Run self-contained loopback network autoresearch (--net).
 
     The ESP32 starts an HTTP server and uses its own HTTP client to fetch
     from 127.0.0.1 (localhost). No WiFi, no host involvement.
@@ -348,7 +348,7 @@ async def run_net_loopback_validation(
     """
     print()
     print("=" * 60)
-    print("NETWORK VALIDATION MODE: LOOPBACK (self-contained)")
+    print("NETWORK AUTORESEARCH MODE: LOOPBACK (self-contained)")
     print("=" * 60)
     print()
 
@@ -402,12 +402,12 @@ async def run_net_loopback_validation(
         print("=" * 60)
         if test_result.get("success"):
             print(
-                f"{Fore.GREEN}NET LOOPBACK VALIDATION PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
+                f"{Fore.GREEN}NET LOOPBACK AUTORESEARCH PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
             )
             return 0
         else:
             print(
-                f"{Fore.RED}NET LOOPBACK VALIDATION FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
+                f"{Fore.RED}NET LOOPBACK AUTORESEARCH FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
             )
             return 1
 
@@ -421,7 +421,9 @@ async def run_net_loopback_validation(
         )
         return 1
     except Exception as e:
-        print(f"\n  {Fore.RED}Network loopback validation error: {e}{Style.RESET_ALL}")
+        print(
+            f"\n  {Fore.RED}Network loopback autoresearch error: {e}{Style.RESET_ALL}"
+        )
         return 1
     finally:
         if client:
@@ -434,20 +436,20 @@ async def run_net_loopback_validation(
             await client.close()
 
 
-async def run_net_validation(
+async def run_net_autoresearch(
     upload_port: str,
     serial_iface: "SerialInterface | None",
     net_server_mode: bool,
     net_client_mode: bool,
     timeout: float = 60.0,
 ) -> int:
-    """Run network validation (--net-server or --net-client).
+    """Run network autoresearch (--net-server or --net-client).
 
     Args:
         upload_port: Serial port for RPC communication
         serial_iface: Pre-created serial interface
-        net_server_mode: True if running --net-server validation
-        net_client_mode: True if running --net-client validation
+        net_server_mode: True if running --net-server autoresearch
+        net_client_mode: True if running --net-client autoresearch
         timeout: RPC timeout in seconds
 
     Returns:
@@ -458,7 +460,7 @@ async def run_net_validation(
 
     print()
     print("=" * 60)
-    print(f"NETWORK VALIDATION MODE: {mode_name}")
+    print(f"NETWORK AUTORESEARCH MODE: {mode_name}")
     print("=" * 60)
     print()
 
@@ -480,16 +482,16 @@ async def run_net_validation(
         print(f"  {Fore.GREEN}Connected to device{Style.RESET_ALL}")
 
         if net_server_mode:
-            return await _run_net_server_validation(client, wifi)
+            return await _run_net_server_autoresearch(client, wifi)
         else:
-            return await _run_net_client_validation(client, wifi)
+            return await _run_net_client_autoresearch(client, wifi)
 
     except KeyboardInterrupt as ki:
         print("\n\n  Interrupted by user")
         handle_keyboard_interrupt(ki)
         return 130
     except Exception as e:
-        print(f"\n  {Fore.RED}Network validation error: {e}{Style.RESET_ALL}")
+        print(f"\n  {Fore.RED}Network autoresearch error: {e}{Style.RESET_ALL}")
         return 1
     finally:
         # Cleanup
@@ -508,11 +510,11 @@ async def run_net_validation(
         wifi.restore(original_ssid)
 
 
-async def _run_net_server_validation(
+async def _run_net_server_autoresearch(
     client: RpcClient,
     wifi: HostWifiManager,
 ) -> int:
-    """Run --net-server validation flow.
+    """Run --net-server autoresearch flow.
 
     1. Send startNetServer RPC to ESP32
     2. Connect host to ESP32's WiFi AP
@@ -598,7 +600,7 @@ async def _run_net_server_validation(
 
     # Test 3: POST /echo
     print(f"\n  Test 3: POST /echo")
-    echo_body = "hello from validation"
+    echo_body = "hello from autoresearch"
     try:
         r = httpx.post(f"{base_url}/echo", content=echo_body, timeout=10.0)
         if r.status_code == 200 and r.text == echo_body:
@@ -644,21 +646,21 @@ async def _run_net_server_validation(
     print("=" * 60)
     if tests_failed == 0:
         print(
-            f"{Fore.GREEN}NET-SERVER VALIDATION PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
+            f"{Fore.GREEN}NET-SERVER AUTORESEARCH PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
         )
         return 0
     else:
         print(
-            f"{Fore.RED}NET-SERVER VALIDATION FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
+            f"{Fore.RED}NET-SERVER AUTORESEARCH FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
         )
         return 1
 
 
-async def _run_net_client_validation(
+async def _run_net_client_autoresearch(
     client: RpcClient,
     wifi: HostWifiManager,
 ) -> int:
-    """Run --net-client validation flow.
+    """Run --net-client autoresearch flow.
 
     1. Send startNetClient RPC to ESP32 (starts WiFi AP)
     2. Connect host to ESP32's WiFi AP
@@ -744,11 +746,11 @@ async def _run_net_client_validation(
     print("=" * 60)
     if test_result.get("success"):
         print(
-            f"{Fore.GREEN}NET-CLIENT VALIDATION PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
+            f"{Fore.GREEN}NET-CLIENT AUTORESEARCH PASSED ({tests_passed}/{total} tests){Style.RESET_ALL}"
         )
         return 0
     else:
         print(
-            f"{Fore.RED}NET-CLIENT VALIDATION FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
+            f"{Fore.RED}NET-CLIENT AUTORESEARCH FAILED ({tests_passed}/{total} passed, {tests_failed} failed){Style.RESET_ALL}"
         )
         return 1

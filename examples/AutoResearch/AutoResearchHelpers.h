@@ -1,11 +1,11 @@
-// ValidationHelpers.h - Helper functions for Validation.ino
+// AutoResearchHelpers.h - Helper functions for AutoResearch.ino
 // Contains utility functions for driver testing, RX channel setup, and result reporting
 
 #pragma once
 
 #include <FastLED.h>
 #include "Common.h"
-#include "ValidationTest.h"
+#include "AutoResearchTest.h"
 #include "fl/rx_device.h"
 
 /// @brief Test RX channel with manual GPIO toggle
@@ -22,9 +22,9 @@ bool testRxChannel(
     uint32_t hz,
     size_t buffer_size);
 
-/// @brief Validate that expected engines are available for this platform
+/// @brief AutoResearch that expected engines are available for this platform
 /// Prints ERROR if any expected engines are missing
-void validateExpectedEngines();
+void autoResearchExpectedEngines();
 
 /// @brief Test a specific driver with given timing configuration
 /// @param driver_name Driver name to test
@@ -52,6 +52,6 @@ void testDriver(
     fl::RxDeviceType rx_type,
     fl::DriverTestResult& result);
 
-/// @brief Print driver validation summary table
+/// @brief Print driver autoresearch summary table
 /// @param driver_results Vector of driver test results
 void printSummaryTable(const fl::vector<fl::DriverTestResult>& driver_results);

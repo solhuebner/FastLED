@@ -52,8 +52,8 @@ COMMAND_RECOMMENDATIONS = {
     "g++": "G++ is NOT SUPPORTED by FastLED - project requires Clang 21.1.5",
     "gdb": "use 'clang-tool-chain-lldb' instead (FastLED's LLDB wrapper)",
     "lldb": "use 'clang-tool-chain-lldb' instead (FastLED's LLDB wrapper)",
-    "pio": "use 'bash compile', 'bash debug', or 'bash validate' instead",
-    "platformio": "use 'bash compile', 'bash debug', or 'bash validate' instead",
+    "pio": "use 'bash compile', 'bash debug', or 'bash autoresearch' instead",
+    "platformio": "use 'bash compile', 'bash debug', or 'bash autoresearch' instead",
 }
 
 FORBIDDEN_PATTERNS = [

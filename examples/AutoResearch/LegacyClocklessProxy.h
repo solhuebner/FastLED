@@ -1,7 +1,7 @@
 // LegacyClocklessProxy.h - Runtime-to-template pin dispatch for legacy addLeds API
 //
 // Maps a runtime pin number (0-8) to compile-time WS2812B<PIN, RGB> template
-// instantiations via a switch statement. This allows validation testing of the
+// instantiations via a switch statement. This allows autoresearch testing of the
 // legacy template API path: WS2812B<PIN> -> WS2812Controller800Khz ->
 // ClocklessControllerImpl -> ClocklessIdf5 -> Channel
 
@@ -16,7 +16,7 @@
 ///   FastLED.addLeds<WS2812B, PIN>(leds, numLeds)
 ///
 /// This proxy uses a switch statement to dispatch runtime pin values (0-8) to
-/// the corresponding template instantiation, enabling validation testing of the
+/// the corresponding template instantiation, enabling autoresearch testing of the
 /// full legacy code path.
 ///
 /// Destructor deletes the controller, which on ESP32 (SKETCH_HAS_LARGE_MEMORY)

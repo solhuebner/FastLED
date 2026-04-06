@@ -1,18 +1,18 @@
 """
-Validation loop orchestration for testing LED drivers with variable lane sizes.
+AutoResearch loop orchestration for testing LED drivers with variable lane sizes.
 
-This module provides functions to run comprehensive validation test matrices,
+This module provides functions to run comprehensive autoresearch test matrices,
 supporting both uniform and asymmetric lane configurations.
 
 Usage:
-    # Basic validation with default configs
-    python validation_loop.py --port /dev/ttyUSB0
+    # Basic autoresearch with default configs
+    python autoresearch_loop.py --port /dev/ttyUSB0
 
     # Custom lane sizes
-    python validation_loop.py --port COM3 --lane-sizes '[[100,100],[300,200,100]]'
+    python autoresearch_loop.py --port COM3 --lane-sizes '[[100,100],[300,200,100]]'
 
     # Use presets
-    python validation_loop.py --port COM3 --presets uniform_medium decreasing --lane-count 4
+    python autoresearch_loop.py --port COM3 --presets uniform_medium decreasing --lane-count 4
 """
 
 import argparse
@@ -20,11 +20,11 @@ import json
 import sys
 from typing import Any, Callable
 
-from ci.util.global_interrupt_handler import handle_keyboard_interrupt
-from ci.validation_agent import (
+from ci.autoresearch_agent import (
+    AutoResearchAgent,
     TestConfig,
-    ValidationAgent,
 )
+from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
 
 # Predefined lane size configurations for testing
@@ -90,7 +90,7 @@ def generate_lane_configs(
     return configs
 
 
-def run_validation_loop(
+def run_autoresearch_loop(
     port: str,
     drivers: list[str] | None = None,
     lane_size_configs: list[list[int]] | None = None,
@@ -99,7 +99,7 @@ def run_validation_loop(
     strip_size_preset: str | None = None,
     test_large_strips: bool = False,
 ) -> dict[str, Any]:
-    """Run comprehensive validation loop across all configurations.
+    """Run comprehensive autoresearch loop across all configurations.
 
     Args:
         port: Serial port
@@ -114,7 +114,7 @@ def run_validation_loop(
     Returns:
         Summary of all test results
     """
-    agent = ValidationAgent(port)
+    agent = AutoResearchAgent(port)
 
     try:
         # Get available drivers if not specified
@@ -248,7 +248,7 @@ def run_validation_loop(
                             total_failed += 1
 
                     except KeyboardInterrupt as ki:
-                        print("\n\nKeyboardInterrupt: Stopping validation loop")
+                        print("\n\nKeyboardInterrupt: Stopping autoresearch loop")
                         handle_keyboard_interrupt(ki)
                         raise
                     except Exception as e:
@@ -270,7 +270,7 @@ def run_validation_loop(
 
         # Summary
         print(f"\n{'=' * 60}")
-        print("VALIDATION COMPLETE")
+        print("AUTORESEARCH COMPLETE")
         print(f"{'=' * 60}")
         print(f"Total tests: {total_passed + total_failed}")
         print(f"Passed: {total_passed}")
@@ -286,7 +286,7 @@ def run_validation_loop(
         }
 
     except KeyboardInterrupt as ki:
-        print("\nKeyboardInterrupt: Cancelling validation loop")
+        print("\nKeyboardInterrupt: Cancelling autoresearch loop")
         handle_keyboard_interrupt(ki)
         raise
     finally:
@@ -296,7 +296,7 @@ def run_validation_loop(
 # CLI entry point
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="FastLED Validation Agent Loop",
+        description="FastLED AutoResearch Agent Loop",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -377,7 +377,7 @@ Strip Size Presets (NEW - Phase 7):
         )
 
     try:
-        results = run_validation_loop(
+        results = run_autoresearch_loop(
             port=args.port,
             drivers=args.drivers,
             lane_size_configs=lane_size_configs,
@@ -390,6 +390,6 @@ Strip Size Presets (NEW - Phase 7):
         # Exit with error code if any tests failed
         sys.exit(0 if results["summary"]["failed"] == 0 else 1)
     except KeyboardInterrupt as ki:
-        print("\nValidation cancelled by user")
+        print("\nAutoResearch cancelled by user")
         handle_keyboard_interrupt(ki)
         sys.exit(130)  # Standard exit code for SIGINT

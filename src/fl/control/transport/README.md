@@ -285,4 +285,4 @@ The serial transport uses `fl::available()`, `fl::read()`, and `fl::println()` w
 
 - `fl/control/remote.h` - JSON-RPC server
 - `fl/control/rpc/server.h` - RequestSource and ResponseSink types
-- `examples/Validation/ValidationRemote.cpp` - Usage example
+- `examples/AutoResearch/AutoResearchRemote.cpp` - Usage example

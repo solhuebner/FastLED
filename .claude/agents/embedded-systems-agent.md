@@ -15,7 +15,7 @@ Provide expert guidance on firmware engineering topics: DMA configuration, inter
 
 - `agents/docs/cpp-standards.md` — Code conventions and platform dispatch patterns
 - `agents/docs/debugging.md` — Crash handler and debugging tools
-- `agents/docs/hardware-validation.md` — Device testing procedures
+- `agents/docs/hardware-autoresearch.md` — Device testing procedures
 - `src/platforms/` — Platform-specific implementations
 
 ## Platform Knowledge Base

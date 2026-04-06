@@ -1,7 +1,7 @@
-// ValidationTest.cpp - Generic LED validation testing infrastructure
+// AutoResearchTest.cpp - Generic LED autoresearch testing infrastructure
 // Driver-agnostic test function implementations
 
-#include "ValidationTest.h"
+#include "AutoResearchTest.h"
 #include "LegacyClocklessProxy.h"
 #include <FastLED.h>
 #include "fl/stl/sstream.h"
@@ -105,7 +105,7 @@ void dumpRawEdgeTiming(fl::shared_ptr<fl::RxDevice> rx_channel,
             ss << "[RAW EDGE TIMING]   3. Data pointer not passed correctly to encoder";
             FL_ERROR(ss.str());
         } else if (!has_short_low && !has_long_low) {
-            // Use FL_WARN to avoid triggering bash validate early exit
+            // Use FL_WARN to avoid triggering bash autoresearch early exit
             FL_WARN("[RAW EDGE TIMING] ✗ ENCODER BROKEN: No valid LOW pulses detected!");
         } else {
             FL_WARN("[RAW EDGE TIMING] ⚠ Partial pattern match - encoder may have issues");
@@ -378,7 +378,7 @@ size_t capture(fl::shared_ptr<fl::RxDevice> rx_channel, fl::span<uint8_t> rx_buf
     auto decode_result = rx_channel->decode(rx_timing, rx_buffer);
 
     if (!decode_result.ok()) {
-        // Use FL_WARN instead of FL_ERROR to avoid triggering bash validate exit
+        // Use FL_WARN instead of FL_ERROR to avoid triggering bash autoresearch exit
         // This can happen during warmup/setup and is not fatal
         FL_WARN("Decode failed (error code: " << static_cast<int>(decode_result.error()) << ")");
         // Print raw edge timing on decode failure to diagnose the issue
@@ -390,21 +390,21 @@ size_t capture(fl::shared_ptr<fl::RxDevice> rx_channel, fl::span<uint8_t> rx_buf
     return decode_result.value();
 }
 
-// Generic driver-agnostic validation test runner
-// Validates all channels using the specified configuration
+// Generic driver-agnostic autoresearch test runner
+// Tests all channels using the specified configuration
 void runTest(const char* test_name,
-             fl::ValidationConfig& config,
+             fl::AutoResearchConfig& config,
              int& total, int& passed) {
-    // Multi-lane limitation: Only validate Lane 0 (first channel)
+    // Multi-lane limitation: Only test Lane 0 (first channel)
     // Hardware constraint: Only one TX channel can be read from via RX loopback
-    size_t channels_to_validate = config.tx_configs.size() > 1 ? 1 : config.tx_configs.size();
+    size_t channels_to_test = config.tx_configs.size() > 1 ? 1 : config.tx_configs.size();
 
     if (config.tx_configs.size() > 1) {
-        FL_WARN("\n[MULTI-LANE] Testing " << config.tx_configs.size() << " lanes, validating Lane 0 only (hardware limitation)");
+        FL_WARN("\n[MULTI-LANE] Testing " << config.tx_configs.size() << " lanes, testing Lane 0 only (hardware limitation)");
     }
 
-    // Validate enabled configs (Lane 0 only for multi-lane)
-    for (size_t config_idx = 0; config_idx < channels_to_validate; config_idx++) {
+    // Test enabled configs (Lane 0 only for multi-lane)
+    for (size_t config_idx = 0; config_idx < channels_to_test; config_idx++) {
         total++;
 
         // Build test context for detailed error reporting
@@ -432,7 +432,7 @@ void runTest(const char* test_name,
             FL_ERROR("[" << ctx.driver_name << "/" << ctx.timing_name << "/" << ctx.pattern_name
                     << " | Lane " << ctx.lane_index << "/" << ctx.lane_count
                     << " (Pin " << ctx.pin_number << ", " << ctx.num_leds << " LEDs) | RX:" << ctx.rx_type_name << "] "
-                    << "RX channel is null - must be created in .ino and passed via ValidationConfig");
+                    << "RX channel is null - must be created in .ino and passed via AutoResearchConfig");
             FL_ERROR("Result: FAIL ✗ (RX channel not provided)");
             continue;
         }
@@ -487,7 +487,7 @@ void runTest(const char* test_name,
                         << (bytes_captured - bytes_expected - front_padding_bytes) << " back pad/RESET)");
             }
 
-            // Validate: byte-level comparison (COLOR_ORDER is RGB, so no reordering)
+            // Compare: byte-level comparison (COLOR_ORDER is RGB, so no reordering)
             size_t bytes_to_check = (bytes_captured < bytes_expected + rx_buffer_offset) ?
                                      (bytes_captured > rx_buffer_offset ? bytes_captured - rx_buffer_offset : 0) :
                                      bytes_expected;
@@ -534,10 +534,10 @@ void runTest(const char* test_name,
     }
 }
 
-// Multi-run validation test runner
+// Multi-run autoresearch test runner
 // Runs the same test multiple times and tracks errors across runs
 void runMultiTest(const char* test_name,
-                  fl::ValidationConfig& config,
+                  fl::AutoResearchConfig& config,
                   const fl::MultiRunConfig& multi_config,
                   int& total, int& passed,
                   fl::vector<fl::RunResult>* out_results) {
@@ -552,11 +552,11 @@ void runMultiTest(const char* test_name,
 
     fl::vector<fl::RunResult> run_results;
 
-    // Multi-lane limitation: Only validate Lane 0
-    size_t channels_to_validate = config.tx_configs.size() > 1 ? 1 : config.tx_configs.size();
+    // Multi-lane limitation: Only test Lane 0
+    size_t channels_to_test = config.tx_configs.size() > 1 ? 1 : config.tx_configs.size();
 
     if (config.tx_configs.size() > 1) {
-        FL_WARN("[MULTI-LANE] Testing " << config.tx_configs.size() << " lanes, validating Lane 0 only");
+        FL_WARN("[MULTI-LANE] Testing " << config.tx_configs.size() << " lanes, testing Lane 0 only");
     }
 
     // Execute multiple runs
@@ -569,8 +569,8 @@ void runMultiTest(const char* test_name,
         fl::RunResult result;
         result.run_number = run;
 
-        // Validate Lane 0 only
-        for (size_t config_idx = 0; config_idx < channels_to_validate; config_idx++) {
+        // Test Lane 0 only
+        for (size_t config_idx = 0; config_idx < channels_to_test; config_idx++) {
             const auto& leds = config.tx_configs[config_idx].mLeds;
             size_t num_leds = leds.size();
             result.total_leds = num_leds;
@@ -585,7 +585,7 @@ void runMultiTest(const char* test_name,
                 break;
             }
 
-            // Validate pixel data
+            // Check pixel data
             int mismatches = 0;
 
             // DEBUG: Print first 24 bytes of captured data
@@ -781,9 +781,9 @@ void runMultiTest(const char* test_name,
     }
 }
 
-// Validate a specific chipset timing configuration
+// AutoResearch a specific chipset timing configuration
 // Creates channels, runs tests, destroys channels
-void validateChipsetTiming(fl::ValidationConfig& config,
+void autoResearchChipsetTiming(fl::AutoResearchConfig& config,
                            int& driver_total, int& driver_passed,
                            uint32_t& out_show_duration_ms,
                            fl::vector<fl::RunResult>* out_results) {
@@ -877,11 +877,11 @@ void validateChipsetTiming(fl::ValidationConfig& config,
     // Channel destruction is synchronous - no delay needed
 }
 
-// Validate using the legacy template addLeds API (supports multi-lane)
-// Nearly identical to validateChipsetTiming() — only channel creation differs:
+// AutoResearch using the legacy template addLeds API (supports multi-lane)
+// Nearly identical to autoResearchChipsetTiming() — only channel creation differs:
 //   Normal:  FastLED.add(channel_config) → Channel
 //   Legacy:  LegacyClocklessProxy(pin, leds, numLeds) → WS2812B<PIN> → ClocklessIdf5 → Channel
-void validateChipsetTimingLegacy(fl::ValidationConfig& config,
+void autoResearchChipsetTimingLegacy(fl::AutoResearchConfig& config,
                                  int& driver_total, int& driver_passed,
                                  uint32_t& out_show_duration_ms,
                                  fl::vector<fl::RunResult>* out_results) {
@@ -927,9 +927,9 @@ void validateChipsetTimingLegacy(fl::ValidationConfig& config,
         return;  // vector destructor cleans up proxies
     }
 
-    delay(5);  // Buffer drain (same as validateChipsetTiming)
+    delay(5);  // Buffer drain (same as autoResearchChipsetTiming)
 
-    // Run test patterns (identical to validateChipsetTiming)
+    // Run test patterns (identical to autoResearchChipsetTiming)
     int total = 0;
     int passed = 0;
 

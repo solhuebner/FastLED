@@ -167,7 +167,7 @@ FastLED 3.10.4 (Next Release)
     * **Forward-compatible**: `setExclusiveDriver()` automatically disables future drivers, ensuring predictable behavior
     * **Automatic fallback**: If highest-priority driver fails, manager automatically tries next priority
     * **ESP32 integration**: Drivers auto-register with names during platform initialization
-    * **Example Sketch**: See `examples/Validation/Validation.ino` for usage with `FastLED.setExclusiveDriver("RMT")`
+    * **Example Sketch**: See `examples/AutoResearch/AutoResearch.ino` for usage with `FastLED.setExclusiveDriver("RMT")`
     * Unit tested with comprehensive test suite (18 test cases covering priority, fallback, runtime control)
   * **ESP32 SPI Chipsets No Longer Hardcoded to Specific Pins**: Use any GPIO pins for SPI-based LEDs (all ESP32 variants)
     * Previously forced to use VSPI/HSPI pins - now fully flexible via GPIO matrix

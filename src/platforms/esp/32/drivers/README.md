@@ -182,7 +182,7 @@ uart.write("Task 2\n");
 - Provide status queries (`isInitialized()`, `isBuffered()`, etc.)
 
 **Integration testing:**
-- Use hardware-in-the-loop validation (`bash validate`)
+- Use hardware-in-the-loop validation (`bash autoresearch`)
 - Test both buffered and fallback modes
 - Verify thread safety with concurrent operations
 

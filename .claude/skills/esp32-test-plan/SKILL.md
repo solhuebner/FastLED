@@ -94,9 +94,9 @@ bash compile esp32c3 --examples Blink
 bash lint
 
 # Hardware validation (requires connected ESP32)
-bash validate --rmt          # For RMT-based LED drivers
-bash validate --spi          # For SPI-based LED drivers
-bash validate --parlio       # For PARLIO (ESP32-S3 parallel)
+bash autoresearch --rmt          # For RMT-based LED drivers
+bash autoresearch --spi          # For SPI-based LED drivers
+bash autoresearch --parlio       # For PARLIO (ESP32-S3 parallel)
 ```
 
 ## Step 4: Writing Host Unit Tests for FastLED
@@ -169,7 +169,7 @@ TEST_CASE("MyFeature - boundary values") {
 | AVR (Uno) | `bash compile uno --examples Blink` | ⬜ Pending |
 
 ### Layer 4: Hardware Validation
-**Command**: `bash validate --<driver>`
+**Command**: `bash autoresearch --<driver>`
 
 | Test Case | Setup | Expected Behavior | Status |
 |-----------|-------|-------------------|--------|

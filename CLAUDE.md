@@ -12,7 +12,7 @@
 | Editing meson.build files | `agents/docs/build-system.md` |
 | Running tests, Docker, WASM, QEMU | `agents/docs/testing-commands.md` |
 | Test-Driven Development (TDD) | Use `/tdd` or `/tdd-implement` skills |
-| Hardware validation / `bash validate` | `agents/docs/hardware-validation.md` |
+| Hardware autoresearch / `bash autoresearch` | `agents/docs/hardware-autoresearch.md` |
 | Debugging a C++ crash | `agents/docs/debugging.md` |
 | Creating a new C++ linter | `agents/docs/linter-architecture.md` |
 | Detailed command reference | `agents/docs/commands-reference.md` |
@@ -28,7 +28,7 @@
 - `bash lint` — Code formatting/linting
 - `bash compile wasm --examples Blink` — Compile example (WASM is default target)
 - `bash compile <platform> --examples Blink` — Compile for specific hardware (only when explicitly requested)
-- `bash validate --parlio` — Live device testing (must specify driver)
+- `bash autoresearch --parlio` — Live device testing (must specify driver)
 - `bash profile <function>` — Performance profiling
 
 **NEVER use:** `uv run python test.py` — use `bash test` or `uv run test.py`
@@ -56,7 +56,7 @@ See `agents/docs/build-system.md` for full command execution rules and forbidden
 - **Fix ALL encountered errors immediately**, even pre-existing ones unrelated to your current task
 
 ### Command Execution
-- **Always use bash wrapper scripts** (`bash test`, `bash compile`, `bash lint`, `bash validate`)
+- **Always use bash wrapper scripts** (`bash test`, `bash compile`, `bash lint`, `bash autoresearch`)
 - **Stay in project root** — never `cd` to subdirectories
 - **Python scripts**: Always use `uv run python script.py` (never bare `python`)
 - **Platform compilation timeout**: 15 minutes minimum for platform builds

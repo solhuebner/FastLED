@@ -90,7 +90,7 @@ Specify the test layers that apply:
 | Host unit tests (`bash test`) | Always | Logic, math, data structures |
 | WASM compile check (`bash compile wasm`) | Always | Catches most compile errors |
 | Platform compile (`bash compile <platform>`) | If driver code | Catches platform-specific errors |
-| Hardware validation (`bash validate`) | If driver or timing change | Only definitive proof for LED output |
+| Hardware validation (`bash autoresearch`) | If driver or timing change | Only definitive proof for LED output |
 
 List specific test cases:
 - **Positive**: Expected behavior with valid inputs

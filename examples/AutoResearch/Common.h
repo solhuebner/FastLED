@@ -1,4 +1,4 @@
-// Common.h - Common data structures for Validation.ino
+// Common.h - Common data structures for AutoResearch.ino
 // Shared types used across multiple files
 
 #pragma once

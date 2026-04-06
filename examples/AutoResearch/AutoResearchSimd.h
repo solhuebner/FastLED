@@ -1,4 +1,4 @@
-// ValidationSimd.h - Comprehensive SIMD operation validation tests
+// AutoResearchSimd.h - Comprehensive SIMD operation autoresearch tests
 //
 // Full SIMD test suite covering every operation in fl::simd namespace.
 // Tests include normal cases, boundary/edge cases, and signed arithmetic.
@@ -16,7 +16,7 @@
 #include "fl/math/fixed_point/s0x32x4.h"
 #include "fl/math/fixed_point/s16x16x4.h"
 
-namespace validation {
+namespace autoresearch {
 namespace simd_check {
 
 using namespace fl::simd;
@@ -684,7 +684,7 @@ inline bool test_max_f32_4() {
 }
 
 // ============================================================================
-// Cross-Validation Tests: SIMD vs Scalar Reference
+// Cross-AutoResearch Tests: SIMD vs Scalar Reference
 // These tests compute expected results using explicit scalar math, then compare
 // against the SIMD function output. Catches PIE assembly bugs by never trusting
 // the SIMD implementation for expected values.
@@ -713,7 +713,7 @@ inline void ref_or_u32_4(const uint32_t* a, const uint32_t* b, uint32_t* out) {
     for (int i = 0; i < 4; i++) out[i] = a[i] | b[i];
 }
 
-// Adversarial cross-validation: alternating bit patterns
+// Adversarial cross-autoresearch: alternating bit patterns
 inline bool test_crossval_and_u8_16() {
     uint8_t a[16] = {0xAA,0x55,0xFF,0x00, 0x0F,0xF0,0x81,0x7E, 0x01,0xFE,0xCC,0x33, 0xDB,0x24,0xA5,0x5A};
     uint8_t b[16] = {0x55,0xAA,0x00,0xFF, 0xF0,0x0F,0x7E,0x81, 0xFE,0x01,0x33,0xCC, 0x24,0xDB,0x5A,0xA5};
@@ -750,7 +750,7 @@ inline bool test_crossval_andnot_u8_16() {
     return compare_u8(expected, actual, 16);
 }
 
-// Adversarial u32 cross-validation: powers of 2, all-ones, sign bit
+// Adversarial u32 cross-autoresearch: powers of 2, all-ones, sign bit
 inline bool test_crossval_xor_u32_4() {
     uint32_t a[4] = {0x80000001, 0x7FFFFFFE, 0xDEADBEEF, 0x00000000};
     uint32_t b[4] = {0x80000001, 0x80000001, 0xCAFEBABE, 0xFFFFFFFF};
@@ -811,7 +811,7 @@ inline void ref_sub_sat_u8_16(const uint8_t* a, const uint8_t* b, uint8_t* out) 
     }
 }
 
-// Adversarial cross-validation: sat add with every combination
+// Adversarial cross-autoresearch: sat add with every combination
 inline bool test_crossval_add_sat_u8_16() {
     // Test adversarial: all-255+all-255, alternating, near-overflow
     uint8_t a[16] = {255,254,128,127, 0,1,200,50, 0xFF,0x80,0x7F,0x01, 100,200,150,250};
@@ -1033,7 +1033,7 @@ inline bool test_crossval_float_ops() {
     return true;
 }
 
-// Cross-validation: aligned load/store with adversarial patterns
+// Cross-autoresearch: aligned load/store with adversarial patterns
 inline bool test_crossval_aligned_load_store() {
     FL_ALIGNAS(16) uint32_t src[4] = {0x80000000, 0x7FFFFFFF, 0xDEADBEEF, 0x00000000};
     FL_ALIGNAS(16) uint32_t dst[4] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
@@ -1042,7 +1042,7 @@ inline bool test_crossval_aligned_load_store() {
     return compare_u32(src, dst, 4);
 }
 
-// Cross-validation: broadcast + adversarial values
+// Cross-autoresearch: broadcast + adversarial values
 inline bool test_crossval_set1_u32_4() {
     // Test adversarial values: sign bit, all ones, zero, alternating bits
     uint32_t test_values[] = {0x80000000, 0xFFFFFFFF, 0x00000000, 0xAAAAAAAA, 0x55555555, 0x01010101};
@@ -1354,7 +1354,7 @@ inline void getTests(const SimdTestEntry** out_tests, int* out_count) {
         {"sqrt f32x4 zero",              test_sqrt_f32_4_zero},
         {"min f32x4",                      test_min_f32_4},
         {"max f32x4",                      test_max_f32_4},
-        // Cross-Validation: SIMD vs Scalar Reference (adversarial patterns)
+        // Cross-AutoResearch: SIMD vs Scalar Reference (adversarial patterns)
         {"crossval scale u8x16",            test_crossval_scale_u8_16},
         {"crossval add_sat u8x16",          test_crossval_add_sat_u8_16},
         {"crossval sub_sat u8x16",          test_crossval_sub_sat_u8_16},
@@ -1367,7 +1367,7 @@ inline void getTests(const SimdTestEntry** out_tests, int* out_count) {
         {"crossval AND u32x4",             test_crossval_and_u32_4},
         {"crossval OR u32x4",              test_crossval_or_u32_4},
         {"crossval broadcast u32x4",       test_crossval_set1_u32_4},
-        // Cross-Validation: i32 arithmetic, shifts, min/max, multiply, u8 min/max, float
+        // Cross-AutoResearch: i32 arithmetic, shifts, min/max, multiply, u8 min/max, float
         {"crossval add i32x4",              test_crossval_add_i32_4},
         {"crossval sub i32x4",              test_crossval_sub_i32_4},
         {"crossval srl u32x4",              test_crossval_srl_u32_4},
@@ -1399,7 +1399,7 @@ inline int runSimdTests() {
     int passed = 0;
     int failed = 0;
 
-    FL_PRINT("\n[SIMD VALIDATION]");
+    FL_PRINT("\n[SIMD AUTORESEARCH]");
     FL_PRINT("────────────────────────────────────────────────────────────────");
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
@@ -1447,4 +1447,4 @@ inline int runSimdTests() {
 }
 
 } // namespace simd_check
-} // namespace validation
+} // namespace autoresearch

@@ -57,7 +57,7 @@ case "${1:-}" in
         echo "Checking daemon status..."
         uv run python ci/util/pio_package_client.py --status
         echo ""
-        echo "Note: Daemon auto-starts when needed by 'bash validate' or 'bash debug'"
+        echo "Note: Daemon auto-starts when needed by 'bash autoresearch' or 'bash debug'"
         ;;
 
     restart)

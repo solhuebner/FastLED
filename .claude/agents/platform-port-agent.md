@@ -110,7 +110,7 @@ If the platform has hardware SPI:
 1. **Compilation test**: `bash compile <platform> --examples Blink`
 2. **Unit tests**: `bash test` (host-side, verifies shared code)
 3. **Hardware test**: Upload to device, verify LED output
-4. **Validation**: `bash validate --<driver>` (if using validation firmware)
+4. **Validation**: `bash autoresearch --<driver>` (if using validation firmware)
 
 ## Output Format
 

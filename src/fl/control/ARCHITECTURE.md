@@ -423,7 +423,7 @@ public:
 
 ### From Old API (fastled3)
 
-See `examples/Validation/MIGRATION_JsonRpcTransport.md` for migration guide from old API.
+See `examples/AutoResearch/MIGRATION_JsonRpcTransport.md` for migration guide from old API.
 
 **Key Changes:**
 - Removed protocol normalization layer (no more `normalizeJsonRpcRequest()`)

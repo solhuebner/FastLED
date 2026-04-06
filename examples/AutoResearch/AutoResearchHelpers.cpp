@@ -1,6 +1,6 @@
-// ValidationHelpers.cpp - Helper function implementations
+// AutoResearchHelpers.cpp - Helper function implementations
 
-#include "ValidationHelpers.h"
+#include "AutoResearchHelpers.h"
 #include "fl/stl/sstream.h"
 #include "fl/system/pin.h"  // Platform-independent pin API
 #include "fl/channels/detail/validation/rx_test.h"
@@ -18,7 +18,7 @@ bool testRxChannel(
 }
 
 
-void validateExpectedEngines() {
+void autoResearchExpectedEngines() {
     // Delegate to library implementation
     fl::validation::printEngineValidation();
 }
@@ -46,13 +46,13 @@ void testDriver(
 
     FL_WARN("[CONFIG] Driver: " << driver_name << " (physical jumper required)\n");
 
-    // Create TX configuration for validation tests
+    // Create TX configuration for autoresearch tests
     fl::ChannelConfig tx_config(pin_data, timing_config.timing, fl::span<CRGB>(leds, num_leds), color_order);
 
     FL_WARN("[INFO] Testing " << timing_config.name << " timing\n");
 
-    // Create validation configuration with all input parameters
-    fl::ValidationConfig validation_config(
+    // Create autoresearch configuration with all input parameters
+    fl::AutoResearchConfig autoresearch_config(
         timing_config.timing,
         timing_config.name,
         fl::span<fl::ChannelConfig>(&tx_config, 1),
@@ -68,13 +68,13 @@ void testDriver(
     FL_WARN("[INFO] Running warm-up frame (results will be discarded)");
     int warmup_total = 0, warmup_passed = 0;
     uint32_t warmup_duration_ms = 0;
-    validateChipsetTiming(validation_config, warmup_total, warmup_passed, warmup_duration_ms);
+    autoResearchChipsetTiming(autoresearch_config, warmup_total, warmup_passed, warmup_duration_ms);
     FL_WARN("[INFO] Warm-up complete (" << warmup_passed << "/" << warmup_total << " passed - discarding)");
 
     // SECOND RUN: Keep results (actual test)
     FL_WARN("[INFO] Running actual test frame");
     uint32_t test_duration_ms = 0;
-    validateChipsetTiming(validation_config, result.total_tests, result.passed_tests, test_duration_ms);
+    autoResearchChipsetTiming(autoresearch_config, result.total_tests, result.passed_tests, test_duration_ms);
 
     FL_WARN("\n[INFO] All timing tests complete for " << driver_name << " driver");
 }

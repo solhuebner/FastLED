@@ -1,18 +1,18 @@
-// examples/Validation/ValidationOta.cpp
+// examples/AutoResearch/AutoResearchOta.cpp
 //
-// OTA validation implementation for ESP32.
+// OTA autoresearch implementation for ESP32.
 // Uses fl::net::OTA for the OTA HTTP server with Basic Auth.
 // Uses ESP-IDF native APIs for WiFi Soft AP.
 // Guarded with FL_IS_ESP32 - no-op stubs on other platforms.
 
-#include "ValidationOta.h"
+#include "AutoResearchOta.h"
 #include "fl/stl/json.h"
 #include "fl/system/log.h"
 
 // Global OTA state
-static ValidationOtaState s_ota_state;
+static AutoResearchOtaState s_ota_state;
 
-ValidationOtaState& getOtaState() {
+AutoResearchOtaState& getOtaState() {
     return s_ota_state;
 }
 
@@ -41,7 +41,7 @@ static bool s_ota_event_loop_initialized = false;
 static bool s_ota_wifi_initialized = false;
 
 // ============================================================================
-// WiFi Soft AP Setup (same pattern as ValidationNet.cpp::initWifiAP)
+// WiFi Soft AP Setup (same pattern as AutoResearchNet.cpp::initWifiAP)
 // ============================================================================
 
 static bool initOtaWifiAP() {
@@ -88,9 +88,9 @@ static bool initOtaWifiAP() {
 
     // Configure AP
     wifi_config_t wifi_config = {};
-    memcpy(wifi_config.ap.ssid, VALIDATION_OTA_SSID, strlen(VALIDATION_OTA_SSID));
-    wifi_config.ap.ssid_len = strlen(VALIDATION_OTA_SSID);
-    memcpy(wifi_config.ap.password, VALIDATION_OTA_PASSWORD, strlen(VALIDATION_OTA_PASSWORD));
+    memcpy(wifi_config.ap.ssid, AUTORESEARCH_OTA_SSID, strlen(AUTORESEARCH_OTA_SSID));
+    wifi_config.ap.ssid_len = strlen(AUTORESEARCH_OTA_SSID);
+    memcpy(wifi_config.ap.password, AUTORESEARCH_OTA_PASSWORD, strlen(AUTORESEARCH_OTA_PASSWORD));
     wifi_config.ap.max_connection = 4;
     wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.ap.channel = 1;
@@ -114,7 +114,7 @@ static bool initOtaWifiAP() {
     }
 
     s_ota_state.wifi_ap_active = true;
-    FL_WARN("[OTA] WiFi AP started: SSID=" << VALIDATION_OTA_SSID << " IP=" << VALIDATION_OTA_AP_IP);
+    FL_WARN("[OTA] WiFi AP started: SSID=" << AUTORESEARCH_OTA_SSID << " IP=" << AUTORESEARCH_OTA_AP_IP);
     return true;
 }
 
@@ -134,7 +134,7 @@ fl::json startOta() {
 
     // Create and start OTA server
     s_ota = fl::make_unique<fl::net::OTA>();
-    if (!s_ota->begin(VALIDATION_OTA_HOSTNAME, VALIDATION_OTA_OTA_PASSWORD)) {
+    if (!s_ota->begin(AUTORESEARCH_OTA_HOSTNAME, AUTORESEARCH_OTA_OTA_PASSWORD)) {
         response.set("success", false);
         response.set("error", "Failed to start OTA server");
         s_ota.reset();
@@ -142,15 +142,15 @@ fl::json startOta() {
     }
 
     s_ota_state.ota_active = true;
-    FL_WARN("[OTA] OTA server started: hostname=" << VALIDATION_OTA_HOSTNAME);
+    FL_WARN("[OTA] OTA server started: hostname=" << AUTORESEARCH_OTA_HOSTNAME);
 
     response.set("success", true);
-    response.set("ssid", VALIDATION_OTA_SSID);
-    response.set("password", VALIDATION_OTA_PASSWORD);
-    response.set("ip", VALIDATION_OTA_AP_IP);
-    response.set("port", static_cast<int64_t>(VALIDATION_OTA_PORT));
-    response.set("ota_password", VALIDATION_OTA_OTA_PASSWORD);
-    response.set("hostname", VALIDATION_OTA_HOSTNAME);
+    response.set("ssid", AUTORESEARCH_OTA_SSID);
+    response.set("password", AUTORESEARCH_OTA_PASSWORD);
+    response.set("ip", AUTORESEARCH_OTA_AP_IP);
+    response.set("port", static_cast<int64_t>(AUTORESEARCH_OTA_PORT));
+    response.set("ota_password", AUTORESEARCH_OTA_OTA_PASSWORD);
+    response.set("hostname", AUTORESEARCH_OTA_HOSTNAME);
     return response;
 }
 
@@ -184,7 +184,7 @@ fl::json stopOta() {
 fl::json startOta() {
     fl::json response = fl::json::object();
     response.set("success", false);
-    response.set("error", "OTA validation only supported on ESP32");
+    response.set("error", "OTA autoresearch only supported on ESP32");
     return response;
 }
 

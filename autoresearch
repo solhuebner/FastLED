@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 
-# validate - FastLED Validation Test Wrapper
+# autoresearch - FastLED AutoResearch Test Wrapper
 #
-# Runs the Validation.ino sketch with proper --expect and --fail-on patterns
+# Runs the AutoResearch.ino sketch with proper --expect and --fail-on patterns
 # to catch ISR failures, hardware issues, and test matrix errors.
 #
 # Usage:
-#   bash validate --parlio            # Run PARLIO driver test (auto-detect environment)
-#   bash validate esp32s3 --parlio    # Run on esp32s3 environment
-#   bash validate --all               # Test all drivers
-#   bash validate --timeout 120       # Override timeout
-#   bash validate --skip-lint         # Skip linting phase
-#   bash validate --help              # Show help
+#   bash autoresearch --parlio            # Run PARLIO driver test (auto-detect environment)
+#   bash autoresearch esp32s3 --parlio    # Run on esp32s3 environment
+#   bash autoresearch --all               # Test all drivers
+#   bash autoresearch --timeout 120       # Override timeout
+#   bash autoresearch --skip-lint         # Skip linting phase
+#   bash autoresearch --help              # Show help
 
 set -euo pipefail
 
 # Help message
 show_help() {
     cat <<EOF
-FastLED Validation Test Wrapper
+FastLED AutoResearch Test Wrapper
 
 Usage:
-  bash validate [ENVIRONMENT] [--<driver>] [OPTIONS]
+  bash autoresearch [ENVIRONMENT] [--<driver>] [OPTIONS]
 
 Positional Arguments:
   ENVIRONMENT         Optional PlatformIO environment (e.g., esp32s3, esp32dev, teensy41)
@@ -40,13 +40,13 @@ Driver Selection (optional - omit for GPIO-only mode):
   --coroutine         Test coroutine/task creation, stop, await (no LED drivers needed)
   --parallel          Test multiple drivers simultaneously (requires 2+ drivers)
 
-Network Validation (ESP32 HTTP):
+Network AutoResearch (ESP32 HTTP):
   --net               Self-contained loopback test: ESP32 HTTP server + client on localhost (no WiFi)
-  --net-server        ESP32 starts WiFi AP + HTTP server; host validates endpoints
+  --net-server        ESP32 starts WiFi AP + HTTP server; host autoresearch endpoints
   --net-client        ESP32 starts WiFi AP; host starts HTTP server; ESP32 fetches from host
 
-OTA Validation (ESP32 WiFi + OTA HTTP):
-  --ota               ESP32 starts WiFi AP + OTA HTTP server; host validates auth and update endpoints
+OTA AutoResearch (ESP32 WiFi + OTA HTTP):
+  --ota               ESP32 starts WiFi AP + OTA HTTP server; host autoresearch auth and update endpoints
 
 Options:
   -h, --help          Show this help message
@@ -68,33 +68,33 @@ Color Configuration:
   --color-pattern HEX       Set RGB color pattern (e.g., 'ff00aa' or '0x00ff00')
 
 Description:
-  Runs the Validation.ino sketch with comprehensive pattern matching and
+  Runs the AutoResearch.ino sketch with comprehensive pattern matching and
   JSON-RPC driver selection. Features include:
 
   - GPIO PRE-TEST: Verifies TX-RX jumper wire connection before running tests
-  - PATTERN MATCHING: Validates hardware setup, driver availability, test results
+  - PATTERN MATCHING: AutoResearch hardware setup, driver availability, test results
   - EARLY EXIT: Stops when test suite completes (no need to wait for timeout)
   - ERROR DETECTION: Catches ISR hangs, device crashes, and test failures
 
 Examples:
-  bash validate teensy41                    # GPIO-only: pin toggle capture test on Teensy
-  bash validate                             # GPIO-only: auto-detect device, pin toggle test
-  bash validate --parlio                    # Auto-detect env, test PARLIO driver
-  bash validate esp32s3 --parlio            # Run on esp32s3, test PARLIO driver
-  bash validate --rmt --spi                 # Test RMT and SPI drivers
-  bash validate --all                       # Test all drivers
-  bash validate --parlio --skip-lint        # Skip linting for faster iteration
-  bash validate --all --timeout 120         # Longer timeout
-  bash validate --i2s --lanes 2             # Test I2S with exactly 2 lanes
-  bash validate --parlio --lanes 1-4        # Test PARLIO with 1-4 lanes
-  bash validate --i2s --lane-counts 100,200,300  # Test I2S with 3 lanes (100, 200, 300 LEDs)
-  bash validate --rmt --color-pattern ff00aa     # Test RMT with custom color (pink)
-  bash validate --parlio --no-fbuild             # Force PlatformIO (skip fbuild)
-  bash validate --parlio --lcd-rgb --parallel --lanes 1  # Test PARLIO + LCD_RGB in parallel
-  bash validate --net                             # ESP32 self-contained HTTP loopback test
-  bash validate --net-server                     # ESP32 WiFi AP + HTTP server validation
-  bash validate --net-client                     # ESP32 WiFi AP + HTTP client validation
-  bash validate --ota                            # ESP32 WiFi AP + OTA HTTP server validation
+  bash autoresearch teensy41                    # GPIO-only: pin toggle capture test on Teensy
+  bash autoresearch                             # GPIO-only: auto-detect device, pin toggle test
+  bash autoresearch --parlio                    # Auto-detect env, test PARLIO driver
+  bash autoresearch esp32s3 --parlio            # Run on esp32s3, test PARLIO driver
+  bash autoresearch --rmt --spi                 # Test RMT and SPI drivers
+  bash autoresearch --all                       # Test all drivers
+  bash autoresearch --parlio --skip-lint        # Skip linting for faster iteration
+  bash autoresearch --all --timeout 120         # Longer timeout
+  bash autoresearch --i2s --lanes 2             # Test I2S with exactly 2 lanes
+  bash autoresearch --parlio --lanes 1-4        # Test PARLIO with 1-4 lanes
+  bash autoresearch --i2s --lane-counts 100,200,300  # Test I2S with 3 lanes (100, 200, 300 LEDs)
+  bash autoresearch --rmt --color-pattern ff00aa     # Test RMT with custom color (pink)
+  bash autoresearch --parlio --no-fbuild             # Force PlatformIO (skip fbuild)
+  bash autoresearch --parlio --lcd-rgb --parallel --lanes 1  # Test PARLIO + LCD_RGB in parallel
+  bash autoresearch --net                             # ESP32 self-contained HTTP loopback test
+  bash autoresearch --net-server                     # ESP32 WiFi AP + HTTP server autoresearch
+  bash autoresearch --net-client                     # ESP32 WiFi AP + HTTP client autoresearch
+  bash autoresearch --ota                            # ESP32 WiFi AP + OTA HTTP server autoresearch
 
 Exit Codes:
   0   Success (all patterns found, no failures)
@@ -102,7 +102,7 @@ Exit Codes:
   130 User interrupt (Ctrl+C)
 
 See Also:
-  - examples/Validation/Validation.ino - Validation sketch documentation
+  - examples/AutoResearch/AutoResearch.ino - AutoResearch sketch documentation
   - CLAUDE.md Section "Live Device Testing (AI Agents)" - Usage guidelines
 
 EOF
@@ -118,5 +118,5 @@ for arg in "$@"; do
     esac
 done
 
-# Run the Python validation script with all arguments
-exec uv run ci/validate.py "$@"
+# Run the Python autoresearch script with all arguments
+exec uv run ci/autoresearch.py "$@"

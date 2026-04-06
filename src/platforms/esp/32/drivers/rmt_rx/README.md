@@ -368,7 +368,7 @@ The destructor automatically releases the RMT channel:
 ## Related Documentation
 
 - `docs/RMT_RX_ARCHITECTURE.md` - System architecture and design
-- `examples/Validation/README.md` - Loopback validation example
+- `examples/AutoResearch/README.md` - Loopback validation example
 - `src/platforms/esp/32/drivers/rmt/rmt_5/README.md` - RMT TX encoder documentation
 - ESP-IDF RMT documentation: https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/peripherals/rmt.html
 
