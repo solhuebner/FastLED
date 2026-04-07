@@ -142,6 +142,16 @@ Example commands:
 ### Runtime Driver Selection
 Driver selection happens at runtime via JSON-RPC (no recompilation needed). You can instantly switch between drivers or test multiple drivers without rebuilding firmware.
 
+### Interpreting Output Cutoff as Device Crash
+**DIRECTIVE:** If the serial output is abruptly cut off mid-test (no `TEST_COMPLETED_EXIT_OK` or `TEST_COMPLETED_EXIT_ERROR`), **assume the device crashed**. This applies even when there is no stack trace or panic message — some crashes (e.g., hardware watchdog, power brownout, DMA corruption) produce no diagnostic output.
+
+**When a crash is suspected without a stack trace:**
+1. Investigate whether a stack trace dumper / crash handler is implemented for the target platform
+2. If no crash handler exists, attempt to implement one (e.g., ESP32 `esp_system` panic handler, custom `abort()` hook)
+3. If implementing a crash handler, leave a comment in `platformio.ini` documenting the investigation outcome
+4. Re-run the failing test to capture the stack trace
+5. If the crash handler cannot be implemented, document the limitation in the test results
+
 ### Why bash autoresearch instead of bash debug
 - Pre-configured patterns catch hardware failures automatically
 - Designed for automated testing and AI feedback loops

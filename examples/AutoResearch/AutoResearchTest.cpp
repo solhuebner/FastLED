@@ -165,6 +165,148 @@ static fl::vector<uint8_t> buildExpectedUCS7604(fl::span<CRGB> leds, const fl::C
     return expected;
 }
 
+// Decode SPI bit stream from raw RMT edges into LED RGB bytes
+// The SPI data pin carries APA102 encoded data clocked by PCLK.
+// RMT RX captures edges on the data pin. Each edge duration / bit_period_ns
+// gives the number of consecutive same-value bits.
+// Returns number of LED RGB bytes written to rx_buffer, or 0 on error.
+static size_t decodeSpiEdges(fl::shared_ptr<fl::RxDevice> rx_channel,
+                             fl::span<uint8_t> rx_buffer,
+                             uint32_t clock_hz) {
+    if (!rx_channel || clock_hz == 0) {
+        FL_WARN("[SPI DECODE] Invalid parameters");
+        return 0;
+    }
+
+    const uint32_t bit_period_ns = static_cast<uint32_t>(1000000000ULL / clock_hz);
+    const uint32_t half_bit_ns = bit_period_ns / 2;
+    FL_WARN("[SPI DECODE] clock=" << clock_hz << " Hz, bit_period=" << bit_period_ns << " ns");
+
+    // Read raw edges (up to 4096 to handle large strips)
+    constexpr size_t MAX_EDGES = 4096;
+    fl::vector<fl::EdgeTime> edges(MAX_EDGES);
+    fl::span<fl::EdgeTime> edge_span(edges.data(), edges.size());
+    size_t edge_count = rx_channel->getRawEdgeTimes(edge_span, 0);
+
+    if (edge_count == 0) {
+        FL_WARN("[SPI DECODE] No edges captured");
+        return 0;
+    }
+    FL_WARN("[SPI DECODE] Captured " << edge_count << " edges");
+
+    // Reconstruct bit stream from edges
+    // Each edge has a level (high/low) and duration in ns.
+    // Number of bits = round(duration_ns / bit_period_ns)
+    fl::vector<uint8_t> bits;
+    bits.reserve(edge_count * 4); // Rough estimate
+
+    for (size_t i = 0; i < edge_count; i++) {
+        uint32_t duration = edges[i].ns;
+        uint32_t num_bits = (duration + half_bit_ns) / bit_period_ns;
+        if (num_bits == 0) num_bits = 1; // At least 1 bit per edge
+        uint8_t bit_val = edges[i].high ? 1 : 0;
+        for (uint32_t b = 0; b < num_bits; b++) {
+            bits.push_back(bit_val);
+        }
+    }
+
+    FL_WARN("[SPI DECODE] Reconstructed " << bits.size() << " bits");
+
+    if (bits.size() < 32) {
+        FL_WARN("[SPI DECODE] Too few bits for APA102 frame");
+        return 0;
+    }
+
+    // Convert bits to bytes (MSB first)
+    size_t total_bytes = bits.size() / 8;
+    fl::vector<uint8_t> raw_bytes(total_bytes);
+    for (size_t i = 0; i < total_bytes; i++) {
+        uint8_t byte_val = 0;
+        for (int bit = 7; bit >= 0; bit--) {
+            size_t bit_idx = i * 8 + (7 - bit);
+            if (bit_idx < bits.size() && bits[bit_idx]) {
+                byte_val |= (1 << bit);
+            }
+        }
+        raw_bytes[i] = byte_val;
+    }
+
+    FL_WARN("[SPI DECODE] Decoded " << total_bytes << " raw bytes");
+
+    // Log first few bytes for debugging
+    {
+        fl::sstream dbg;
+        dbg << "[SPI DECODE] First bytes:";
+        size_t show = total_bytes < 20 ? total_bytes : 20;
+        for (size_t i = 0; i < show; i++) {
+            dbg << " 0x";
+            uint8_t hi = raw_bytes[i] >> 4;
+            uint8_t lo = raw_bytes[i] & 0xF;
+            dbg << (char)(hi < 10 ? '0' + hi : 'A' + hi - 10);
+            dbg << (char)(lo < 10 ? '0' + lo : 'A' + lo - 10);
+        }
+        FL_WARN(dbg.str());
+    }
+
+    // Find APA102 start frame (4 bytes of 0x00)
+    // The RMT may not capture the start frame since it's all zeros and
+    // the idle state is also LOW. In that case, the first captured data
+    // is the first LED frame header (0xE0 | brightness).
+    size_t data_start = 0;
+
+    // Check if we captured the start frame
+    if (total_bytes >= 4 && raw_bytes[0] == 0x00 && raw_bytes[1] == 0x00 &&
+        raw_bytes[2] == 0x00 && raw_bytes[3] == 0x00) {
+        data_start = 4; // Skip start frame
+        FL_WARN("[SPI DECODE] Found start frame at offset 0");
+    } else {
+        // No start frame captured (RMT started at first edge = first HIGH bit)
+        // First byte should be 0xE0|brightness or 0xFF
+        FL_WARN("[SPI DECODE] No start frame (first edge = first LED data)");
+    }
+
+    // Extract LED RGB data from APA102 frames
+    // Each LED: [0xE0|brightness] [color0] [color1] [color2] (4 bytes)
+    // With EOrder=RGB in the validation config, the wire order after the
+    // brightness header is [R, G, B] — we copy these directly to rx_buffer.
+    // NOTE: The APA102 end frame (all 0xFF) also has (0xFF & 0xE0) == 0xE0,
+    // so we cannot distinguish end frame from a max-brightness LED purely
+    // from the header byte. We stop after we've exhausted captured data.
+    size_t led_bytes_written = 0;
+    size_t pos = data_start;
+
+    while (pos + 4 <= total_bytes) {
+        uint8_t header = raw_bytes[pos];
+
+        // Check for valid LED frame header (top 3 bits must be 111)
+        if ((header & 0xE0) != 0xE0) {
+            FL_WARN("[SPI DECODE] End of LED data at byte " << pos
+                    << " (header=0x" << ((header >> 4) < 10 ? '0' + (header >> 4) : 'A' + (header >> 4) - 10)
+                    << ((header & 0xF) < 10 ? '0' + (header & 0xF) : 'A' + (header & 0xF) - 10) << ")");
+            break;
+        }
+
+        uint8_t c0 = raw_bytes[pos + 1];
+        uint8_t c1 = raw_bytes[pos + 2];
+        uint8_t c2 = raw_bytes[pos + 3];
+
+        if (led_bytes_written + 3 <= rx_buffer.size()) {
+            rx_buffer[led_bytes_written + 0] = c0;
+            rx_buffer[led_bytes_written + 1] = c1;
+            rx_buffer[led_bytes_written + 2] = c2;
+            led_bytes_written += 3;
+        } else {
+            FL_WARN("[SPI DECODE] rx_buffer full at LED " << (led_bytes_written / 3));
+            break;
+        }
+        pos += 4;
+    }
+
+    size_t num_leds = led_bytes_written / 3;
+    FL_WARN("[SPI DECODE] Extracted " << num_leds << " LEDs (" << led_bytes_written << " RGB bytes)");
+    return led_bytes_written;
+}
+
 // Capture transmitted LED data via RX loopback
 // - rx_channel: Shared pointer to RX device (persistent across calls)
 // - rx_buffer: Buffer to store received bytes
@@ -308,6 +450,23 @@ size_t capture(fl::shared_ptr<fl::RxDevice> rx_channel, fl::span<uint8_t> rx_buf
         }
         FL_WARN("[CAPTURE] UART decoded " << decode_result.value() << " LED bytes");
         return decode_result.value();
+    }
+
+    // SPI chipset drivers (LCD_SPI, I2S_SPI): decode raw SPI bit stream
+    // These drivers use LCD_CAM I80 bus or I2S to output APA102 data.
+    // RMT RX captures edges on the data pin; clock pin is ignored.
+    bool is_lcd_spi_driver = (fl::strcmp(driver_name, "LCD_SPI") == 0);
+    bool is_i2s_spi_driver = (fl::strcmp(driver_name, "I2S_SPI") == 0);
+    if (is_lcd_spi_driver || is_i2s_spi_driver) {
+        // SPI clock used for validation: 2.4MHz (matches ValidationRemote.cpp)
+        const uint32_t spi_clock_hz = 2400000;
+        FL_WARN("[CAPTURE] SPI chipset decode: clock=" << spi_clock_hz << " Hz");
+        size_t decoded = decodeSpiEdges(rx_channel, rx_buffer, spi_clock_hz);
+        if (decoded == 0) {
+            FL_WARN("[CAPTURE] SPI decode failed");
+            dumpRawEdgeTiming(rx_channel, timing, fl::EdgeRange(0, 256));
+        }
+        return decoded;
     }
 
     // Decode received data directly into rx_buffer
@@ -790,10 +949,17 @@ void autoResearchChipsetTiming(fl::AutoResearchConfig& config,
     fl::sstream ss;
     ss << "\n========================================\n";
     ss << "Testing: " << config.timing_name << "\n";
-    ss << "  T0H: " << config.timing.t1_ns << "ns\n";
-    ss << "  T1H: " << (config.timing.t1_ns + config.timing.t2_ns) << "ns\n";
-    ss << "  T0L: " << config.timing.t3_ns << "ns\n";
-    ss << "  RESET: " << config.timing.reset_us << "us\n";
+    bool has_spi_config = config.tx_configs.size() > 0 && config.tx_configs[0].isSpi();
+    if (has_spi_config) {
+        const auto* spi_cfg = config.tx_configs[0].getSpiChipset();
+        ss << "  Protocol: SPI (APA102)\n";
+        ss << "  Clock: " << (spi_cfg ? spi_cfg->timing.clock_hz : 0) << " Hz\n";
+    } else {
+        ss << "  T0H: " << config.timing.t1_ns << "ns\n";
+        ss << "  T1H: " << (config.timing.t1_ns + config.timing.t2_ns) << "ns\n";
+        ss << "  T0L: " << config.timing.t3_ns << "ns\n";
+        ss << "  RESET: " << config.timing.reset_us << "us\n";
+    }
     ss << "  Channels: " << config.tx_configs.size() << "\n";
     ss << "========================================";
     FL_WARN(ss.str());
@@ -801,10 +967,15 @@ void autoResearchChipsetTiming(fl::AutoResearchConfig& config,
     // Create ALL channels from tx_configs (multi-channel support)
     fl::vector<fl::shared_ptr<fl::Channel>> channels;
     for (size_t i = 0; i < config.tx_configs.size(); i++) {
-        // Create channel config with runtime timing
-        fl::ChannelConfig channel_config(config.tx_configs[i].getDataPin(), config.timing, config.tx_configs[i].mLeds, config.tx_configs[i].rgb_order);
-
-        auto channel = FastLED.add(channel_config);
+        fl::shared_ptr<fl::Channel> channel;
+        if (config.tx_configs[i].isSpi()) {
+            // SPI chipset: pass through the SPI config directly
+            channel = FastLED.add(config.tx_configs[i]);
+        } else {
+            // Clockless chipset: re-create with runtime timing
+            fl::ChannelConfig channel_config(config.tx_configs[i].getDataPin(), config.timing, config.tx_configs[i].mLeds, config.tx_configs[i].rgb_order);
+            channel = FastLED.add(channel_config);
+        }
         if (!channel) {
             FL_ERROR("Failed to create channel " << i << " (pin " << config.tx_configs[i].getDataPin() << ") - platform not supported");
             // Clean up previously created channels

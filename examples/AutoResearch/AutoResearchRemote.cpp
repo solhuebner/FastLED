@@ -31,6 +31,8 @@
 #include "fl/math/simd.h"
 #include "AutoResearchSimd.h"
 #include "fl/system/heap.h"
+#include "fl/chipsets/spi.h"
+#include "fl/channels/config.h"
 #include <Arduino.h>
 
 #include "fl/net/ble.h"
@@ -296,14 +298,37 @@ fl::json AutoResearchRemoteControl::runSingleTestImpl(const fl::json& args) {
     fl::vector<fl::unique_ptr<fl::vector<CRGB>>> led_arrays;
     fl::vector<fl::ChannelConfig> tx_configs;
 
+    // SPI chipset drivers (LCD_SPI, I2S_SPI) use APA102 protocol with data+clock pins
+    // Clockless drivers use WS2812B timing on a single data pin
+    bool is_spi_chipset_driver = (driver_name == "LCD_SPI" || driver_name == "I2S_SPI");
+
     for (fl::size i = 0; i < lane_sizes.size(); i++) {
         auto leds = fl::make_unique<fl::vector<CRGB>>(lane_sizes[i]);
-        tx_configs.push_back(fl::ChannelConfig(
-            pin_tx + i,  // Consecutive pins for multi-lane
-            timing_config.timing,
-            fl::span<CRGB>(leds->data(), leds->size()),
-            RGB  // Default color order
-        ));
+        if (is_spi_chipset_driver) {
+            // SPI chipset: APA102 with data pin = pin_tx (lane 0 only)
+            // Multi-lane SPI validation is not currently supported because
+            // the I80 bus transposes all lanes onto a single bus — only
+            // lane 0 (D0) can be captured via the TX→RX jumper wire.
+            // Clock pin must avoid TX, RX, and DC (21) pins.
+            int data_pin = pin_tx;
+            int clock_pin = pin_rx + 1;
+            // Use 2.4MHz SPI clock (matches I2S LCD_CAM default, ~417ns/bit)
+            // Lower frequencies (e.g., 800kHz) fail with ESP_ERR_NOT_SUPPORTED
+            // on the I80 panel IO.
+            fl::SpiChipsetConfig spi_cfg(data_pin, clock_pin, fl::SpiEncoder::apa102(2400000));
+            tx_configs.push_back(fl::ChannelConfig(
+                spi_cfg,
+                fl::span<CRGB>(leds->data(), leds->size()),
+                RGB
+            ));
+        } else {
+            tx_configs.push_back(fl::ChannelConfig(
+                pin_tx + i,  // Consecutive pins for multi-lane
+                timing_config.timing,
+                fl::span<CRGB>(leds->data(), leds->size()),
+                RGB  // Default color order
+            ));
+        }
         led_arrays.push_back(fl::move(leds));
     }
 
