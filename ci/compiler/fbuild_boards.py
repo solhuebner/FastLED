@@ -27,7 +27,7 @@ FBUILD_BOARDS: frozenset[str] = frozenset(
         # ESP32 (pioarduino espressif32)
         # "esp32dev",
         # "esp32s3",
-        # "esp32c3",
+        "esp32c3",
         # "esp32c6",
         # "esp32c2",
         # "esp32c5",

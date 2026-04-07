@@ -99,15 +99,17 @@ def _init_platformio_build(
                 build_dir=build_dir,
             )
 
-    # Clone board and add sketch directory include path (enables "shared/file.h" style includes)
     board_with_sketch_include = board.clone()
-    if board_with_sketch_include.build_flags is None:
-        board_with_sketch_include.build_flags = []
-    else:
-        board_with_sketch_include.build_flags = list(
-            board_with_sketch_include.build_flags
-        )
-    board_with_sketch_include.build_flags.append("-Isrc/sketch")
+
+    # Make the staged source roots available as include roots so sketch-relative
+    # includes resolve consistently under both PlatformIO and fbuild.
+    default_include_dirs = [
+        (build_dir / "src").resolve().as_posix(),
+        (build_dir / "src" / "sketch").resolve().as_posix(),
+    ]
+    merged_include_dirs = list(default_include_dirs)
+    if additional_include_dirs:
+        merged_include_dirs.extend(additional_include_dirs)
 
     # Set up compiler cache through build_flags if enabled and available
     cache_config = get_cache_build_flags(board.board_name, cache_type)
@@ -163,7 +165,7 @@ def _init_platformio_build(
         example,
         paths,
         additional_defines,
-        additional_include_dirs,
+        merged_include_dirs,
         additional_libs,
         cache_type,
     ):
@@ -630,11 +632,12 @@ class PioCompiler(Compiler):
         from ci.util.fbuild_runner import run_fbuild_compile
 
         environment = self.board.board_name
-        success = run_fbuild_compile(
+        result = run_fbuild_compile(
             self.build_dir,
             environment=environment,
             verbose=self.verbose,
         )
+        success = result.success
 
         if success:
             green_color = "\033[32m"
@@ -650,7 +653,7 @@ class PioCompiler(Compiler):
 
         return SketchResult(
             success=success,
-            output="fbuild compilation",
+            output=result.output or "fbuild compilation",
             build_dir=self.build_dir,
             example=example,
         )

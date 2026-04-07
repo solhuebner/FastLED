@@ -1372,7 +1372,9 @@ def main() -> int:
         if use_fbuild:
             from ci.util.fbuild_runner import run_fbuild_compile
 
-            if not run_fbuild_compile(build_dir, args.environment, args.verbose):
+            if not run_fbuild_compile(
+                build_dir, args.environment, args.verbose
+            ).success:
                 return 1
         else:
             if not run_compile(build_dir, args.environment, args.verbose):

@@ -26,10 +26,20 @@ from __future__ import annotations
 import io
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
 
 from fbuild import Daemon, connect_daemon
+
+
+@dataclass
+class FbuildCommandResult:
+    """Result for an fbuild CLI invocation."""
+
+    success: bool
+    output: str
+    returncode: int | None = None
 
 
 def ensure_fbuild_daemon() -> None:
@@ -54,7 +64,7 @@ def run_fbuild_compile(
     timeout: float = 1800,
     quiet: bool = False,
     log_file: IO[str] | None = None,
-) -> bool:
+) -> FbuildCommandResult:
     """Compile the project using fbuild CLI subprocess.
 
     Uses ``fbuild build`` as a subprocess so that Ctrl+C terminates it
@@ -70,7 +80,7 @@ def run_fbuild_compile(
         log_file: File to redirect verbose output to in quiet mode
 
     Returns:
-        True if compilation succeeded, False otherwise
+        Result containing success flag, return code, and captured output
     """
     import shutil
     import subprocess
@@ -87,8 +97,9 @@ def run_fbuild_compile(
 
     fbuild_exe = shutil.which("fbuild")
     if fbuild_exe is None:
-        print("BUILD FAIL fbuild not found on PATH")
-        return False
+        message = "BUILD FAIL fbuild not found on PATH"
+        print(message, file=out)
+        return FbuildCommandResult(success=False, output=message)
 
     cmd: list[str] = [
         fbuild_exe,
@@ -105,21 +116,23 @@ def run_fbuild_compile(
     print(f"Running: {subprocess.list2cmdline(cmd)}", file=out)
     print(file=out)
 
+    def _echo_line(line: str) -> None:
+        print(line, file=out)
+
     t0 = time.monotonic()
     try:
-        if quiet:
-            result = RunningProcess.run(
-                cmd,
-                timeout=timeout,
-                stdout=log_file if log_file else subprocess.DEVNULL,
-                stderr=subprocess.STDOUT if log_file else subprocess.DEVNULL,
-            )
-        else:
-            result = RunningProcess.run(
-                cmd,
-                timeout=timeout,
-            )
-        success = result.returncode == 0
+        process = RunningProcess(
+            cmd,
+            timeout=int(timeout),
+            auto_run=False,
+            capture=True,
+        )
+        process.start()
+        returncode = process.wait(
+            echo=_echo_line if (not quiet or log_file is not None) else False
+        )
+        output = process.stdout
+        success = returncode == 0
     except KeyboardInterrupt as ki:
         from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
@@ -128,12 +141,13 @@ def run_fbuild_compile(
         raise
     except subprocess.TimeoutExpired:
         elapsed = time.monotonic() - t0
-        print(f"BUILD FAIL timeout after {elapsed:.1f}s")
-        return False
+        message = f"BUILD FAIL timeout after {elapsed:.1f}s"
+        print(message, file=out)
+        return FbuildCommandResult(success=False, output=message)
     except Exception as e:
-        elapsed = time.monotonic() - t0
-        print(f"BUILD FAIL {e}")
-        return False
+        message = f"BUILD FAIL {e}"
+        print(message, file=out)
+        return FbuildCommandResult(success=False, output=message)
 
     elapsed = time.monotonic() - t0
     if quiet:
@@ -145,7 +159,11 @@ def run_fbuild_compile(
         else:
             print(f"\n❌ Compilation failed (fbuild) [{elapsed:.1f}s]\n")
 
-    return success
+    return FbuildCommandResult(
+        success=success,
+        output=output,
+        returncode=returncode,
+    )
 
 
 def run_fbuild_upload(
