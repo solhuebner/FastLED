@@ -6,16 +6,16 @@
 # Supported platforms (fbuild orchestrator must exist):
 #   - atmelavr  -> AvrOrchestrator  (avr-gcc with -mmcu=)
 #   - espressif32 (pioarduino) -> Esp32Orchestrator (metadata-driven toolchain)
-#   - teensy    -> TeensyOrchestrator (arm-none-eabi-gcc)
+#   - teensy    -> TeensyOrchestrator (arm-none-eabi-gcc, Cortex-M7 only)
 #
 # NOT supported by fbuild (must stay on PlatformIO):
-#   - atmelmegaavr boards (ATtiny1604, ATtiny1616, nano_every) -- orchestrator not implemented
-#   - Teensy boards -- lib/ discovery fails + command-line quoting broken on Windows
-#   - atmega8a -- MiniCore framework: core path + board name mapping broken
-#   - Specialized ESP32 variants (qemu, idf33, idf44, i2s, rmt_51) -- custom IDF/driver configs
+#   - atmelmegaavr boards (ATtiny1604, ATtiny1616, nano_every) -- platform not recognized
+#   - esp32s2, esp32h2
+#   - Teensy 3.x/LC (teensy30..36, teensylc)
+#   - Specialized ESP32 variants (qemu, idf33, idf44, i2s)
 #   - uno_r4_wifi -- uses renesas-ra platform, no fbuild orchestrator
-#   - esp8266 -- no orchestrator
-#   - STM32, RP2040/RP2350, NRF52, Apollo3, SAM/SAMD, MGM240 -- no orchestrators
+#   - ESP32 boards (Windows)
+#   - teensy40, teensy41
 FBUILD_BOARDS: frozenset[str] = frozenset(
     {
         # AVR (atmelavr)
@@ -25,16 +25,16 @@ FBUILD_BOARDS: frozenset[str] = frozenset(
         "attiny4313",
         "leonardo",
         # ESP32 (pioarduino espressif32)
-        "esp32dev",
-        "esp32s3",
-        "esp32c3",
-        "esp32c6",
-        "esp32c2",
-        "esp32c5",
-        "esp32p4",
-        "esp32s2",
-        "esp32h2",
-        "upesy_wroom",
-        "seeed_xiao_esp32s3",
+        # "esp32dev",
+        # "esp32s3",
+        # "esp32c3",
+        # "esp32c6",
+        # "esp32c2",
+        # "esp32c5",
+        # "esp32p4",
+        # "esp32s2",
+        # "esp32h2",
+        # "upesy_wroom",
+        # "seeed_xiao_esp32s3",
     }
 )
