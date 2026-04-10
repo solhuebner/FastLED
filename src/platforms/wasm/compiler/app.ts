@@ -6,17 +6,17 @@
  * so that Vite can process and bundle it properly.
  */
 
-// Three.js imports — Vite bundles these from npm package
-import * as THREE from 'three';
-import Stats from 'three/examples/jsm/libs/stats.module.js';
-import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+// Three.js imports are vendored locally so the frontend can build without npm.
+import * as THREE from './vendor/three/build/three.module.js';
+import Stats from './vendor/three/examples/jsm/libs/stats.module.js';
+import { GUI } from './vendor/three/examples/jsm/libs/lil-gui.module.min.js';
+import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from './vendor/three/examples/jsm/loaders/GLTFLoader.js';
+import { EffectComposer } from './vendor/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from './vendor/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from './vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from './vendor/three/examples/jsm/postprocessing/OutputPass.js';
+import * as BufferGeometryUtils from './vendor/three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Make Three.js modules available globally for the worker and other modules
 window.threeJsModules = {

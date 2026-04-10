@@ -211,7 +211,7 @@ export class FastLEDWorkerManager {
       // Worker constructor for Vite to detect and bundle it correctly.
       console.log('🔧 createWorker: Creating Worker instance...');
       this.worker = new Worker(
-        new URL('./fastled_background_worker.ts', import.meta.url),
+        new URL('./fastled_background_worker.js', import.meta.url),
         { type: 'module', name: 'fastled-background-worker' }
       );
       console.log('🔧 createWorker: Worker instance created');

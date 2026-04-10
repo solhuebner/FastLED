@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from ci.lint_cpp.arduino_macro_usage_checker import ArduinoMacroUsageChecker
+from ci.lint_cpp.asm_js_location_checker import AsmJsLocationChecker
 from ci.lint_cpp.attribute_checker import AttributeChecker
 from ci.lint_cpp.banned_define_checker import BannedDefineChecker
 from ci.lint_cpp.banned_headers_checker import (
@@ -177,6 +178,7 @@ def create_checkers(
         PlatformTrampolineChecker(),  # Enforce trampoline architecture in src/fl/** and root src/
         WeakAttributeChecker(),
         AttributeChecker(),  # Checks all C++ standard attributes (replaces MaybeUnusedChecker)
+        AsmJsLocationChecker(),  # Checks EM_JS / EM_ASYNC_JS / EM_ASM live only in *.js.cpp.hpp
         BannedMacrosChecker(),  # Checks for banned preprocessor macros like __has_include
         BuiltinMemcpyChecker(),  # Checks for raw __builtin_memcpy — use FL_BUILTIN_MEMCPY
         FlIsDefinedChecker(),
