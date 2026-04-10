@@ -16,6 +16,7 @@ if sys.platform == "win32":
 import threading
 import time
 from pathlib import Path
+from typing import cast
 
 from running_process import RunningProcess
 
@@ -23,7 +24,7 @@ from ci.meson.build_config import perform_ninja_maintenance, setup_meson_build
 from ci.meson.compiler import check_meson_installed, get_meson_executable
 from ci.meson.test_execution import MesonTestResult
 from ci.util.build_lock import libfastled_build_lock
-from ci.util.output_formatter import TimestampFormatter, create_filtering_echo_callback
+from ci.util.output_formatter import TimestampFormatter
 from ci.util.timestamp_print import ts_print as _ts_print
 
 
@@ -164,9 +165,7 @@ def compile_examples(
             output_formatter=TimestampFormatter(),
         )
 
-        # Use filtering callback in verbose mode to suppress noise patterns
-        echo_callback = create_filtering_echo_callback() if verbose else False
-        returncode = proc.wait(echo=echo_callback)
+        returncode = cast(int, proc.wait(echo=verbose))
 
         # Stop heartbeat before reporting result
         heartbeat.stop()
@@ -191,7 +190,7 @@ def compile_examples(
                 # Note: proc.stdout may have timestamps (e.g., "7.59 FAILED: ...")
                 # and [code=N] prefixes, so use "FAILED:" in line, not startswith
                 failures: dict[str, list[str]] = {}
-                lines = proc.stdout.splitlines()
+                lines = str(proc.stdout).splitlines()
                 current_target: str | None = None
                 current_lines: list[str] = []
                 for line in lines:
@@ -230,7 +229,7 @@ def compile_examples(
                     # Couldn't parse per-target; write full output
                     log_path = log_failures / "compile_compile.log"
                     with open(log_path, "w", encoding="utf-8", errors="replace") as f:
-                        f.write(proc.stdout)
+                        f.write(str(proc.stdout))
 
             return False
 
@@ -316,9 +315,7 @@ def run_examples(
             output_formatter=TimestampFormatter(),
         )
 
-        # Use filtering callback in verbose mode to suppress noise patterns
-        echo_callback = create_filtering_echo_callback() if verbose else False
-        returncode = proc.wait(echo=echo_callback)
+        returncode = cast(int, proc.wait(echo=verbose))
 
         # Stop heartbeat before reporting result
         heartbeat.stop()

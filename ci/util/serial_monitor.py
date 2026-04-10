@@ -29,8 +29,7 @@ from pathlib import Path
 
 import serial
 from colorama import Fore, Style
-from running_process import RunningProcess
-from running_process.process_output_reader import EndOfStream
+from running_process import EndOfStream, RunningProcess
 
 from ci.compiler.build_utils import get_utf8_env
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
@@ -469,7 +468,7 @@ class PioDeviceMonitorHandler:
 
                         # Dispatch to all handlers
                         for handler in self.mHandlers:
-                            if not handler.handle_line(line):
+                            if not handler.handle_line(str(line)):
                                 # Handler requested stop
                                 should_continue = False
                                 proc.terminate()

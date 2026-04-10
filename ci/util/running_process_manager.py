@@ -52,11 +52,9 @@ class RunningProcessManager:
                 pid = None
 
             start = p.start_time
-            last_out = p.time_last_stdout_line()
             duration_str = f"{(now - start):.1f}s" if start is not None else "?"
-            since_out_str = (
-                f"{(now - last_out):.1f}s" if last_out is not None else "no-output"
-            )
+            has_output = bool(p.stdout) if p.finished or p.is_running() else False
+            since_out_str = "has-output" if has_output else "no-output"
 
             print(
                 f"  {idx}. cmd={p.command} pid={pid} duration={duration_str} last_output={since_out_str}"

@@ -18,8 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from running_process import RunningProcess
-from running_process.process_output_reader import EndOfStream
+from running_process import EndOfStream, RunningProcess
 
 from ci.util.deadlock_detector import handle_hung_test
 from ci.util.docker_helper import attempt_start_docker

@@ -84,7 +84,7 @@ from typing import Any
 
 from colorama import Fore, Style, init
 from fbuild.api import SerialMonitor
-from running_process.process_output_reader import EndOfStream
+from running_process import EndOfStream
 
 from ci.compiler.build_utils import get_utf8_env
 from ci.util.crash_trace_decoder import CrashTraceDecoder

@@ -16,6 +16,7 @@ import hashlib
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from ci.docker_utils.container_db import (
     ContainerDatabase,
@@ -444,7 +445,7 @@ def run_docker_tests(args: TestArgs) -> int:
 
         cmd = docker_base_args + [bash_script]
         proc = RunningProcess(cmd, auto_run=True)
-        return proc.wait(echo=True, timeout=timeout)
+        return cast(int, proc.wait(echo=True, timeout=timeout))
 
     try:
         rc = _run_docker_step(

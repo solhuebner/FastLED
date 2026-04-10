@@ -1305,9 +1305,11 @@ class ProcessStuckMonitor:
                     return
 
                 # Check if we have recent stdout activity
-                stdout_time = process.time_last_stdout_line()
-                if stdout_time is not None:
-                    last_activity_time = stdout_time
+                if process.has_pending_output():
+                    # Drain pending output to detect ongoing activity
+                    while process.has_pending_output():
+                        process.get_next_line_non_blocking()
+                    last_activity_time = time.time()
 
                 # Check if process is stuck
                 current_time = time.time()

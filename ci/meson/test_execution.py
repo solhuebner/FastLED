@@ -5,7 +5,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -16,7 +16,7 @@ from ci.meson.output import (
     print_success,
 )
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
-from ci.util.output_formatter import TimestampFormatter, create_filtering_echo_callback
+from ci.util.output_formatter import TimestampFormatter
 from ci.util.timestamp_print import ts_print as _ts_print
 
 
@@ -129,13 +129,12 @@ def run_meson_test(
 
         if verbose:
             # Use filtering callback in verbose mode to suppress noise patterns
-            echo_callback = create_filtering_echo_callback()
-            returncode = proc.wait(echo=echo_callback)
+            returncode = cast(int, proc.wait(echo=True))
 
             # Parse failed test names from verbose output
             if returncode != 0:
                 test_fail_pattern = re.compile(r"(\S+:\S+)\s+FAIL")
-                for match in test_fail_pattern.finditer(proc.stdout):
+                for match in test_fail_pattern.finditer(str(proc.stdout)):
                     failed_test_names.add(match.group(1))
                 if test_name and not failed_test_names:
                     if ":" not in test_name:
@@ -205,7 +204,7 @@ def run_meson_test(
                 # Parse the meson output to find which tests failed
                 # Pattern matches: "fastled:fl_control_remote FAIL"
                 test_fail_pattern = re.compile(r"(\S+:\S+)\s+FAIL")
-                for match in test_fail_pattern.finditer(proc.stdout):
+                for match in test_fail_pattern.finditer(str(proc.stdout)):
                     failed_test_names.add(match.group(1))
 
                 # Also check if we're running a specific test that failed

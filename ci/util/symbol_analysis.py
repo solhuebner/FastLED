@@ -118,12 +118,12 @@ def run_command(cmd: str) -> str:
     try:
         proc = RunningProcess(cmd, shell=True, auto_run=True, timeout=30)
         output = ""
-        from running_process.process_output_reader import EndOfStream
+        from running_process import EndOfStream
 
         while line := proc.get_next_line(timeout=30):
             if isinstance(line, EndOfStream):
                 break
-            output += line
+            output += str(line)
         exit_code = proc.wait()
         if exit_code != 0:
             print(f"Error running command: {cmd}")
@@ -149,12 +149,12 @@ def demangle_symbol(mangled_name: str, cppfilt_path: str) -> str:
         cmd = f'echo "{mangled_name}" | "{cppfilt_path}"'
         proc = RunningProcess(cmd, shell=True, auto_run=True, timeout=10)
         output = ""
-        from running_process.process_output_reader import EndOfStream
+        from running_process import EndOfStream
 
         while line := proc.get_next_line(timeout=10):
             if isinstance(line, EndOfStream):
                 break
-            output += line
+            output += str(line)
         exit_code = proc.wait()
         demangled = output.strip()
         # If demangling failed, c++filt returns the original name

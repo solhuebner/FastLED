@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from running_process import RunningProcess
 
@@ -124,7 +124,7 @@ def run_docker_command_streaming(cmd: list[str]) -> int:
         for line in it:
             print(line)
 
-    returncode = proc.wait()
+    returncode = cast(int, proc.wait())
     if returncode != 0:
         raise subprocess.CalledProcessError(returncode, cmd)
     return returncode
@@ -140,7 +140,7 @@ def run_docker_command_no_fail(cmd: list[str]) -> int:
         for line in it:
             print(line)
 
-    return proc.wait()
+    return cast(int, proc.wait())
 
 
 class DockerQEMURunner:
@@ -366,7 +366,7 @@ class DockerQEMURunner:
             for line in it:
                 print(line)
 
-        returncode = proc.wait()
+        returncode = cast(int, proc.wait())
 
         if returncode == 0 and progress:
             print()

@@ -4,8 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
-from running_process import RunningProcess
-from running_process.process_output_reader import EndOfStream
+from running_process import EndOfStream, RunningProcess
 
 from ci.compiler.build_utils import get_utf8_env
 from ci.util.create_build_dir import insert_tool_aliases
@@ -66,12 +65,13 @@ def generate_build_info_json_from_existing_build(
         while line := metadata_proc.get_next_line(timeout=900):
             if isinstance(line, EndOfStream):
                 break
-            metadata_lines.append(line)
+            line_str = str(line)
+            metadata_lines.append(line_str)
             # Show progress for library resolution operations (not JSON output)
             # JSON output will be a single line starting with '{'
-            if not line.strip().startswith("{"):
+            if not line_str.strip().startswith("{"):
                 # This is a progress message from PlatformIO
-                stripped = line.strip()
+                stripped = line_str.strip()
                 if any(
                     keyword in stripped
                     for keyword in [

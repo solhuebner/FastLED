@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -54,7 +54,7 @@ class DockerManager:
             import re
             import time
 
-            from running_process.process_output_reader import EndOfStream
+            from running_process import EndOfStream
 
             proc = RunningProcess(full_command, env=env, auto_run=True)
             timeout_occurred = False
@@ -91,7 +91,7 @@ class DockerManager:
                             break
 
                         # Process the line
-                        line: str = result
+                        line: str = str(result)
                         print(line)
 
                         # Write to output file if specified
@@ -129,11 +129,11 @@ class DockerManager:
                             auto_run=True,
                             timeout=10,
                         )
-                        stop_returncode = stop_proc_obj.wait()
+                        stop_returncode = cast(int, stop_proc_obj.wait())
                         stop_proc = subprocess.CompletedProcess(
                             args=["docker", "stop", "--time=1", container_name],
                             returncode=stop_returncode,
-                            stdout=stop_proc_obj.stdout,
+                            stdout=str(stop_proc_obj.stdout),
                             stderr=None,
                         )
                         if stop_proc.returncode != 0:
@@ -148,7 +148,9 @@ class DockerManager:
 
                 # Wait for process to complete (with short timeout if we stopped the container)
                 try:
-                    returncode = proc.wait(timeout=10 if timeout_occurred else None)
+                    returncode = cast(
+                        int, proc.wait(timeout=10 if timeout_occurred else None)
+                    )
                 except KeyboardInterrupt as ki:
                     handle_keyboard_interrupt(ki)
                     raise
@@ -174,7 +176,7 @@ class DockerManager:
                 raise
             except Exception as e:
                 print(f"Error during streaming: {e}")
-                returncode = proc.wait() if hasattr(proc, "wait") else 1
+                returncode = cast(int, proc.wait()) if hasattr(proc, "wait") else 1
                 return subprocess.CompletedProcess(
                     args=full_command, returncode=returncode, stdout="", stderr=str(e)
                 )
@@ -190,11 +192,11 @@ class DockerManager:
                 auto_run=True,
                 timeout=timeout,
             )
-            returncode = proc.wait()
+            returncode = cast(int, proc.wait())
             result = subprocess.CompletedProcess(
                 args=full_command,
                 returncode=returncode,
-                stdout=proc.stdout,
+                stdout=str(proc.stdout),
                 stderr=None,
             )
             if check and result.returncode != 0:

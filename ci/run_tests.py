@@ -307,7 +307,7 @@ def run_test(
         process.wait()
         return_code = process.poll()
         success = return_code == 0
-        output = process.stdout
+        output = str(process.stdout)
 
         # Add detailed crash analysis for failed tests
         if not success and return_code is not None:

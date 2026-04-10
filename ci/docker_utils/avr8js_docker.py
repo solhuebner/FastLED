@@ -161,7 +161,8 @@ class DockerAVR8jsRunner:
                 timeout=timeout + 10,  # Add buffer to Docker timeout
             )
 
-            # Combine stdout (stderr merged by RunningProcess.run)
+            # Preserve legacy combined output by default; callers can request
+            # split stderr explicitly with stderr=subprocess.PIPE when needed.
             output = result.stdout or ""
 
             print(f"{'-' * 70}")

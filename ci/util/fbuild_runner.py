@@ -28,7 +28,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, Any, cast
 
 from fbuild import Daemon, connect_daemon
 
@@ -116,9 +116,6 @@ def run_fbuild_compile(
     print(f"Running: {subprocess.list2cmdline(cmd)}", file=out)
     print(file=out)
 
-    def _echo_line(line: str) -> None:
-        print(line, file=out)
-
     t0 = time.monotonic()
     try:
         process = RunningProcess(
@@ -128,10 +125,10 @@ def run_fbuild_compile(
             capture=True,
         )
         process.start()
-        returncode = process.wait(
-            echo=_echo_line if (not quiet or log_file is not None) else False
+        returncode = cast(
+            int, process.wait(echo=bool(not quiet or log_file is not None))
         )
-        output = process.stdout
+        output = str(process.stdout)
         success = returncode == 0
     except KeyboardInterrupt as ki:
         from ci.util.global_interrupt_handler import handle_keyboard_interrupt

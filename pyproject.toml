@@ -35,14 +35,13 @@ dependencies = [
     "emoji>=2.14.1",
     "pydantic[email]>=2.0.0",
     "dirsync>=2.2.6",
-
     "esptool>=5.0.2",
     "docker>=7.0.0",
     "pillow>=11.3.0",
     "ffmpeg-python>=0.2.0",
     "static-ffmpeg>=2.7",
     "fastled>=2.0.5",
-    "running-process>=1.1.6",
+    "running-process>=1.1.6,<3.0.0",
     "nodejs-wheel>=22.0.0",
     "daemoniker>=0.2.3",
     "colorama>=0.4.6",
@@ -201,6 +200,9 @@ markers = [
     "serial: marks tests as requiring serial execution (no parallel execution)",
     "slow: marks tests as slow (can be skipped with -m 'not slow' for faster test runs)",
 ]
+
+[tool.uv.sources]
+running-process = { path = "../running-process", editable = true }
 
 [[tool.pyright.executionEnvironments]]
 root = "."

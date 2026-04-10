@@ -7,7 +7,7 @@ from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -403,7 +403,7 @@ def compile_meson(
                 # Echo the (possibly rewritten) line (only in verbose mode)
                 _ts_print(display_line)
 
-        returncode = proc.wait()
+        returncode = cast(int, proc.wait())
 
         # Write standardized footer to error log
         stderr_tee.write_footer(returncode)
@@ -425,7 +425,7 @@ def compile_meson(
         # Check for Meson version incompatibility
         # This appears as "Build directory has been generated with Meson version X.Y.Z, which is incompatible with the current version A.B.C"
         # When detected, suggest reconfiguration (setup_meson_build handles auto-healing)
-        output = proc.stdout  # RunningProcess combines stdout and stderr
+        output = str(proc.stdout)  # RunningProcess combines stdout and stderr
         if (
             "build directory has been generated with meson version" in output.lower()
             and "incompatible" in output.lower()

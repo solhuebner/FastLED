@@ -21,8 +21,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Optional
 
-from running_process import RunningProcess
-from running_process.process_output_reader import EndOfStream
+from running_process import EndOfStream, RunningProcess
 
 from ci.boards import Board, create_board
 
@@ -550,7 +549,7 @@ class PioCompiler(Compiler):
             running_process.wait()
 
             success = running_process.returncode == 0
-            output = running_process.stdout
+            output = str(running_process.stdout)
 
             # Check for PackageException in output
             has_package_exception, package_info = detect_package_exception_in_output(
@@ -851,7 +850,7 @@ class PioCompiler(Compiler):
 
             # Check if upload was successful
             upload_success = running_process.returncode == 0
-            upload_output = running_process.stdout
+            upload_output = str(running_process.stdout)
 
             if not upload_success:
                 return SketchResult(
@@ -1221,7 +1220,7 @@ class PioCompiler(Compiler):
             while line := merge_proc.get_next_line(timeout=300):
                 if isinstance(line, EndOfStream):
                     break
-                output += line
+                output += str(line)
             exit_code = merge_proc.wait()
             if exit_code != 0:
                 return SketchResult(

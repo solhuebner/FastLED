@@ -8,7 +8,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 from running_process import RunningProcess
 
@@ -368,7 +368,7 @@ def stream_compile_only(
                                 on_test_compiled(test_path)
 
             # Check compilation result
-            returncode = proc.wait()
+            returncode = cast(int, proc.wait())
 
             # Write standardized footer to error log
             stderr_tee.write_footer(returncode)
@@ -387,7 +387,7 @@ def stream_compile_only(
                     f.write("--- Error Context ---\n\n")
                     f.write("\n".join(last_error_lines))
 
-            compilation_output = proc.stdout
+            compilation_output = str(proc.stdout)
             if returncode != 0:
                 phase_tracker.set_phase("LINK", target=target, path="streaming")
                 _ts_print(

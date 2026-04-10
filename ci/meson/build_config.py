@@ -13,7 +13,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -1831,8 +1831,8 @@ endian = 'little'
             output_formatter=TimestampFormatter(),
         )
 
-        returncode = proc.wait(echo=True)
-        return returncode, proc.stdout
+        returncode = cast(int, proc.wait(echo=True))
+        return returncode, str(proc.stdout)
 
     def _clear_stale_caches() -> None:
         """Clear stale test metadata caches that may reference deleted files."""

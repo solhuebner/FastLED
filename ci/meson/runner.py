@@ -12,7 +12,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -39,7 +39,7 @@ from ci.meson.test_discovery import get_fuzzy_test_candidates
 from ci.meson.test_execution import MesonTestResult, run_meson_test
 from ci.util.build_lock import libfastled_build_lock
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
-from ci.util.output_formatter import TimestampFormatter, create_filtering_echo_callback
+from ci.util.output_formatter import TimestampFormatter
 from ci.util.timestamp_print import ts_print as _ts_print
 
 
@@ -761,7 +761,7 @@ def run_meson_build_and_test(
                         finally:
                             with _active_procs_lock:
                                 _active_procs.discard(proc)
-                        captured = proc.stdout
+                        captured = str(proc.stdout)
 
                         # Enhanced error detection for streaming tests
                         if returncode != 0:
@@ -1374,13 +1374,9 @@ def run_meson_build_and_test(
             # Profile tests always echo output (they produce benchmark reports)
             # Regular tests only echo in verbose mode
             is_profile_test = _artifact_path and "profile" in str(_artifact_path)
-            echo_callback = (
-                create_filtering_echo_callback()
-                if (verbose or is_profile_test)
-                else False
-            )
+            echo_callback = verbose or is_profile_test
             test_start = time.time()
-            returncode = proc.wait(echo=echo_callback)
+            returncode = cast(int, proc.wait(echo=bool(echo_callback)))
             test_duration = time.time() - test_start
             duration = time.time() - start_time
 
@@ -1410,13 +1406,13 @@ def run_meson_build_and_test(
                         f.write(f"# Exit code: {returncode}\n")
                         f.write(f"# Full test output below:\n\n")
                         f.write("--- Test Output ---\n\n")
-                        f.write(proc.stdout)
+                        f.write(str(proc.stdout))
 
                     print_error(f"[MESON] 📄 Full test output: {error_log_path}")
 
                     # Enhanced crash detection: Check if doctest actually ran
                     # Doctest prints patterns like "test cases:", "assertions:", "[doctest]"
-                    stdout_lower = proc.stdout.lower()
+                    stdout_lower = str(proc.stdout).lower()
                     has_doctest_output = any(
                         pattern in stdout_lower
                         for pattern in [
@@ -1455,7 +1451,7 @@ def run_meson_build_and_test(
                         # Filter stderr/stdout for error messages (case insensitive)
                         error_lines = [
                             line.strip()
-                            for line in proc.stdout.splitlines()
+                            for line in str(proc.stdout).splitlines()
                             if "error" in line.lower() and line.strip()
                         ]
 
@@ -1493,7 +1489,7 @@ def run_meson_build_and_test(
                 # Show test output for failures (even if not verbose)
                 if not verbose and proc.stdout:
                     print_error("[MESON] Test output:")
-                    for line in proc.stdout.splitlines()[-50:]:  # Last 50 lines
+                    for line in str(proc.stdout).splitlines()[-50:]:  # Last 50 lines
                         _ts_print(f"  {line}")
                 if _artifact_path is not None:
                     save_test_result_state(
@@ -1502,7 +1498,7 @@ def run_meson_build_and_test(
                 # Write test run failure log
                 if log_failures is not None and meson_test_name:
                     _write_failure_log(
-                        log_failures, meson_test_name, "run", proc.stdout
+                        log_failures, meson_test_name, "run", str(proc.stdout)
                     )
                 return MesonTestResult(
                     success=False,

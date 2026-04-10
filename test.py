@@ -510,12 +510,10 @@ def main() -> None:
                 python_process = create_python_test_process(
                     enable_stack_trace=False, run_slow=True
                 )
-                python_process.auto_run = False
 
                 examples_process = create_examples_test_process(
                     args, not args.no_stack_trace
                 )
-                examples_process.auto_run = False
 
                 # Now wait for discovery and display counts
                 _discovery_thread.join(timeout=15)

@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 
 from running_process import RunningProcess
 
@@ -38,6 +38,16 @@ from ci.util.test_runner import (
     _handle_stuck_processes,
     extract_error_snippet,
 )
+
+
+def _get_output_lines(proc: RunningProcess) -> list[str]:
+    """Convert process stdout to a list of lines for extract_error_snippet."""
+    output = proc.stdout
+    if isinstance(output, bytes):
+        output = output.decode("utf-8", errors="replace")
+    if not output:
+        return []
+    return output.splitlines()
 
 
 class ExecutionMode(Enum):
@@ -376,7 +386,7 @@ class RunningProcessGroup:
             failures: list[TestFailureInfo] = []
             for proc, exit_code in exit_failed_processes:
                 # Extract error snippet from process output
-                error_snippet = extract_error_snippet(proc.accumulated_output)
+                error_snippet = extract_error_snippet(_get_output_lines(proc))
 
                 failures.append(
                     TestFailureInfo(
@@ -472,9 +482,10 @@ class RunningProcessGroup:
         if cached:
             return cached
 
-        # Fall back to accumulated output
-        if process.accumulated_output:
-            last_line = process.accumulated_output[-1].strip()
+        # Fall back to stdout output
+        lines = _get_output_lines(process)
+        if lines:
+            last_line = lines[-1].strip()
             self._process_last_output[process] = last_line
             return last_line
 
@@ -486,8 +497,9 @@ class RunningProcessGroup:
 
     def _update_process_output(self, process: RunningProcess) -> None:
         """Update cached last output line for a process."""
-        if process.accumulated_output:
-            last_line = process.accumulated_output[-1].strip()
+        lines = _get_output_lines(process)
+        if lines:
+            last_line = lines[-1].strip()
             self._process_last_output[process] = last_line
 
     def _handle_stuck_processes(
@@ -511,7 +523,7 @@ class RunningProcessGroup:
         failures: list[TestFailureInfo] = []
 
         for proc, exit_code in exit_failed_processes:
-            error_snippet = extract_error_snippet(proc.accumulated_output)
+            error_snippet = extract_error_snippet(_get_output_lines(proc))
             failures.append(
                 TestFailureInfo(
                     test_name=_extract_test_name(proc.command),
@@ -564,7 +576,7 @@ class RunningProcessGroup:
             if proc.finished:
                 any_activity = True
                 # Get the exit code to check for failure
-                exit_code = proc.wait()
+                exit_code = cast(int, proc.wait())
 
                 # Process completed, remove from active list
                 active_processes.remove(proc)
@@ -627,7 +639,7 @@ class RunningProcessGroup:
                     process.start()
 
                 try:
-                    exit_code = process.wait()
+                    exit_code = cast(int, process.wait())
 
                     # Collect timing data
                     if process.duration is not None:
@@ -641,7 +653,7 @@ class RunningProcessGroup:
                     # Check for failure
                     if exit_code != 0:
                         error_snippet = extract_error_snippet(
-                            process.accumulated_output
+                            _get_output_lines(process)
                         )
                         failure = TestFailureInfo(
                             test_name=_extract_test_name(process.command),
@@ -703,7 +715,7 @@ class RunningProcessGroup:
                     process.start()
 
                 try:
-                    exit_code = process.wait()
+                    exit_code = cast(int, process.wait())
 
                     # Collect timing data
                     if process.duration is not None:
@@ -721,7 +733,7 @@ class RunningProcessGroup:
                     # Check for failure
                     if exit_code != 0:
                         error_snippet = extract_error_snippet(
-                            process.accumulated_output
+                            _get_output_lines(process)
                         )
                         failure = TestFailureInfo(
                             test_name=_extract_test_name(process.command),
