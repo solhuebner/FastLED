@@ -41,12 +41,12 @@ dependencies = [
     "ffmpeg-python>=0.2.0",
     "static-ffmpeg>=2.7",
     "fastled>=2.0.5",
-    "running-process>=3.0.6",
     "nodejs-wheel>=22.0.0",
     "daemoniker>=0.2.3",
     "colorama>=0.4.6",
     "ty>=0.0.15",
     "bleak>=0.22.3",
+    "running-process>=3.0.7",
 ]
 
 [build-system]
@@ -200,9 +200,6 @@ markers = [
     "serial: marks tests as requiring serial execution (no parallel execution)",
     "slow: marks tests as slow (can be skipped with -m 'not slow' for faster test runs)",
 ]
-
-[tool.uv.sources]
-running-process = { path = "../running-process", editable = true }
 
 [[tool.pyright.executionEnvironments]]
 root = "."
