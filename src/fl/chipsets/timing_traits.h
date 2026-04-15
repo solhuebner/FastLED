@@ -69,14 +69,16 @@ struct CustomTimingTraits {
 };
 
 // Conversion from FastLED timings to the type found in datasheets.
-inline void convert_fastled_timings_to_timedeltas(u16 T1, u16 T2,
-                                                  u16 T3, u16 *T0H,
-                                                  u16 *T0L, u16 *T1H,
-                                                  u16 *T1L) FL_NOEXCEPT {
-    *T0H = T1;
-    *T0L = T2 + T3;
-    *T1H = T1 + T2;
-    *T1L = T3;
+// Note: parameter names avoid T0H/T0L/T1H/T1L which are hardware register
+// macros on ESP8266 (defined in esp8266_peri.h).
+inline void convert_fastled_timings_to_timedeltas(u16 t1_in, u16 t2_in,
+                                                  u16 t3_in, u16 *out_t0h,
+                                                  u16 *out_t0l, u16 *out_t1h,
+                                                  u16 *out_t1l) FL_NOEXCEPT {
+    *out_t0h = t1_in;
+    *out_t0l = t2_in + t3_in;
+    *out_t1h = t1_in + t2_in;
+    *out_t1l = t3_in;
 }
 
 }  // namespace fl
