@@ -2,9 +2,9 @@
 
 #include "fl/stl/int.h"
 #include "fl/math/math.h"
-#include "fl/math/math.h"
 #include "fl/stl/compiler_control.h"
 #include "fl/stl/noexcept.h"
+#include "fl/stl/undef.h"  // IWYU pragma: keep — re-clean min/max macros polluted by platform headers
 
 
 FL_DISABLE_WARNING_PUSH
