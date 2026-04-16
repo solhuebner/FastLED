@@ -86,9 +86,9 @@ class TestDetermineStatus(unittest.TestCase):
             "project_owner_type": "organization",
             "project_number": 1,
             "status_field": "Status",
-            "status_todo": "Todo",
+            "status_todo": "Triage",
             "status_done": "Done",
-            "status_draft": "Draft",
+            "status_draft": "In Progress",
             "date_field": "",
             "event_name": "issues",
             "event_action": "opened",
@@ -102,45 +102,45 @@ class TestDetermineStatus(unittest.TestCase):
         config = self._make_config(event_action="closed")
         self.assertEqual(determine_status(config), "Done")
 
-    def test_opened_issue_returns_todo(self) -> None:
+    def test_opened_issue_returns_triage(self) -> None:
         config = self._make_config(event_name="issues", event_action="opened")
-        self.assertEqual(determine_status(config), "Todo")
+        self.assertEqual(determine_status(config), "Triage")
 
-    def test_opened_pr_returns_todo(self) -> None:
+    def test_opened_pr_returns_triage(self) -> None:
         config = self._make_config(
             event_name="pull_request_target", event_action="opened", is_draft=False
         )
-        self.assertEqual(determine_status(config), "Todo")
+        self.assertEqual(determine_status(config), "Triage")
 
-    def test_draft_pr_returns_draft(self) -> None:
+    def test_draft_pr_returns_in_progress(self) -> None:
         config = self._make_config(
             event_name="pull_request_target",
             event_action="opened",
             is_draft=True,
-            status_draft="Draft",
+            status_draft="In Progress",
         )
-        self.assertEqual(determine_status(config), "Draft")
+        self.assertEqual(determine_status(config), "In Progress")
 
-    def test_draft_pr_without_draft_status_returns_todo(self) -> None:
+    def test_draft_pr_without_draft_status_returns_triage(self) -> None:
         config = self._make_config(
             event_name="pull_request_target",
             event_action="opened",
             is_draft=True,
             status_draft="",
         )
-        self.assertEqual(determine_status(config), "Todo")
+        self.assertEqual(determine_status(config), "Triage")
 
-    def test_reopened_returns_todo(self) -> None:
+    def test_reopened_returns_triage(self) -> None:
         config = self._make_config(event_action="reopened")
-        self.assertEqual(determine_status(config), "Todo")
+        self.assertEqual(determine_status(config), "Triage")
 
-    def test_ready_for_review_returns_todo(self) -> None:
+    def test_ready_for_review_returns_triage(self) -> None:
         config = self._make_config(
             event_name="pull_request_target",
             event_action="ready_for_review",
             is_draft=False,
         )
-        self.assertEqual(determine_status(config), "Todo")
+        self.assertEqual(determine_status(config), "Triage")
 
 
 if __name__ == "__main__":

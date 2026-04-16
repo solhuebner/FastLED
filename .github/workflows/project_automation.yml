@@ -39,10 +39,10 @@ jobs:
           PROJECT_OWNER_TYPE: ${{ vars.GITHUB_PROJECT_OWNER_TYPE || 'organization' }}
           PROJECT_NUMBER: ${{ vars.GITHUB_PROJECT_NUMBER }}
           STATUS_FIELD: ${{ vars.GITHUB_PROJECT_STATUS_FIELD_NAME || 'Status' }}
-          STATUS_TODO: ${{ vars.GITHUB_PROJECT_STATUS_TODO || 'Todo' }}
+          STATUS_TODO: ${{ vars.GITHUB_PROJECT_STATUS_TODO || 'Triage' }}
           STATUS_DONE: ${{ vars.GITHUB_PROJECT_STATUS_DONE || 'Done' }}
-          STATUS_DRAFT: ${{ vars.GITHUB_PROJECT_STATUS_DRAFT || '' }}
-          DATE_FIELD: ${{ vars.GITHUB_PROJECT_DATE_FIELD_NAME || '' }}
+          STATUS_DRAFT: ${{ vars.GITHUB_PROJECT_STATUS_DRAFT || 'In Progress' }}
+          DATE_FIELD: ${{ vars.GITHUB_PROJECT_DATE_FIELD_NAME || 'Date posted' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
           ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
