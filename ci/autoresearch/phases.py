@@ -907,12 +907,11 @@ async def _run_schema_and_pin_setup(ctx: RunContext) -> int | None:
             print(f"\u26a0\ufe0f  Schema validation skipped: {e}")
 
     # Create serial interface
-    if not use_fbuild:
-        from ci.util.serial_interface import create_serial_interface
+    from ci.util.serial_interface import create_serial_interface
 
-        ctx.serial_iface = create_serial_interface(port=upload_port, use_pyserial=True)
-    else:
-        ctx.serial_iface = None
+    ctx.serial_iface = create_serial_interface(
+        port=upload_port, use_pyserial=not use_fbuild
+    )
 
     # Create crash trace decoder
     if final_environment:

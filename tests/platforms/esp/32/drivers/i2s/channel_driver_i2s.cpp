@@ -320,6 +320,438 @@ FL_TEST_CASE("ChannelEngineI2S - varying LED counts") {
     }
 }
 
+//=============================================================================
+// Stress Test Helpers
+//=============================================================================
+
+namespace {
+
+/// Different timing so we can test chipset-group splitting
+ChipsetTimingConfig getSK6812Timing() {
+    return ChipsetTimingConfig(300, 600, 900, 80, "SK6812");
+}
+
+/// Wait for driver to become READY; returns false on timeout
+bool waitReady(ChannelEngineI2S& driver, int maxIter = 5000) {
+    for (int i = 0; i < maxIter; i++) {
+        if (driver.poll() == IChannelDriver::DriverState::READY)
+            return true;
+        fl::this_thread::yield();
+    }
+    return false;
+}
+
+} // anonymous namespace
+
+//=============================================================================
+// Stress: Multi-lane with varying LED lengths
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - 4 lanes different lengths") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    driver.enqueue(createTestChannelData(1, 10));
+    driver.enqueue(createTestChannelData(2, 50));
+    driver.enqueue(createTestChannelData(3, 100));
+    driver.enqueue(createTestChannelData(4, 25));
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    FL_CHECK(mock.getTransmitCount() >= 1);
+    FL_CHECK(mock.getConfig().num_lanes == 4);
+}
+
+FL_TEST_CASE("StressI2S - 8 lanes ascending lengths") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    int lengths[] = {5, 15, 30, 60, 120, 200, 300, 500};
+    for (int i = 0; i < 8; i++) {
+        driver.enqueue(createTestChannelData(i + 1, lengths[i]));
+    }
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    FL_CHECK(mock.getTransmitCount() >= 1);
+    FL_CHECK(mock.getConfig().num_lanes == 8);
+}
+
+//=============================================================================
+// Stress: Extreme length disparity
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - extreme disparity 1 vs 1000 LEDs") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    driver.enqueue(createTestChannelData(1, 1));
+    driver.enqueue(createTestChannelData(2, 1000));
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    FL_CHECK(mock.getTransmitCount() >= 1);
+
+    // Transmitted buffer must be large enough for 1000-LED lane
+    const auto& history = mock.getTransmitHistory();
+    FL_REQUIRE(history.size() >= 1);
+    // Wave8: 1000 LEDs * 3 bytes * 64 words * 2 bytes/word + reset
+    size_t min_expected = 1000 * 3 * 64 * sizeof(uint16_t);
+    FL_CHECK(history[0].size_bytes >= min_expected);
+}
+
+FL_TEST_CASE("StressI2S - extreme disparity 1 vs 500 three lanes") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    driver.enqueue(createTestChannelData(1, 1));
+    driver.enqueue(createTestChannelData(2, 500));
+    driver.enqueue(createTestChannelData(3, 3));
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 1);
+}
+
+//=============================================================================
+// Stress: Max lane count (16)
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - 16 lanes varying lengths") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int i = 0; i < 16; i++) {
+        driver.enqueue(createTestChannelData(i + 1, (i + 1) * 10));
+    }
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    FL_CHECK(mock.getTransmitCount() >= 1);
+    FL_CHECK(mock.getConfig().num_lanes == 16);
+}
+
+FL_TEST_CASE("StressI2S - 16 lanes all 1 LED") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int i = 0; i < 16; i++) {
+        driver.enqueue(createTestChannelData(i + 1, 1));
+    }
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getConfig().num_lanes == 16);
+}
+
+FL_TEST_CASE("StressI2S - 16 lanes all 300 LEDs") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int i = 0; i < 16; i++) {
+        driver.enqueue(createTestChannelData(i + 1, 300));
+    }
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 1);
+}
+
+//=============================================================================
+// Stress: Rapid consecutive show cycles with geometry changes
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - 20 cycles changing lane count") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int cycle = 0; cycle < 20; cycle++) {
+        int numLanes = (cycle % 8) + 1;
+        int numLeds = 10 + cycle * 5;
+
+        for (int lane = 0; lane < numLanes; lane++) {
+            driver.enqueue(createTestChannelData(lane + 1, numLeds));
+        }
+        driver.show();
+        FL_REQUIRE(waitReady(driver));
+    }
+
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 20);
+}
+
+FL_TEST_CASE("StressI2S - 20 cycles changing LED counts per lane") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int cycle = 0; cycle < 20; cycle++) {
+        driver.enqueue(createTestChannelData(1, 10 + cycle));
+        driver.enqueue(createTestChannelData(2, 50 + cycle * 3));
+        driver.enqueue(createTestChannelData(3, 5 + cycle * 2));
+        driver.enqueue(createTestChannelData(4, 100 - cycle));
+        driver.show();
+        FL_REQUIRE(waitReady(driver));
+    }
+
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 20);
+}
+
+//=============================================================================
+// Stress: Buffer reallocation (lane count + LED count changes)
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - realloc small to large to small") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    // Small: 1 lane, 5 LEDs
+    driver.enqueue(createTestChannelData(1, 5));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    // Large: 8 lanes, 500 LEDs
+    for (int i = 0; i < 8; i++) {
+        driver.enqueue(createTestChannelData(i + 1, 500));
+    }
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    // Small again: 2 lanes, 10 LEDs
+    driver.enqueue(createTestChannelData(1, 10));
+    driver.enqueue(createTestChannelData(2, 10));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 3);
+}
+
+FL_TEST_CASE("StressI2S - realloc alternating sizes") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int cycle = 0; cycle < 10; cycle++) {
+        int numLeds = (cycle % 2 == 0) ? 10 : 500;
+        int numLanes = (cycle % 2 == 0) ? 2 : 8;
+
+        for (int lane = 0; lane < numLanes; lane++) {
+            driver.enqueue(createTestChannelData(lane + 1, numLeds));
+        }
+        driver.show();
+        FL_REQUIRE(waitReady(driver));
+    }
+
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 10);
+}
+
+//=============================================================================
+// Stress: Single lane at large LED counts
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - single lane 1000 LEDs") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    driver.enqueue(createTestChannelData(1, 1000));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 1);
+}
+
+FL_TEST_CASE("StressI2S - single lane 2000 LEDs") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    driver.enqueue(createTestChannelData(1, 2000));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 1);
+}
+
+//=============================================================================
+// Stress: Chipset group splitting (mixed timing configs)
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - two chipset timing groups") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    auto ws = getWS2812Timing();
+    auto sk = getSK6812Timing();
+
+    // WS2812 timing on lanes 1-2
+    driver.enqueue(ChannelData::create(1, ws, []{
+        fl::vector_psram<uint8_t> d; d.resize(50 * 3); return d;
+    }()));
+    driver.enqueue(ChannelData::create(2, ws, []{
+        fl::vector_psram<uint8_t> d; d.resize(100 * 3); return d;
+    }()));
+    // SK6812 timing on lanes 3-4
+    driver.enqueue(ChannelData::create(3, sk, []{
+        fl::vector_psram<uint8_t> d; d.resize(75 * 3); return d;
+    }()));
+    driver.enqueue(ChannelData::create(4, sk, []{
+        fl::vector_psram<uint8_t> d; d.resize(30 * 3); return d;
+    }()));
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    // Two groups → at least 2 transmissions (one per timing group)
+    FL_CHECK(mock.getTransmitCount() >= 2);
+}
+
+FL_TEST_CASE("StressI2S - three chipset timing groups sequential") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    ChipsetTimingConfig t1(350, 800, 450, 50, "T1");
+    ChipsetTimingConfig t2(300, 600, 900, 80, "T2");
+    ChipsetTimingConfig t3(400, 850, 400, 50, "T3");
+
+    driver.enqueue(ChannelData::create(1, t1, []{
+        fl::vector_psram<uint8_t> d; d.resize(100 * 3); return d;
+    }()));
+    driver.enqueue(ChannelData::create(2, t2, []{
+        fl::vector_psram<uint8_t> d; d.resize(200 * 3); return d;
+    }()));
+    driver.enqueue(ChannelData::create(3, t3, []{
+        fl::vector_psram<uint8_t> d; d.resize(150 * 3); return d;
+    }()));
+    driver.show();
+
+    FL_REQUIRE(waitReady(driver));
+
+    // Three different timings → 3 sequential transmissions
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 3);
+}
+
+//=============================================================================
+// Stress: Rapid frames with same geometry (steady-state)
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - 50 frames 4 lanes steady geometry") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    for (int frame = 0; frame < 50; frame++) {
+        driver.enqueue(createTestChannelData(1, 60));
+        driver.enqueue(createTestChannelData(2, 60));
+        driver.enqueue(createTestChannelData(3, 60));
+        driver.enqueue(createTestChannelData(4, 60));
+        driver.show();
+        FL_REQUIRE(waitReady(driver));
+    }
+
+    FL_CHECK(I2sLcdCamPeripheralMock::instance().getTransmitCount() >= 50);
+}
+
+//=============================================================================
+// Stress: Zero-length lane mixed with populated lanes
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - zero-length lane mixed with populated") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    // 0-LED channel has 0-byte data
+    driver.enqueue(createTestChannelData(1, 0));
+    driver.enqueue(createTestChannelData(2, 100));
+    driver.show();
+
+    // Should not crash; driver may skip or handle gracefully
+    waitReady(driver);
+}
+
+//=============================================================================
+// Stress: Transmit failure recovery with many lanes
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - failure recovery with 8 lanes") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+    mock.setTransmitFailure(true);
+
+    for (int i = 0; i < 8; i++) {
+        driver.enqueue(createTestChannelData(i + 1, 50 + i * 10));
+    }
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    // Recover
+    mock.setTransmitFailure(false);
+
+    for (int i = 0; i < 4; i++) {
+        driver.enqueue(createTestChannelData(i + 1, 30));
+    }
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    FL_CHECK(mock.getTransmitCount() >= 1);
+}
+
+//=============================================================================
+// Stress: Buffer size scales with max lane length
+//=============================================================================
+
+FL_TEST_CASE("StressI2S - buffer size scales with max lane") {
+    resetMockState();
+    auto peripheral = createMockPeripheral();
+    ChannelEngineI2S driver(peripheral);
+    auto& mock = I2sLcdCamPeripheralMock::instance();
+
+    // Frame 1: max lane is 50 LEDs
+    driver.enqueue(createTestChannelData(1, 10));
+    driver.enqueue(createTestChannelData(2, 50));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    const auto& h1 = mock.getTransmitHistory();
+    FL_REQUIRE(h1.size() >= 1);
+    size_t size1 = h1.back().size_bytes;
+
+    mock.clearTransmitHistory();
+
+    // Frame 2: max lane is 200 LEDs → buffer must grow
+    driver.enqueue(createTestChannelData(1, 10));
+    driver.enqueue(createTestChannelData(2, 200));
+    driver.show();
+    FL_REQUIRE(waitReady(driver));
+
+    const auto& h2 = mock.getTransmitHistory();
+    FL_REQUIRE(h2.size() >= 1);
+    size_t size2 = h2.back().size_bytes;
+
+    FL_CHECK(size2 > size1);
+}
+
 #endif // FASTLED_STUB_IMPL
 
 } // FL_TEST_FILE
