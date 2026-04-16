@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import _thread
 import asyncio
+import time
 import warnings
 from collections.abc import AsyncIterator
 from concurrent.futures import ThreadPoolExecutor
@@ -140,14 +141,25 @@ class FbuildSerialAdapter:
         queue: asyncio.Queue[str | None] = asyncio.Queue()
 
         def _producer() -> None:
+            # fbuild's native read_lines() returns the first batch of lines
+            # then exits (it does NOT keep reading until timeout). We must
+            # loop over multiple read_lines() calls to cover the full timeout.
+            deadline = time.monotonic() + timeout
             try:
-                for line in self._monitor.read_lines(timeout=timeout):
-                    loop.call_soon_threadsafe(queue.put_nowait, line)
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    for line in self._monitor.read_lines(timeout=remaining):
+                        loop.call_soon_threadsafe(queue.put_nowait, line)
             except KeyboardInterrupt:
                 _thread.interrupt_main()
                 raise
-            except Exception:
-                pass
+            except Exception as exc:
+                warnings.warn(
+                    f"FbuildSerialAdapter read_lines error: {exc}",
+                    stacklevel=2,
+                )
             finally:
                 loop.call_soon_threadsafe(queue.put_nowait, None)
 
