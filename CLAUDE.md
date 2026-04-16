@@ -40,7 +40,9 @@ See `agents/docs/build-system.md` for full command execution rules and forbidden
 ## Core Rules (ALL AGENTS)
 
 ### Git and Code Publishing
-- **NEVER run git commit or git push** — user controls all git operations
+- **Committing and pushing to feature branches is allowed** — including pushing a branch or PR for testing and merge
+- **NEVER commit or push directly to `master`/`main`** — always use a feature branch
+- **NEVER force-push** to shared branches (master/main, or any branch with an open PR others may be reviewing)
 
 ### Hook Error Policy
 - **ALWAYS stop and fix Write/Edit hook errors immediately** before writing the next file
