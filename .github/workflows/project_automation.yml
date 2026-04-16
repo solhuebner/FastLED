@@ -13,8 +13,8 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     if: >-
-      vars.GITHUB_PROJECT_NUMBER != '' &&
-      vars.GITHUB_PROJECT_OWNER != ''
+      vars.PROJECT_NUMBER != '' &&
+      vars.PROJECT_OWNER != ''
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,21 +28,21 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ vars.GITHUB_PROJECT_APP_ID }}
-          private-key: ${{ secrets.GITHUB_PROJECT_APP_PRIVATE_KEY }}
-          owner: ${{ vars.GITHUB_PROJECT_OWNER }}
+          app-id: ${{ vars.PROJECT_APP_ID }}
+          private-key: ${{ secrets.PROJECT_APP_PRIVATE_KEY }}
+          owner: ${{ vars.PROJECT_OWNER }}
 
       - name: Sync to project board
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PROJECT_OWNER: ${{ vars.GITHUB_PROJECT_OWNER }}
-          PROJECT_OWNER_TYPE: ${{ vars.GITHUB_PROJECT_OWNER_TYPE || 'organization' }}
-          PROJECT_NUMBER: ${{ vars.GITHUB_PROJECT_NUMBER }}
-          STATUS_FIELD: ${{ vars.GITHUB_PROJECT_STATUS_FIELD_NAME || 'Status' }}
-          STATUS_TODO: ${{ vars.GITHUB_PROJECT_STATUS_TODO || 'Triage' }}
-          STATUS_DONE: ${{ vars.GITHUB_PROJECT_STATUS_DONE || 'Done' }}
-          STATUS_DRAFT: ${{ vars.GITHUB_PROJECT_STATUS_DRAFT || 'In Progress' }}
-          DATE_FIELD: ${{ vars.GITHUB_PROJECT_DATE_FIELD_NAME || 'Date posted' }}
+          PROJECT_OWNER: ${{ vars.PROJECT_OWNER }}
+          PROJECT_OWNER_TYPE: ${{ vars.PROJECT_OWNER_TYPE || 'organization' }}
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          STATUS_FIELD: ${{ vars.PROJECT_STATUS_FIELD_NAME || 'Status' }}
+          STATUS_TODO: ${{ vars.PROJECT_STATUS_TODO || 'Triage' }}
+          STATUS_DONE: ${{ vars.PROJECT_STATUS_DONE || 'Done' }}
+          STATUS_DRAFT: ${{ vars.PROJECT_STATUS_DRAFT || 'In Progress' }}
+          DATE_FIELD: ${{ vars.PROJECT_DATE_FIELD_NAME || 'Date posted' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
           ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}

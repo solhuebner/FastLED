@@ -18,8 +18,23 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any
+
+from typeguard import typechecked
+
+VALID_OWNER_TYPES = {"organization", "user"}
 
 
+@typechecked
+@dataclass
+class FieldOption:
+    """Resolved field and option IDs for a single-select project field."""
+
+    field_id: str
+    option_id: str
+
+
+@typechecked
 @dataclass
 class Config:
     """Configuration parsed from environment variables."""
@@ -38,7 +53,7 @@ class Config:
     is_draft: bool
 
     @classmethod
-    def from_env(cls) -> Config:
+    def from_env(cls: type[Config]) -> Config:
         """Parse configuration from environment variables."""
         project_number_raw = os.environ.get("PROJECT_NUMBER", "")
         if not project_number_raw:
@@ -64,19 +79,18 @@ class Config:
         )
 
 
-def graphql(query: str, variables: dict | None = None) -> dict:
+def graphql(query: str, variables: dict[str, Any]) -> dict[str, Any]:
     """Execute a GitHub GraphQL query via the gh CLI."""
     cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
-    if variables:
-        for key, value in variables.items():
-            cmd.extend(["-F", f"{key}={value}"])
+    for key, value in variables.items():
+        cmd.extend(["-F", f"{key}={value}"])
 
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         print(f"GraphQL error (stderr): {result.stderr}", file=sys.stderr)
         raise SystemExit(f"GraphQL request failed: {result.returncode}")
 
-    data = json.loads(result.stdout)
+    data: dict[str, Any] = json.loads(result.stdout)
     if "errors" in data:
         print(
             f"GraphQL errors: {json.dumps(data['errors'], indent=2)}", file=sys.stderr
@@ -88,6 +102,11 @@ def graphql(query: str, variables: dict | None = None) -> dict:
 
 def find_project(owner: str, owner_type: str, number: int) -> str:
     """Look up a project by owner and number, return the project node ID."""
+    if owner_type not in VALID_OWNER_TYPES:
+        raise SystemExit(
+            f"PROJECT_OWNER_TYPE must be 'organization' or 'user', got '{owner_type}'"
+        )
+
     if owner_type == "organization":
         query = """
         query($owner: String!, $number: Int!) {
@@ -99,7 +118,12 @@ def find_project(owner: str, owner_type: str, number: int) -> str:
         }
         """
         data = graphql(query, {"owner": owner, "number": number})
-        return data["data"]["organization"]["projectV2"]["id"]
+        project = data["data"]["organization"]["projectV2"]
+        if not project:
+            raise SystemExit(
+                f"Project #{number} not found for organization '{owner}'"
+            )
+        return project["id"]
     else:
         query = """
         query($owner: String!, $number: Int!) {
@@ -111,7 +135,10 @@ def find_project(owner: str, owner_type: str, number: int) -> str:
         }
         """
         data = graphql(query, {"owner": owner, "number": number})
-        return data["data"]["user"]["projectV2"]["id"]
+        project = data["data"]["user"]["projectV2"]
+        if not project:
+            raise SystemExit(f"Project #{number} not found for user '{owner}'")
+        return project["id"]
 
 
 def add_item_to_project(project_id: str, content_id: str) -> str:
@@ -131,11 +158,8 @@ def add_item_to_project(project_id: str, content_id: str) -> str:
 
 def get_field_and_option(
     project_id: str, field_name: str, option_name: str
-) -> tuple[str, str]:
-    """Find a single-select field and a specific option by name.
-
-    Returns (field_id, option_id).
-    """
+) -> FieldOption:
+    """Find a single-select field and a specific option by name."""
     query = """
     query($projectId: ID!) {
       node(id: $projectId) {
@@ -157,20 +181,28 @@ def get_field_and_option(
     }
     """
     data = graphql(query, {"projectId": project_id})
-    fields = data["data"]["node"]["fields"]["nodes"]
+    fields: list[dict[str, Any]] = data["data"]["node"]["fields"]["nodes"]
 
     for field in fields:
         if field.get("name") == field_name:
             for option in field.get("options", []):
                 if option["name"] == option_name:
-                    return field["id"], option["id"]
-            available = [o["name"] for o in field.get("options", [])]
+                    return FieldOption(
+                        field_id=field["id"], option_id=option["id"]
+                    )
+            available: list[str] = []
+            for opt in field.get("options", []):
+                available.append(opt["name"])
             raise SystemExit(
                 f"Option '{option_name}' not found in field '{field_name}'. "
                 f"Available: {available}"
             )
 
-    available_fields = [f.get("name") for f in fields if f.get("name")]
+    available_fields: list[str] = []
+    for f in fields:
+        name = f.get("name")
+        if name:
+            available_fields.append(name)
     raise SystemExit(
         f"Field '{field_name}' not found. Available: {available_fields}"
     )
@@ -196,7 +228,7 @@ def get_date_field(project_id: str, field_name: str) -> str:
     }
     """
     data = graphql(query, {"projectId": project_id})
-    fields = data["data"]["node"]["fields"]["nodes"]
+    fields: list[dict[str, Any]] = data["data"]["node"]["fields"]["nodes"]
 
     for field in fields:
         if field.get("name") == field_name and field.get("dataType") == "DATE":
@@ -275,6 +307,7 @@ def determine_status(config: Config) -> str:
 
 
 def main() -> None:
+    """Entry point: parse config, sync item to project, set status and date."""
     config = Config.from_env()
 
     if not config.project_owner:
@@ -292,10 +325,10 @@ def main() -> None:
 
     status_name = determine_status(config)
     print(f"Setting status to: {status_name}")
-    field_id, option_id = get_field_and_option(
+    resolved = get_field_and_option(
         project_id, config.status_field, status_name
     )
-    update_single_select(project_id, item_id, field_id, option_id)
+    update_single_select(project_id, item_id, resolved.field_id, resolved.option_id)
     print("Status updated")
 
     if config.date_field and config.event_action in ("opened", "ready_for_review"):
