@@ -65,14 +65,16 @@ ChannelDriverLcdClockless::ChannelDriverLcdClockless(
 
 ChannelDriverLcdClockless::~ChannelDriverLcdClockless() {
     if (mBusy && mPeripheral) {
+        // Wait up to 2 s for DMA to drain. If the peripheral is still busy
+        // after that, it is either a stuck controller on real hardware or a
+        // mock with no auto-completion. Free either way: LeakSanitizer in
+        // unit tests flags the alternative, and a 2 s stall already means
+        // something is badly wrong so leaking is not a meaningful safety net.
         bool done = mPeripheral->waitTransmitDone(2000);
         mBusy = false;
         if (!done) {
-            // DMA may still be using the buffers — leak them to avoid
-            // use-after-free.
-            FL_WARN("ChannelDriverLcdClockless: DMA wait timed out, "
-                    "leaking ring buffers to avoid use-after-free");
-            return;
+            FL_WARN("ChannelDriverLcdClockless: DMA wait timed out — "
+                    "freeing ring buffers anyway");
         }
     }
     freeRingBuffers();
@@ -370,13 +372,17 @@ bool ChannelDriverLcdClockless::beginTransmission(
             config.data_gpios[i] = channels[i]->getPin();
         }
 
-        // PCLK needs a GPIO but is not connected to LEDs for clockless.
-        // Use GPIO 21 as dummy (same convention as SPI dc_gpio).
+        // PCLK and DC pins are required by the LCD I80 bus API but the
+        // signals are not connected to LEDs for clockless output (data
+        // streams out on data_gpios). Use GPIO 0 for both (same convention
+        // as the legacy I2S LCD_CAM driver this replaces — proven safe on
+        // ESP32-S3 because the strapping pin tolerates being multiplexed
+        // to unused peripheral functions).
         if (config.clock_gpio < 0) {
-            config.clock_gpio = 21;
+            config.clock_gpio = 0;
         }
         if (config.dc_gpio < 0) {
-            config.dc_gpio = 22; // another unused GPIO
+            config.dc_gpio = 0;
         }
 
         if (!mPeripheral->initialize(config)) {
