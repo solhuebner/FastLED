@@ -214,12 +214,17 @@ class FbuildSerialAdapter:
             yield item
 
     async def reset_device(self, board: str | None) -> bool:
-        """Reset device via fbuild daemon's reset endpoint."""
+        """Reset device via fbuild daemon's reset endpoint.
+
+        Uses wait_for_output=True to block until the device produces
+        serial output (rebooted and running), avoiding fixed sleep delays.
+        """
         if not hasattr(self._monitor, "reset_device"):
-            # Older fbuild version — fall back to pyserial
             return _pyserial_dtr_reset(self._monitor.port)
         try:
-            result = await self._run_in_thread(self._monitor.reset_device, board)
+            result = await self._run_in_thread(
+                self._monitor.reset_device, board, True, 5.0
+            )
             return bool(result)
         except Exception:
             return False
