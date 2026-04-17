@@ -1,14 +1,36 @@
 #pragma once
 
-// Three-tier memory classification:
-//   Low:  SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
-//         (AVR, ESP8266, Teensy LC/3.0/3.1/3.2, STM32F1, Renesas UNO)
+// Four-tier memory classification:
+//   Tiny: SKETCH_HAS_TINY_MEMORY=1, SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
+//         (classic ATtiny <=512B parts, ATtiny1604 1KB, select modern tinyAVR
+//          0/1-series parts with <=1KB SRAM — see FL_IS_AVR_ATTINY_TINY_MEMORY
+//          in is_avr.h for the full list; 2-series parts with 2KB+ are excluded)
+//   Low:  SKETCH_HAS_TINY_MEMORY=0, SKETCH_HAS_LARGE_MEMORY=0, SKETCH_HAS_HUGE_MEMORY=0
+//         (AVR Uno/Nano/Leonardo, ATtiny1616/1624/3216/3224 (2-3KB), ESP8266,
+//          Teensy LC/3.0/3.1/3.2, STM32F1, Renesas UNO)
 //   High: SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=0
 //         (Apollo3, nRF52, SAMD21, generic ARM)
 //   Huge: SKETCH_HAS_LARGE_MEMORY=1, SKETCH_HAS_HUGE_MEMORY=1
 //         (ESP32, Teensy 3.5/3.6/4.x, RP2040/RP2350, SAMD51, STM32F4+/H7, native/WASM)
 //
-// Invariant: HUGE=1 implies LARGE=1. LARGE=0 implies HUGE=0.
+// Invariants:
+//   HUGE=1 implies LARGE=1. LARGE=0 implies HUGE=0.
+//   TINY=1 implies LARGE=0 and HUGE=0.
+
+// Tiny-memory devices: <= 1KB SRAM. These cannot fit many of the standard
+// FastLED example sketches. Detect BEFORE computing SKETCH_HAS_LARGE_MEMORY so
+// that LARGE is always 0 on tiny parts.
+// FL_IS_AVR_ATTINY_TINY_MEMORY is defined in platforms/avr/is_avr.h (included
+// via platforms/is_platform.h upstream in FastLED.h).
+#ifdef SKETCH_HAS_TINY_MEMORY
+#define SKETCH_HAS_TINY_MEMORY_OVERRIDDEN 1
+#else
+#if defined(FL_IS_AVR_ATTINY_TINY_MEMORY)
+#define SKETCH_HAS_TINY_MEMORY 1
+#else
+#define SKETCH_HAS_TINY_MEMORY 0
+#endif
+#endif
 
 #ifdef SKETCH_HAS_LARGE_MEMORY
 // User has manually defined SKETCH_HAS_LARGE_MEMORY via build flags.
@@ -61,6 +83,11 @@
 // Enforce invariant: HUGE=1 requires LARGE=1.
 #if SKETCH_HAS_HUGE_MEMORY && !SKETCH_HAS_LARGE_MEMORY
 #error "SKETCH_HAS_HUGE_MEMORY=1 requires SKETCH_HAS_LARGE_MEMORY=1"
+#endif
+
+// Enforce invariant: TINY=1 requires LARGE=0 (and therefore HUGE=0).
+#if SKETCH_HAS_TINY_MEMORY && SKETCH_HAS_LARGE_MEMORY
+#error "SKETCH_HAS_TINY_MEMORY=1 is incompatible with SKETCH_HAS_LARGE_MEMORY=1"
 #endif
 
 // Backward compatibility aliases for external user code.
