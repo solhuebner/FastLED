@@ -67,14 +67,17 @@ async def run_gpio_pretest(
 
                     # Use SerialInterface.reset_device(wait_for_output=True)
                     # to block until the device starts producing serial output
+                    reset_ok = False
                     if serial_interface is not None:
                         print("  Resetting device via SerialInterface.reset_device(wait_for_output=True)...")
-                        await serial_interface.reset_device(board=None)
+                        reset_ok = await serial_interface.reset_device(board=None)
                     else:
                         from ci.util.serial_interface import _pyserial_dtr_reset
 
-                        _pyserial_dtr_reset(port)
-                        await asyncio.sleep(1.0)
+                        reset_ok = _pyserial_dtr_reset(port)
+
+                    # Use longer boot_wait if reset reported failure
+                    boot_wait = 1.0 if reset_ok else 3.0
 
                     client = RpcClient(
                         port,
@@ -82,7 +85,7 @@ async def run_gpio_pretest(
                         serial_interface=serial_interface,
                         verbose=True,
                     )
-                    await client.connect(boot_wait=1.0, drain_boot=True)
+                    await client.connect(boot_wait=boot_wait, drain_boot=True)
                     ping_response = await client.send("ping", retries=3)
                     print(f"\u2705 Ping successful after DTR reset: {ping_response.data}")
                 except KeyboardInterrupt as ki:
@@ -260,14 +263,16 @@ async def run_pin_discovery(
                 client = None
 
                 # Use SerialInterface.reset_device(wait_for_output=True)
+                reset_ok = False
                 if serial_interface is not None:
                     print("  Resetting device via SerialInterface.reset_device(wait_for_output=True)...")
-                    await serial_interface.reset_device(board=None)
+                    reset_ok = await serial_interface.reset_device(board=None)
                 else:
                     from ci.util.serial_interface import _pyserial_dtr_reset
 
-                    _pyserial_dtr_reset(port)
-                    await asyncio.sleep(1.0)
+                    reset_ok = _pyserial_dtr_reset(port)
+
+                boot_wait = 1.0 if reset_ok else 3.0
 
                 client = RpcClient(
                     port,
@@ -275,7 +280,7 @@ async def run_pin_discovery(
                     serial_interface=serial_interface,
                     verbose=True,
                 )
-                await client.connect(boot_wait=1.0, drain_boot=True)
+                await client.connect(boot_wait=boot_wait, drain_boot=True)
                 ping_response = await client.send("ping", timeout=30.0, retries=3)
                 print(f"\u2705 Ping successful after DTR reset: {ping_response.data}")
             except KeyboardInterrupt as ki:
