@@ -1001,13 +1001,27 @@ async def _run_schema_and_pin_setup(ctx: RunContext) -> int | None:
         print(f"{Fore.RED}AUTORESEARCH ABORTED - GPIO PRE-TEST FAILED")
         print(f"{Fore.RED}=" * 60)
         print()
-        print("The autoresearch cannot proceed without a physical connection")
-        print("between the TX and RX pins.")
+        print("The GPIO connectivity test did not pass. Possible causes:")
         print()
-        print(
-            f"Please connect a jumper wire from GPIO {ctx.effective_tx_pin} to GPIO {ctx.effective_rx_pin}"
-        )
-        print("and run the autoresearch again.")
+        print("  1. RPC COMMUNICATION FAILURE: The device is not responding to")
+        print("     JSON-RPC commands. Check serial output above for boot errors")
+        print("     or crashes. Try power-cycling the device.")
+        print()
+        tx = ctx.effective_tx_pin if ctx.effective_tx_pin is not None else PIN_TX
+        rx = ctx.effective_rx_pin if ctx.effective_rx_pin is not None else PIN_RX
+        print("  2. WRONG PIN PAIR: The jumper wire may be connected to different")
+        print(f"     pins than expected (tested TX={tx}, RX={rx}).")
+        print("     Try: bash autoresearch --auto-discover-pins")
+        print("     Or specify pins explicitly: --tx-pin N --rx-pin M")
+        print()
+        print("  3. NO JUMPER WIRE: If no jumper wire is connected, connect one")
+        print(f"     between GPIO {tx} and GPIO {rx}.")
+        print()
+        print("  4. DRIVER FAILURE: The pin test passed (electrical connection OK)")
+        print("     but the LED driver captured 0 edges from DMA. This indicates")
+        print("     a driver/DMA configuration issue, NOT a wiring problem.")
+        print("     Check firmware logs for '[RX TEST]: wait() succeeded but 0")
+        print("     edges captured' messages.")
         print()
         return 1
 
