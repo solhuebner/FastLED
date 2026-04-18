@@ -338,10 +338,18 @@ size_t capture(fl::shared_ptr<fl::RxDevice> rx_channel, fl::span<uint8_t> rx_buf
     // For other drivers (PARLIO, SPI, UART, I2S), disable io_loop_back (use external GPIO wire)
     bool is_rmt_driver = (fl::strcmp(driver_name, "RMT") == 0);
     rx_config.io_loop_back = is_rmt_driver;
+    // RX DMA streaming: extends capture past the non-DMA cap by sizing
+    // mem_block_symbols = 14336 so ESP-IDF allocates ~14 DMA descriptor
+    // nodes (each 4092 bytes), yielding a 57 KB user-buffer cap — enough to
+    // capture ~583 WS2812B LEDs in a single rmt_receive() call. Safe for
+    // non-RMT TX paths (SPI, PARLIO, I2S, UART, LCD_*) that don't contend
+    // for the shared ESP32-S3 DMA slot. RMT loopback stays non-DMA.
+    // See issue #2254.
+    rx_config.use_dma = !is_rmt_driver;
     if (is_rmt_driver) {
         FL_WARN("[CAPTURE] RMT TX -> RMT RX: Internal loopback enabled (io_loop_back=true)");
     } else {
-        FL_WARN("[CAPTURE] " << driver_name << " TX -> RMT RX: External GPIO wire (io_loop_back=false)");
+        FL_WARN("[CAPTURE] " << driver_name << " TX -> RMT RX: External GPIO wire (io_loop_back=false, use_dma=true)");
     }
 
     // Driver-aware capture strategy:
