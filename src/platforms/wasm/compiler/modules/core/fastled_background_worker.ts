@@ -48,7 +48,7 @@ async function loadThreeJSModules() {
       { OutputPass },
       BufferGeometryUtils
     ] = await Promise.all([
-      import('../../vendor/three/build/three.module.js'),
+      import('../../vendor/three/three.module.js'),
       import('../../vendor/three/examples/jsm/postprocessing/EffectComposer.js'),
       import('../../vendor/three/examples/jsm/postprocessing/RenderPass.js'),
       import('../../vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js'),

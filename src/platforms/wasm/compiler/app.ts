@@ -7,7 +7,7 @@
  */
 
 // Three.js imports are vendored locally so the frontend can build without npm.
-import * as THREE from './vendor/three/build/three.module.js';
+import * as THREE from './vendor/three/three.module.js';
 import Stats from './vendor/three/examples/jsm/libs/stats.module.js';
 import { GUI } from './vendor/three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
