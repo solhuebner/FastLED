@@ -200,4 +200,54 @@ FL_TEST_CASE("fl::parse_lnk") {
     }
 }
 
+FL_TEST_CASE("fl::parse_lnk_with_metadata") {
+    FL_SUBCASE("URL only, no metadata") {
+        LnkMetadata m = parse_lnk_with_metadata(
+            string_view("https://example.com/a.mp3\n"));
+        FL_CHECK(m.isValid());
+        FL_CHECK_EQ(m.primary.host(), string_view("example.com"));
+        FL_CHECK(m.sha256.empty());
+        FL_CHECK_FALSE(m.fallback.isValid());
+    }
+
+    FL_SUBCASE("URL + sha256 + fallback") {
+        LnkMetadata m = parse_lnk_with_metadata(string_view(
+            "https://example.com/b.mp3\n"
+            "sha256=deadbeef1234\n"
+            "fallback=https://mirror.example.com/b.mp3\n"));
+        FL_CHECK(m.isValid());
+        FL_CHECK_EQ(m.primary.host(), string_view("example.com"));
+        FL_CHECK_EQ(m.sha256, fl::string("deadbeef1234"));
+        FL_CHECK(m.fallback.isValid());
+        FL_CHECK_EQ(m.fallback.host(), string_view("mirror.example.com"));
+    }
+
+    FL_SUBCASE("unknown metadata keys are ignored (forward-compat)") {
+        LnkMetadata m = parse_lnk_with_metadata(string_view(
+            "https://example.com/c.mp3\n"
+            "content-type=audio/mpeg\n"
+            "future-key=some value\n"
+            "sha256=abc\n"));
+        FL_CHECK(m.isValid());
+        FL_CHECK_EQ(m.sha256, fl::string("abc"));
+        FL_CHECK_FALSE(m.fallback.isValid());
+    }
+
+    FL_SUBCASE("comments before and between metadata are skipped") {
+        LnkMetadata m = parse_lnk_with_metadata(string_view(
+            "# comment first\n"
+            "https://example.com/d.mp3\n"
+            "# between metadata\n"
+            "sha256=1234\n"));
+        FL_CHECK(m.isValid());
+        FL_CHECK_EQ(m.sha256, fl::string("1234"));
+    }
+
+    FL_SUBCASE("empty input yields invalid metadata") {
+        LnkMetadata m = parse_lnk_with_metadata(string_view(""));
+        FL_CHECK_FALSE(m.isValid());
+        FL_CHECK_FALSE(bool(m));
+    }
+}
+
 } // FL_TEST_FILE

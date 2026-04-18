@@ -245,6 +245,19 @@ class url {
 
 using Url = url;
 
+/// Metadata extracted from a `.lnk` asset link file.
+///
+/// v1: parsed but not enforced; reserved for future integrity/fallback
+/// features. The runtime ignores everything except `primary`.
+struct LnkMetadata {
+    fl::url primary;       ///< First non-comment URL in the file.
+    fl::string sha256;     ///< Hex-encoded sha256 of the expected asset (reserved).
+    fl::url fallback;      ///< Mirror URL used if `primary` fails (reserved).
+
+    bool isValid() const FL_NOEXCEPT { return primary.isValid(); }
+    explicit operator bool() const FL_NOEXCEPT { return primary.isValid(); }
+};
+
 /// Parse the contents of a `.lnk` file into a `fl::url`.
 ///
 /// Format: one URL per line. Leading/trailing whitespace on each line is
@@ -255,6 +268,9 @@ using Url = url;
 /// Future-compat: additional lines (metadata like `sha256=...`,
 /// `fallback=...`) are ignored by this v1 parser so older binaries keep
 /// working when future `.lnk` files grow richer.
+///
+/// See also `parse_lnk_with_metadata()` which returns the URL alongside the
+/// (currently unenforced) metadata fields for forward-compat callers.
 inline url parse_lnk(fl::string_view content) FL_NOEXCEPT {
     fl::size pos = 0;
     while (pos < content.size()) {
@@ -291,6 +307,73 @@ inline url parse_lnk(fl::string_view content) FL_NOEXCEPT {
         return url(line);
     }
     return url();
+}
+
+/// Parse a `.lnk` file into URL + metadata (forward-compat).
+///
+/// Accepts the same format as `parse_lnk()` and additionally scans
+/// non-comment `key=value` lines that follow the primary URL. Recognized
+/// keys:
+///   - `sha256=<hex>`   — stored in `LnkMetadata::sha256`
+///   - `fallback=<url>` — stored in `LnkMetadata::fallback`
+/// Unknown keys are silently ignored (forward-compat).
+///
+/// v1: the returned metadata is parsed but NOT enforced by the runtime.
+/// `sha256` is not verified and `fallback` is not retried. These fields
+/// are reserved for future integrity/retry features so existing `.lnk`
+/// files remain valid when richer behavior lands.
+inline LnkMetadata parse_lnk_with_metadata(fl::string_view content) FL_NOEXCEPT {
+    LnkMetadata out;
+    bool gotPrimary = false;
+    fl::size pos = 0;
+    while (pos < content.size()) {
+        fl::size eol = content.find('\n', pos);
+        fl::size lineEnd = (eol == fl::string_view::npos) ? content.size() : eol;
+        fl::string_view line = content.substr(pos, lineEnd - pos);
+        pos = (eol == fl::string_view::npos) ? content.size() : eol + 1;
+
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line = line.substr(0, line.size() - 1);
+        }
+
+        fl::size s = 0;
+        while (s < line.size() &&
+               (line[s] == ' ' || line[s] == '\t')) {
+            ++s;
+        }
+        fl::size e = line.size();
+        while (e > s &&
+               (line[e - 1] == ' ' || line[e - 1] == '\t')) {
+            --e;
+        }
+        line = line.substr(s, e - s);
+
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        if (!gotPrimary) {
+            out.primary = url(line);
+            gotPrimary = true;
+            continue;
+        }
+
+        // Subsequent lines: look for "key=value" metadata.
+        fl::size eq = line.find('=');
+        if (eq == fl::string_view::npos) {
+            // Unknown non-kv line, ignore (forward-compat).
+            continue;
+        }
+        fl::string_view key = line.substr(0, eq);
+        fl::string_view value = line.substr(eq + 1);
+        if (key == "sha256") {
+            out.sha256 = fl::string(value.data(), value.size());
+        } else if (key == "fallback") {
+            out.fallback = url(value);
+        }
+        // else: unknown key, ignore.
+    }
+    return out;
 }
 
 } // namespace fl

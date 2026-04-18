@@ -7,6 +7,7 @@
 #include "fl/system/arduino.h"
 // IWYU pragma: end_keep
 
+#include "fl/asset.cpp.hpp"
 #include "fl/fastled_internal.cpp.hpp"
 #include "fl/fltest.cpp.hpp"
 #include "fl/id_tracker.cpp.hpp"
