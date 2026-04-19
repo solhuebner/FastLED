@@ -179,7 +179,10 @@ size_t RmtMemoryManager::calculateMemoryBlocks(bool networkActive) FL_NOEXCEPT {
     // Memory pressure detection:
     // - Count already-allocated TX channels (not RX, which uses separate pool)
     // - Calculate remaining TX memory after this allocation
-    // - If insufficient for 4+ total channels, switch to single-buffering
+    // - If insufficient to fit min(SOC_RMT_TX_CANDIDATES_PER_GROUP, 4) channels
+    //   at the requested rate, switch to single-buffering. The clamp at 4
+    //   avoids unnecessary fallback on classic ESP32/S2 (8 TX channels) while
+    //   still triggering correctly on S3/C3/C6/H2 where #1873 lives.
     //
     // Example ESP32-S3 (192 words total):
     // - Channel 0: 96 words (2 blocks) → 96 remaining → only 2 channels fit ✗
@@ -233,15 +236,26 @@ size_t RmtMemoryManager::calculateMemoryBlocks(bool networkActive) FL_NOEXCEPT {
     // Calculate how many TX channels we could fit at the requested rate
     size_t channels_at_requested_rate = (requested_words > 0) ? (available_memory / requested_words) : 0;
 
-    // Memory pressure: If we can't fit all platform TX channels at requested rate,
-    // switch to single-buffering to maximize channel density.
-    // Using SOC_RMT_TX_CANDIDATES_PER_GROUP makes this platform-aware:
-    //   ESP32/S2:     8 / 4 channels → pressure if can't fit all
-    //   ESP32-S3:     4 channels → pressure if <4 fit (drives 4-strip scenarios)
-    //   ESP32-C3/C6/H2: 2 channels → pressure if <2 fit (fixes issue #1873)
+    // Memory pressure threshold: trigger single-buffering fallback when we
+    // can't fit this many TX channels at the requested rate.
+    //
+    // Clamped at 4 so we don't demote classic ESP32/S2 (8 TX channels,
+    // 512 words) on the first allocation — there, 2× buffering fits 4 strips
+    // comfortably and falling back to 1× would change observable behaviour
+    // without fixing any real bug. Platforms with ≤4 TX channels
+    // (ESP32-S3, C3, C6, H2) use their own SOC_RMT_TX_CANDIDATES_PER_GROUP,
+    // which is what drives the #1873 fix on C3/C6/H2.
+    //
+    //   ESP32 / ESP32-S2:     min(8, 4) = 4 → pressure if <4 fit (unchanged)
+    //   ESP32-S3:             min(4, 4) = 4 → pressure if <4 fit (unchanged)
+    //   ESP32-C3 / C6 / H2:   min(2, 4) = 2 → pressure if <2 fit (fixes #1873)
+    constexpr size_t kMemoryPressureThreshold =
+        (SOC_RMT_TX_CANDIDATES_PER_GROUP < 4)
+            ? static_cast<size_t>(SOC_RMT_TX_CANDIDATES_PER_GROUP)
+            : static_cast<size_t>(4);
     bool memory_pressure =
         (requested_blocks > 1 &&
-         channels_at_requested_rate < static_cast<size_t>(SOC_RMT_TX_CANDIDATES_PER_GROUP));
+         channels_at_requested_rate < kMemoryPressureThreshold);
 
     if (memory_pressure) {
         FL_LOG_RMT("Adaptive RMT allocation: Memory pressure detected");
