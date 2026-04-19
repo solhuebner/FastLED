@@ -306,6 +306,14 @@ class SM16824E : public SM16824EController<DATA_PIN, RGB_ORDER> {};
 template<fl::u8 DATA_PIN, fl::EOrder RGB_ORDER>
 class TM1829 : public TM1829Controller800Khz<DATA_PIN, RGB_ORDER> {};
 
+/// @brief TX1813N1 controller class (2020-package 3-in-1 RGB).
+/// @details Protocol-compatible with TM1829 per reporter field-testing on
+/// 2.2 mm × 2.2 mm 2020-package parts. Uses the TM1829 800 kHz timing.
+/// @see TM1829Controller800Khz
+/// @see https://github.com/FastLED/FastLED/issues/1362
+template<fl::u8 DATA_PIN, fl::EOrder RGB_ORDER>
+class TX1813N1 : public TM1829Controller800Khz<DATA_PIN, RGB_ORDER> {};
+
 /// @brief TM1812 controller class.
 /// @copydetails TM1809Controller800Khz
 template<fl::u8 DATA_PIN, fl::EOrder RGB_ORDER>
@@ -404,6 +412,18 @@ class GS1903 : public WS2812Controller800Khz<DATA_PIN, RGB_ORDER> {};
 /// @copydetails SK6812Controller
 template<fl::u8 DATA_PIN, fl::EOrder RGB_ORDER>
 class SK6812 : public SK6812Controller<DATA_PIN, RGB_ORDER> {};
+
+/// @brief SK6812 WWA controller alias.
+/// @details SK6812 WWA (Warm-White / White / Amber) strips use the same 800 kHz
+/// timing and wire protocol as regular SK6812 RGB strips. The three bytes per
+/// pixel are independent white/amber channel intensities instead of R/G/B.
+/// Use the CRGB struct as a 3-byte carrier: \c leds[i].r → channel 1,
+/// \c leds[i].g → channel 2, \c leds[i].b → channel 3 (check your strip's
+/// physical ordering; swap \c RGB_ORDER if channels look transposed).
+/// @see SK6812Controller
+/// @see https://github.com/FastLED/FastLED/issues/1347
+template<fl::u8 DATA_PIN, fl::EOrder RGB_ORDER>
+class SK6812WWA : public SK6812Controller<DATA_PIN, RGB_ORDER> {};
 
 /// @brief SK6822 controller class.
 /// @copydetails SK6822Controller
