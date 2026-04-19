@@ -179,7 +179,10 @@ size_t RmtMemoryManager::calculateMemoryBlocks(bool networkActive) FL_NOEXCEPT {
     // Memory pressure detection:
     // - Count already-allocated TX channels (not RX, which uses separate pool)
     // - Calculate remaining TX memory after this allocation
-    // - If insufficient for 4+ total channels, switch to single-buffering
+    // - If insufficient to fit min(SOC_RMT_TX_CANDIDATES_PER_GROUP, 4) channels
+    //   at the requested rate, switch to single-buffering. The clamp at 4
+    //   avoids unnecessary fallback on classic ESP32/S2 (8 TX channels) while
+    //   still triggering correctly on S3/C3/C6/H2 where #1873 lives.
     //
     // Example ESP32-S3 (192 words total):
     // - Channel 0: 96 words (2 blocks) → 96 remaining → only 2 channels fit ✗
@@ -197,28 +200,62 @@ size_t RmtMemoryManager::calculateMemoryBlocks(bool networkActive) FL_NOEXCEPT {
     }
 
     // Adaptive logic: Maximize TX channel count by detecting memory constraints
-    // ESP32-S3 constraint: 192 words TX memory = 4 channels × 48 words (single-buffer)
-    //                                          or 2 channels × 96 words (double-buffer)
+    // Platform constraints:
+    //   ESP32-S3: 192 words TX memory = 4 channels × 48 words (single-buffer)
+    //                                or 2 channels × 96 words (double-buffer)
+    //   ESP32-C3/C6/H2: 96 words TX memory = 2 channels × 48 words (single-buffer ONLY)
+    //                                      (cannot fit 2 channels with double-buffer)
     //
-    // Strategy: Always use single-buffering (1 block) on ESP32-S3 to maximize channel count
-    // Threshold: If available memory can't fit 4+ total TX channels at requested rate, use 1 block
+    // Strategy: Use single-buffering (1 block) when needed to maximize channel count.
+    // Threshold: If available memory can't fit SOC_RMT_TX_CANDIDATES_PER_GROUP channels
+    //            at the requested rate, fall back to 1 block per channel.
     //
-    // Example ESP32-S3 scenarios:
+    // CRITICAL for ESP32-C3/C6/H2 (GitHub issue #1873):
+    //   These platforms have only 2 TX channels with 96 words shared between them.
+    //   With default 2× buffering (96 words each), the FIRST channel consumes ALL
+    //   TX memory, causing ESP-IDF to fail on second rmt_new_tx_channel() with
+    //   ESP_ERR_NOT_FOUND ("no free tx channels"). The adaptive logic below detects
+    //   this memory pressure and switches to 1× buffering, enabling two strips to
+    //   coexist. Combined with the worker-pool in ChannelEngineRMT, more than 2
+    //   strips can be serialized through the same HW channels.
+    //
+    // Example ESP32-S3 scenarios (max=4 TX channels):
     // - First TX allocation (192 available, 2 blocks requested = 96 words):
     //   192 / 96 = 2 channels → NOT enough for 4+ channels → use 1 block
     // - After 1 TX channel allocated (144 available, 2 blocks requested = 96 words):
     //   144 / 96 = 1.5 channels → NOT enough for 3+ more channels → use 1 block
     //
-    // This ensures we can allocate 4 TX channels on ESP32-S3 (192 / 48 = 4)
+    // Example ESP32-C3 scenarios (max=2 TX channels):
+    // - First TX allocation (96 available, 2 blocks requested = 96 words):
+    //   96 / 96 = 1 channel → NOT enough for 2 channels → use 1 block (48 words)
+    // - After 1 TX channel allocated (48 available, 2 blocks requested = 96 words):
+    //   48 / 96 = 0 channels → NOT enough for 1 more channel → use 1 block (48 words)
     size_t words_per_block = SOC_RMT_MEM_WORDS_PER_CHANNEL;
     size_t requested_words = requested_blocks * words_per_block;
 
     // Calculate how many TX channels we could fit at the requested rate
     size_t channels_at_requested_rate = (requested_words > 0) ? (available_memory / requested_words) : 0;
 
-    // Memory pressure: If we can't fit at least 4 TX channels total (including this one),
-    // switch to single-buffering to maximize channel density
-    bool memory_pressure = (requested_blocks > 1 && channels_at_requested_rate < 4);
+    // Memory pressure threshold: trigger single-buffering fallback when we
+    // can't fit this many TX channels at the requested rate.
+    //
+    // Clamped at 4 so we don't demote classic ESP32/S2 (8 TX channels,
+    // 512 words) on the first allocation — there, 2× buffering fits 4 strips
+    // comfortably and falling back to 1× would change observable behaviour
+    // without fixing any real bug. Platforms with ≤4 TX channels
+    // (ESP32-S3, C3, C6, H2) use their own SOC_RMT_TX_CANDIDATES_PER_GROUP,
+    // which is what drives the #1873 fix on C3/C6/H2.
+    //
+    //   ESP32 / ESP32-S2:     min(8, 4) = 4 → pressure if <4 fit (unchanged)
+    //   ESP32-S3:             min(4, 4) = 4 → pressure if <4 fit (unchanged)
+    //   ESP32-C3 / C6 / H2:   min(2, 4) = 2 → pressure if <2 fit (fixes #1873)
+    constexpr size_t kMemoryPressureThreshold =
+        (SOC_RMT_TX_CANDIDATES_PER_GROUP < 4)
+            ? static_cast<size_t>(SOC_RMT_TX_CANDIDATES_PER_GROUP)
+            : static_cast<size_t>(4);
+    bool memory_pressure =
+        (requested_blocks > 1 &&
+         channels_at_requested_rate < kMemoryPressureThreshold);
 
     if (memory_pressure) {
         FL_LOG_RMT("Adaptive RMT allocation: Memory pressure detected");
