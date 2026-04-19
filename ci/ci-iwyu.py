@@ -842,8 +842,8 @@ def main() -> int:
     # compile_commands.json via clang-tool-chain-iwyu-tool. Bypasses the PIO
     # project-tree assumption entirely — no platformio.ini required. See
     # FastLED#2303.
-    if was_compiled_with_fbuild(build, canonical_board_name):
-        compile_db = get_compile_commands(canonical_board_name, build_root=build)
+    if was_compiled_with_fbuild(_PROJECT_ROOT, build, canonical_board_name):
+        compile_db = get_compile_commands(canonical_board_name, build)
         if compile_db is None:
             print(
                 f"ERROR: could not obtain fbuild compile_commands.json for "

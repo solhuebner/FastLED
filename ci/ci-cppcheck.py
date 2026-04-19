@@ -204,7 +204,7 @@ def main() -> int:
         # emits. Avoids `pio check`'s CMake-configure failure mode (missing
         # partition CSVs etc.) while giving us real cppcheck coverage, not a
         # skip. See FastLED#2303.
-        if was_compiled_with_fbuild(build, canonical_board_name):
+        if was_compiled_with_fbuild(project_root, build, canonical_board_name):
             compile_db = ensure_compile_commands(
                 project_root, build, canonical_board_name
             )

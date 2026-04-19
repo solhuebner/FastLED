@@ -30,7 +30,7 @@ from pathlib import Path
 from ci.util.global_interrupt_handler import handle_keyboard_interrupt
 
 
-def get_compile_commands(board: str, build_root: Path | None = None) -> Path | None:
+def get_compile_commands(board: str, build_root: Path) -> Path | None:
     """Return the path to ``compile_commands.json`` for ``board``.
 
     Thin wrapper around :func:`ci.util.fbuild_compiledb.ensure_compile_commands`
@@ -45,9 +45,10 @@ def get_compile_commands(board: str, build_root: Path | None = None) -> Path | N
 
     Args:
         board: Canonical board / fbuild environment name (e.g. ``"esp32c2"``).
-        build_root: Optional ``.build/`` directory. Defaults to
-            ``<repo-root>/.build/`` — where fbuild writes its artifacts under
-            ``.fbuild/build/<env>/``.
+        build_root: The ``.build/`` directory — where fbuild writes its
+            artifacts under ``.fbuild/build/<env>/``. Callers know their build
+            root; no default is applied (per repo style: parameters don't have
+            defaults).
 
     Returns:
         Path to ``compile_commands.json`` on success, ``None`` if fbuild
@@ -59,8 +60,6 @@ def get_compile_commands(board: str, build_root: Path | None = None) -> Path | N
     from ci.util.fbuild_compiledb import ensure_compile_commands
 
     project_root = Path(__file__).resolve().parent.parent.parent
-    if build_root is None:
-        build_root = project_root / ".build"
     return ensure_compile_commands(project_root, build_root, board)
 
 
