@@ -64,6 +64,52 @@ const urlParams = new URLSearchParams(window.location.search);
 console.log(`⭐ index.js loading, URL: ${window.location.href}`);
 
 /**
+ * FastLED v1 asset manifest loader (issue #2284).
+ *
+ * The WASM build pipeline emits `asset_manifest.json` alongside `fastled.js`.
+ * The manifest maps sketch-relative asset paths (e.g. "data/track.mp3") to
+ * `{url, sha256, fallback}`. sha256 and fallback are parsed but NOT enforced
+ * by v1 — they are reserved for future integrity/retry features.
+ *
+ * We expose the manifest as `window.fastledAssetManifest` so C++-side
+ * `fl::resolve_asset()` consumers (populated via register_asset calls in
+ * generated C++) and pure-JS consumers read from the same source of truth.
+ *
+ * Missing/malformed manifest is non-fatal: sketches that don't use
+ * `fl::asset(...)` continue to work; C++ resolution will return an invalid
+ * url and the existing `fl::url` ctor path is unaffected.
+ */
+(function loadFastledAssetManifest() {
+  // Idempotent: don't clobber a manifest that was injected earlier (e.g., by
+  // server-side rendering or a test harness).
+  if ((window as any).fastledAssetManifest) {
+    console.log('🎛️ fastledAssetManifest already present, skipping fetch');
+    return;
+  }
+  fetch('asset_manifest.json', { cache: 'no-cache' })
+    .then((response) => {
+      if (!response.ok) {
+        // 404 is expected for sketches without a data/ dir; log at info level.
+        console.log(`🎛️ asset_manifest.json not present (${response.status}); continuing without manifest`);
+        (window as any).fastledAssetManifest = {};
+        return null;
+      }
+      return response.json();
+    })
+    .then((manifest) => {
+      if (manifest) {
+        (window as any).fastledAssetManifest = manifest;
+        const count = Object.keys(manifest).length;
+        console.log(`🎛️ Loaded fastledAssetManifest with ${count} entries`);
+      }
+    })
+    .catch((err) => {
+      console.warn('🎛️ asset_manifest.json fetch failed:', err);
+      (window as any).fastledAssetManifest = {};
+    });
+})();
+
+/**
  * Browser Compatibility Check
  * FastLED WASM requires OffscreenCanvas and WebGL2 support for Web Worker mode
  */

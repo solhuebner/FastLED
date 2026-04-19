@@ -1453,6 +1453,34 @@ def generate_manifest(example_name: str, output_dir: Path) -> None:
         json.dump(data_files, f, indent=2)
 
 
+def generate_asset_manifest(example_name: str, output_dir: Path) -> None:
+    """Generate the v1 asset manifest for `<sketch>/data/*.lnk` files.
+
+    Part of FastLED issue #2284. Scans the sketch's ``data/`` directory for
+    ``*.lnk`` asset-link files, parses each into ``{url, sha256, fallback}``
+    (sha256/fallback are reserved and not enforced in v1), and writes the
+    resulting manifest to ``<output_dir>/asset_manifest.json``.
+
+    The HTML bootstrap (``src/platforms/wasm/compiler/index.ts``) fetches
+    this file and injects it as ``window.fastledAssetManifest``. The C++
+    runtime side consumes the same data via ``fl::register_asset`` calls
+    emitted into generated C++ (see ``ci/compiler/asset_scanner.py``).
+    """
+    from ci.compiler.asset_scanner import scan_sketch_assets, write_manifest_json
+
+    sketch_dir = PROJECT_ROOT / "examples" / example_name
+    scan = scan_sketch_assets(sketch_dir)
+    for warning in scan.warnings:
+        print(f"[WASM] {warning}", file=sys.stderr)
+
+    manifest_path = output_dir / "asset_manifest.json"
+    write_manifest_json(scan, manifest_path)
+    if scan.manifest:
+        print(
+            f"[WASM] Wrote asset manifest ({len(scan.manifest)} entries) -> {manifest_path}"
+        )
+
+
 def build(
     example: str,
     output: str,
@@ -1548,6 +1576,11 @@ def build(
         # Step 5: Copy templates and generate manifest
         copy_templates(output_dir)
         generate_manifest(example, output_dir)
+        # v1 asset pipeline (issue #2284): scan <sketch>/data/ for *.lnk
+        # files and emit asset_manifest.json beside fastled.js. The HTML
+        # loader injects this as window.fastledAssetManifest so both JS
+        # consumers and C++ (via fl::resolve_asset) see the same data.
+        generate_asset_manifest(example, output_dir)
 
         total_time = time.time() - start_time
         print(f"\n[WASM] Build successful!")

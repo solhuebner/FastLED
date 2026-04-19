@@ -6,6 +6,7 @@
 // which includes is_teensy.h before this header.
 
 // begin current directory includes
+#include "fl/asset.cpp.hpp"
 #include "fl/fastled_internal.cpp.hpp"
 #include "fl/fltest.cpp.hpp"
 #include "fl/id_tracker.cpp.hpp"

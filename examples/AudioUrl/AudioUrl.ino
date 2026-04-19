@@ -11,6 +11,7 @@
 //   fastled
 
 #include <FastLED.h>
+#include "fl/asset.h"
 #include "fl/ui.h"
 #include "fl/stl/url.h"
 
@@ -19,9 +20,18 @@
 
 CRGB leds[NUM_LEDS];
 
-// Provide an MP3 URL -- the WASM frontend will auto-load and auto-play it.
+// Two ways to provide the URL -- both are supported.
+
+// 1) Legacy: hardcode the URL inline. The WASM frontend will auto-load and
+//    auto-play it. Kept here so the pre-asset-pipeline code path stays tested.
 fl::UIAudio audio("Audio",
     fl::url("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"));
+
+// 2) v1 asset pipeline (issue #2284): point at a file under data/ whose real
+//    URL lives in a sibling *.lnk file. Uncomment to switch to the pipeline.
+//    The .lnk at data/track.mp3.lnk resolves to the same SoundHelix URL.
+//
+// fl::UIAudio audio("Audio", FL_ASSET("data/track.mp3"));
 
 void setup() {
     FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);

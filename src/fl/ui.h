@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "fl/asset.h"
 #include "fl/stl/shared_ptr.h"  // For shared_ptr
 #include "fl/stl/json.h"  // IWYU pragma: keep
 #include "fl/stl/string.h"
@@ -430,6 +431,12 @@ class UIAudio : public UIElement {
     FL_NO_COPY(UIAudio)
     UIAudio(const fl::string& name) FL_NOEXCEPT;
     UIAudio(const fl::string& name, const fl::url& url) FL_NOEXCEPT;
+    /// Asset-handle overload (issue #2284). Resolves `asset` via
+    /// `fl::resolve_asset()` at construction time: the manifest/registry
+    /// is consulted first, then (on host/stub) the local filesystem and
+    /// sibling `.lnk`. If resolution succeeds, forwards to the url()
+    /// constructor; otherwise behaves like the name-only constructor.
+    UIAudio(const fl::string& name, const fl::asset_ref& asset) FL_NOEXCEPT;
     UIAudio(const fl::string& name, const fl::audio::Config& config) FL_NOEXCEPT;
     ~UIAudio() FL_NOEXCEPT;
     audio::Sample next() FL_NOEXCEPT { return mImpl.next(); }
