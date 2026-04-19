@@ -17,7 +17,9 @@ import sys
 from pathlib import Path
 
 
-def _candidate_fbuild_release_dirs(build_root: Path, board_name: str) -> list[Path]:
+def _candidate_fbuild_release_dirs(
+    project_root: Path, build_root: Path, board_name: str
+) -> list[Path]:
     """Candidate locations where fbuild may have written artifacts.
 
     FastLED compiles fbuild with ``build_dir=<repo>/.build/pio/<board>/`` (see
@@ -28,18 +30,22 @@ def _candidate_fbuild_release_dirs(build_root: Path, board_name: str) -> list[Pa
     direct ``--target compiledb`` invocation (no prior FastLED compile) also
     works. An older ``.build/.fbuild/…`` layout is kept as a tail fallback.
 
+    ``project_root`` is passed explicitly rather than derived from
+    ``build_root.name == ".build"`` — callers always know their repo root
+    (every call site has ``_PROJECT_ROOT`` or ``project_root`` locally), and
+    an explicit arg removes the fragile name-based heuristic that silently
+    collapsed candidates when ``build_root`` wasn't conventionally named.
+
     Returned in preference order (first hit wins).
     """
-    # Repo root is the parent of .build/ when build_root follows convention.
-    repo_root = build_root.parent if build_root.name == ".build" else build_root
     return [
         build_root / "pio" / board_name / ".fbuild" / "build" / board_name / "release",
-        repo_root / ".fbuild" / "build" / board_name / "release",
+        project_root / ".fbuild" / "build" / board_name / "release",
         build_root / ".fbuild" / "build" / board_name / "release",
     ]
 
 
-def fbuild_release_dir(build_root: Path, board_name: str) -> Path:
+def fbuild_release_dir(project_root: Path, build_root: Path, board_name: str) -> Path:
     """Return the canonical fbuild release dir for ``board_name``.
 
     Prefers the first of the candidate locations in
@@ -49,14 +55,16 @@ def fbuild_release_dir(build_root: Path, board_name: str) -> Path:
     callers can still materialize artifacts there via
     :func:`ensure_compile_commands`.
     """
-    candidates = _candidate_fbuild_release_dirs(build_root, board_name)
+    candidates = _candidate_fbuild_release_dirs(project_root, build_root, board_name)
     for cand in candidates:
         if cand.exists():
             return cand
     return candidates[0]
 
 
-def was_compiled_with_fbuild(build_root: Path, board_name: str) -> bool:
+def was_compiled_with_fbuild(
+    project_root: Path, build_root: Path, board_name: str
+) -> bool:
     """True iff fbuild produced artifacts for ``board_name`` anywhere we look.
 
     Probes every candidate release dir from
@@ -65,13 +73,16 @@ def was_compiled_with_fbuild(build_root: Path, board_name: str) -> bool:
     the canonical fbuild-vs-PIO backend signal for post-compile tooling.
     """
     return any(
-        cand.exists() for cand in _candidate_fbuild_release_dirs(build_root, board_name)
+        cand.exists()
+        for cand in _candidate_fbuild_release_dirs(project_root, build_root, board_name)
     )
 
 
-def _find_existing_compile_db(build_root: Path, board_name: str) -> Path | None:
+def _find_existing_compile_db(
+    project_root: Path, build_root: Path, board_name: str
+) -> Path | None:
     """Return an existing ``compile_commands.json`` for ``board_name``, or None."""
-    for cand in _candidate_fbuild_release_dirs(build_root, board_name):
+    for cand in _candidate_fbuild_release_dirs(project_root, build_root, board_name):
         cdb = cand / "compile_commands.json"
         if cdb.exists():
             return cdb
@@ -99,7 +110,7 @@ def ensure_compile_commands(
     Returns:
         Path to ``compile_commands.json`` on success, ``None`` otherwise.
     """
-    cdb = _find_existing_compile_db(build_root, board_name)
+    cdb = _find_existing_compile_db(project_root, build_root, board_name)
     if cdb is not None:
         return cdb
 
@@ -141,4 +152,4 @@ def ensure_compile_commands(
     # Re-scan candidate locations — ``fbuild --target compiledb`` writes to
     # ``<repo>/.fbuild/build/<env>/release/`` regardless of which candidate
     # the prior FastLED compile populated.
-    return _find_existing_compile_db(build_root, board_name)
+    return _find_existing_compile_db(project_root, build_root, board_name)
