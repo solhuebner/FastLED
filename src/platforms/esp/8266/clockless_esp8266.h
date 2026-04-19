@@ -165,7 +165,7 @@ protected:
 				intlock.Lock();
 				// if interrupts took longer than 45µs, punt on the current frame
 				if((i32)(__clock_cycles()-last_mark) > 0) {
-					if((i32)(__clock_cycles()-last_mark) > (T1+T2+T3+((WAIT_TIME-INTERRUPT_THRESHOLD)*CLKS_PER_US))) {
+					if((i32)(__clock_cycles()-last_mark) > (i32)(T1+T2+T3+((WAIT_TIME-INTERRUPT_THRESHOLD)*CLKS_PER_US))) {
 						return 0;
 					}
 				}

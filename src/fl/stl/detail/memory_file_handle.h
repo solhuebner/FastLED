@@ -27,7 +27,7 @@ public:
         if (!buffer || count == 0) return 0;
         fl::size_t actual = FL_MIN(count, mBuffer.size());
         for (fl::size_t i = 0; i < actual; ++i) {
-            fl::u8 b;
+            fl::u8 b = 0;
             mBuffer.pop_front(&b);
             buffer[i] = static_cast<char>(b);
         }
