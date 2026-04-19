@@ -33,7 +33,16 @@ namespace platforms {
 // ============================================================================
 // GPIO Register Access Macros (ESP8266)
 // ============================================================================
+//
+// Several of these names collide with the Arduino-ESP8266 core's
+// <esp8266_peri.h>, which defines them as function-like macros with
+// different parameter shapes than FastLED uses internally (see issue
+// #1264). We explicitly #undef each colliding name before redefining so
+// the redefinition is a replacement, not a diagnostic — silences
+// -Wbuiltin-macro-redefined / redefined-warning noise on every TU that
+// pulls this header in.
 
+#undef ESP8266_REG
 // Base register address for GPIO
 #define ESP8266_REG(addr) (*reinterpret_cast<volatile u32*>(0x60000000 + (addr)))  // ok reinterpret cast
 
@@ -50,16 +59,20 @@ namespace platforms {
 #define GPC(p)   ESP8266_REG(0x328 + ((p & 0xF) * 4))
 
 // GPIO pin function register (one per pin)
+#undef GPF
 #define GPF(p)   ESP8266_REG(0x800 + ((p & 0xF) * 4))
 
 // GPIO pin input read macro
+#undef GPIP
 #define GPIP(p)  ((GPI >> (p)) & 1)
 
 // GPIO 16 special registers (separate from 0-15)
 #define GP16O    ESP8266_REG(0x768)  // GPIO16 output
 #define GP16E    ESP8266_REG(0x774)  // GPIO16 enable
 #define GP16I    ESP8266_REG(0x78C)  // GPIO16 input
+#undef GPC16
 #define GPC16    ESP8266_REG(0x790)  // GPIO16 control
+#undef GPF16
 #define GPF16    ESP8266_REG(0x7A0)  // GPIO16 function
 
 // Pin control register bit positions
@@ -69,11 +82,15 @@ namespace platforms {
 // Pin function register bit positions
 #define GPFPU    7   // Pull-up enable (1 = enable)
 #define GPFPD    6   // Pull-down enable (1 = enable)
+#undef GPFFS
 #define GPFFS    4   // Function select bits (4-6)
 
 // GPIO function select helper - sets function select bits to GPIO mode
+#undef GPFFS_GPIO
 #define GPFFS_GPIO(p)  (((p) < 16) ? 0 : 0)  // Function 0 = GPIO for pins 0-15
+#undef GP16FFS
 #define GP16FFS(v)     ((v) << 0)  // GPIO16 function select
+#undef GP16FPD
 #define GP16FPD        6   // GPIO16 pull-down bit
 
 // ============================================================================

@@ -6,6 +6,7 @@
 
 #include "fl/channels/detail/validation/platform.h"
 #include "fl/channels/manager.h"
+#include "fl/stl/compiler_control.h"
 #include "fl/system/log.h"
 
 namespace fl {
@@ -27,6 +28,7 @@ void printEngineValidation() {
     FL_WARN("\n[VALIDATION] Registered drivers: " << infos.size());
     for (fl::size i = 0; i < infos.size(); i++) {
         const auto& info = infos[i];
+        FL_UNUSED(info);  // silences -Wunused-variable when FL_WARN is a no-op
         FL_WARN("  - " << info.name.c_str()
                         << " (priority=" << info.priority
                         << ", enabled=" << (info.enabled ? "true" : "false")
