@@ -172,7 +172,9 @@ template<> void delaycycles<50>() { delaycycles<40>(); delaycycles<10>(); }
 // Millisecond and Microsecond delay implementations
 // ============================================================================
 
-void delay(u32 ms, bool run_async) {
+namespace detail {
+
+void delay_impl(u32 ms, bool run_async) {
 #if SKETCH_HAS_LARGE_MEMORY
   // Check if delay override is active (for fast testing with stub platform)
   // When override is active, skip async pumping and use platform delay directly
@@ -194,9 +196,11 @@ void delay(u32 ms, bool run_async) {
 #endif
 }
 
+}  // namespace detail
+
 void delayMillis(u32 ms) {
   // Legacy function - no async pumping (backward compatibility)
-  delay(ms, false);
+  detail::delay_impl(ms, false);
 }
 
 void delayMicroseconds(u32 us) {

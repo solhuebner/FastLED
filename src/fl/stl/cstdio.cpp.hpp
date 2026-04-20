@@ -10,8 +10,10 @@
 
 // Forward declare delay to avoid Arduino conflict
 namespace fl {
-    void delay(u32 ms, bool run_async);
     void delayMicroseconds(u32 us);
+    namespace detail {
+        void delay_impl(u32 ms, bool run_async);
+    }
 }
 
 // =============================================================================

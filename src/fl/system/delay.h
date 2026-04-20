@@ -81,29 +81,23 @@ template<cycle_t CYCLES> inline void delaycycles_min1() FL_NOEXCEPT {
 // Millisecond and Microsecond delay wrappers
 // ============================================================================
 
-/// Delay for a given number of milliseconds with optional async task pumping
+namespace detail {
+
+/// Internal delay implementation used by the public fl::delay wrapper
 /// @param ms Milliseconds to delay
 /// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LARGE_MEMORY==1)
-void delay(u32 ms, bool run_async = true) FL_NOEXCEPT;
+void delay_impl(u32 ms, bool run_async = true) FL_NOEXCEPT;
 
-/// Template overload for all arithmetic types - coexists with Arduino's extern "C" delay()
-/// Templates have different overload resolution rules and don't conflict with C-linkage functions
-/// This allows "using fl::delay;" to work universally on all platforms including Arduino
-/// @param ms Milliseconds to delay (accepts integers, floats, doubles)
-/// @note Similar technique used by fl::round to coexist with Arduino's ::round()
-/// @note Accepts all integer types (char, short, int, long, etc.) and floating-point types (float, double)
-template<typename T, typename = fl::enable_if_t<fl::is_arithmetic<T>::value>>
-inline void delay(T ms) FL_NOEXCEPT {
-    delay(static_cast<u32>(ms), true);
-}
+}  // namespace detail
 
-/// Template overload with async flag for all arithmetic types
-/// @param ms Milliseconds to delay (accepts integers, floats, doubles)
-/// @param run_async If true, pump async tasks during delay
-/// @note Accepts all integer types (char, short, int, long, etc.) and floating-point types (float, double)
-template<typename T, typename = fl::enable_if_t<fl::is_arithmetic<T>::value>>
-inline void delay(T ms, bool run_async) FL_NOEXCEPT {
-    delay(static_cast<u32>(ms), run_async);
+/// Public delay wrapper that keeps bare Arduino delay() preferred after
+/// `using fl::delay;` while still allowing explicit fl::delay() calls.
+/// @param ms Milliseconds to delay
+/// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LARGE_MEMORY==1)
+template<int Dummy = 0>
+inline void delay(u32 ms, bool run_async = true) FL_NOEXCEPT {
+    (void)Dummy;
+    detail::delay_impl(ms, run_async);
 }
 
 /// Delay for a given number of milliseconds (legacy - no async pumping)
@@ -124,7 +118,7 @@ inline void delayUs(u32 us) FL_NOEXCEPT {
 /// @param ms Milliseconds to delay
 /// @param run_async If true, pump async tasks during delay (only on platforms with SKETCH_HAS_LARGE_MEMORY==1)
 inline void delayMs(u32 ms, bool run_async = true) FL_NOEXCEPT {
-  delay(ms, run_async);
+  detail::delay_impl(ms, run_async);
 }
 
 /// Shorter alias for delayNanoseconds (template version)
