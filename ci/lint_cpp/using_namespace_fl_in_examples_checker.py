@@ -2,8 +2,8 @@
 """Checker to ensure 'using namespace fl;' is not used in example files.
 
 This checker prevents namespace conflicts between fl:: and Arduino built-in functions.
-When FastLED.h does 'using fl::delay;' and an example also does 'using namespace fl;',
-it can create ambiguity with Arduino's delay() function.
+FastLED.h re-exports selected fl:: names, so examples should keep fl:: usage explicit
+instead of pulling the whole namespace into sketch scope.
 
 Examples should use:
 - Explicit qualification: fl::delay(), fl::XYMap, etc.
