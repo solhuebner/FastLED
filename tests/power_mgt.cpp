@@ -9,6 +9,21 @@
 
 FL_TEST_FILE(FL_FILEPATH) {
 
+struct ScopedPowerScalingExponent {
+    explicit ScopedPowerScalingExponent(float exponent)
+        : previous_model(get_power_model()) {
+        PowerModelRGB updated_model = previous_model;
+        updated_model.exponent = exponent;
+        set_power_model(updated_model);
+    }
+
+    ~ScopedPowerScalingExponent() {
+        set_power_model(previous_model);
+    }
+
+    PowerModelRGB previous_model;
+};
+
 FL_TEST_CASE("PowerModelRGB - constructor") {
     PowerModelRGB model(40, 40, 40, 2);
     FL_CHECK(model.red_mW == 40);
@@ -165,6 +180,75 @@ FL_TEST_CASE("Default power model - WS2812 @ 5V") {
     FL_CHECK(current.green_mW == 55);
     FL_CHECK(current.blue_mW == 75);
     FL_CHECK(current.dark_mW == 5);
+}
+
+FL_TEST_CASE("Power scaling exponent - default is linear") {
+    set_power_model(PowerModelRGB(50, 50, 50, 0, 1.0f));
+    FL_CHECK(get_power_scaling_exponent() >= 0.999f);
+    FL_CHECK(get_power_scaling_exponent() <= 1.001f);
+
+    CRGB leds[1] = {CRGB(128, 0, 0)};
+    uint32_t power = calculate_unscaled_power_mW(leds, 1);
+
+    // 128 * 50 >> 8 = 25mW with the default linear scaling model
+    FL_CHECK(power >= 24);
+    FL_CHECK(power <= 25);
+}
+
+FL_TEST_CASE("Power scaling exponent - non linear estimate increases mid brightness demand") {
+    // Demonstrates the single-call pattern: channel weights + response curve
+    // configured together via PowerModelRGB's exponent field.
+    set_power_model(PowerModelRGB(50, 50, 50, 0, 0.87f));
+    FL_CHECK(get_power_scaling_exponent() >= 0.869f);
+    FL_CHECK(get_power_scaling_exponent() <= 0.871f);
+
+    CRGB leds[1] = {CRGB(128, 0, 0)};
+    uint32_t power = calculate_unscaled_power_mW(leds, 1);
+
+    // Non-linear mapping should estimate higher power than the linear 25mW case.
+    FL_CHECK(power > 25);
+
+    // Reset to linear for isolation from subsequent tests.
+    set_power_model(PowerModelRGB());
+}
+
+FL_TEST_CASE("PowerModelRGB - exponent field travels with the model") {
+    // Setting the model with a non-linear exponent replaces the two-call pattern
+    // (set_power_model + set_power_scaling_exponent) with a single call.
+    set_power_model(PowerModelRGB(40, 40, 40, 2, 0.87f));
+
+    PowerModelRGB retrieved = get_power_model();
+    FL_CHECK(retrieved.red_mW == 40);
+    FL_CHECK(retrieved.green_mW == 40);
+    FL_CHECK(retrieved.blue_mW == 40);
+    FL_CHECK(retrieved.dark_mW == 2);
+    FL_CHECK(retrieved.exponent >= 0.869f);
+    FL_CHECK(retrieved.exponent <= 0.871f);
+    FL_CHECK(get_power_scaling_exponent() >= 0.869f);
+    FL_CHECK(get_power_scaling_exponent() <= 0.871f);
+
+    // Reset to linear default via the same single-call pattern.
+    set_power_model(PowerModelRGB());
+    FL_CHECK(get_power_scaling_exponent() >= 0.999f);
+    FL_CHECK(get_power_scaling_exponent() <= 1.001f);
+}
+
+FL_TEST_CASE("Power scaling exponent - limiter becomes more conservative") {
+    set_power_model(PowerModelRGB(80, 80, 80, 0, 1.0f));
+
+    CRGB leds[10];
+    for (int i = 0; i < 10; ++i) {
+        leds[i] = CRGB(255, 255, 255);
+    }
+
+    fl::u8 linear_recommended = calculate_max_brightness_for_power_mW(leds, 10, 128, 1250);
+    FL_CHECK(linear_recommended == 128);
+
+    {
+        ScopedPowerScalingExponent scaling(0.87f);
+        fl::u8 nonlinear_recommended = calculate_max_brightness_for_power_mW(leds, 10, 128, 1250);
+        FL_CHECK(nonlinear_recommended < 128);
+    }
 }
 
 } // FL_TEST_FILE

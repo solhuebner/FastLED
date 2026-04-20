@@ -21,11 +21,22 @@ static CRGB gLeds4[10];    // For zero brightness
 static CRGB gLeds5[10];    // For high power limit
 static CRGB gLeds6[50];    // For brightness scaling with limiting
 
-// Fixture to reset power model to default before each test
-// This prevents power_mgt.cpp tests from affecting power_estimation.cpp tests
+// Fixture to reset power model to default around each test.
+// This prevents power_mgt.cpp tests from affecting power_estimation.cpp tests,
+// and the destructor prevents non-linear model state set mid-test from leaking
+// into any subsequent test in the process.
 struct PowerEstimationFixture {
     PowerEstimationFixture() {
-        // Reset power model to WS2812 @ 5V default (80, 55, 75, 5)
+        reset_to_default();
+    }
+    ~PowerEstimationFixture() {
+        reset_to_default();
+    }
+
+    static void reset_to_default() {
+        // Reset power model to WS2812 @ 5V default (80, 55, 75, 5) with linear
+        // response; set_power_model rebuilds the scaling LUTs from the model's
+        // exponent field so this is sufficient to restore linear behavior.
         set_power_model(PowerModelRGB());
     }
 };
@@ -186,4 +197,20 @@ FL_TEST_CASE_FIXTURE(PowerEstimationFixture,"Power estimation - brightness scali
     FL_REQUIRE(power_full <= 5000 + tolerance);
     FL_REQUIRE(power_half <= 5000 + tolerance);
     FL_REQUIRE(power_quarter <= 5000 + tolerance);
+}
+
+FL_TEST_CASE_FIXTURE(PowerEstimationFixture,"Power estimation - non linear scaling raises mid brightness estimate") {
+    fill_solid(gLeds1, 10, CRGB(255, 255, 255));
+
+    FastLED.addLeds<WS2812, 7, GRB>(gLeds1, 10);
+    FastLED.setBrightness(128);
+
+    uint32_t linear_power = FastLED.getEstimatedPowerInMilliWatts(false);
+
+    PowerModelRGB nonlinear_model = FastLED.getPowerModel();
+    nonlinear_model.exponent = 0.87f;
+    FastLED.setPowerModel(nonlinear_model);
+    uint32_t nonlinear_power = FastLED.getEstimatedPowerInMilliWatts(false);
+
+    FL_REQUIRE(nonlinear_power > linear_power);
 }

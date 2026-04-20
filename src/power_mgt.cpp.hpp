@@ -6,6 +6,12 @@
 #include "pixeltypes.h"       // CRGB
 #include "controller.h"       // CLEDController
 #include "fastpin.h"          // Pin
+#include "fl/system/sketch_macros.h"
+#if SKETCH_HAS_LARGE_MEMORY
+#include "fl/math/math.h"
+#include "fl/stl/array.h"
+#include <math.h>
+#endif
 #include "fl/stl/int.h"           // fl::u32, fl::u8
 #include "power_mgt.h"        // Function declarations (to avoid redefinition errors)
 #include "fl/stl/singleton.h"    // fl::Singleton
@@ -30,9 +36,91 @@
 /// @endcode
 /// @{
 
-/// Global RGB power model (initialized to WS2812 @ 5V defaults)
+static constexpr float kLinearPowerScalingExponent = 1.0f;
+static constexpr float kPowerScalingExponentEpsilon = 0.0001f;
+
+/// Global RGB power model (initialized to WS2812 @ 5V defaults, linear response)
 static PowerModelRGB& gPowerModel() {
     return fl::Singleton<PowerModelRGB>::instance();
+}
+
+#if SKETCH_HAS_LARGE_MEMORY
+static constexpr fl::size kPowerScalingTableSize = 256;
+
+/// Cached forward/reverse LUTs derived from `gPowerModel().exponent`.
+/// Authoritative exponent storage lives in the PowerModel itself; this is a
+/// pure cache rebuilt whenever the model's exponent changes.
+struct PowerScalingState {
+    fl::array<fl::u8, kPowerScalingTableSize> forward;
+    fl::array<fl::u8, kPowerScalingTableSize> reverse;
+
+    PowerScalingState() {
+        reset_identity();
+    }
+
+    void reset_identity() {
+        for (fl::size i = 0; i < kPowerScalingTableSize; ++i) {
+            forward[i] = static_cast<fl::u8>(i);
+            reverse[i] = static_cast<fl::u8>(i);
+        }
+    }
+};
+
+static PowerScalingState& gPowerScaling() {
+    return fl::Singleton<PowerScalingState>::instance();
+}
+
+/// Rebuild the forward/reverse LUTs from the given exponent.
+/// Non-positive or near-1.0 exponents collapse to identity tables.
+static void rebuild_power_scaling_tables(float exponent) {
+    PowerScalingState& state = gPowerScaling();
+    if (!(exponent > 0.0f) ||
+        fl::almost_equal(exponent, kLinearPowerScalingExponent, kPowerScalingExponentEpsilon)) {
+        state.reset_identity();
+        return;
+    }
+
+    // Forward LUT: source brightness -> scaled brightness via pow(x/255, exponent)
+    state.forward[0] = 0;
+    for (fl::size i = 1; i < kPowerScalingTableSize; ++i) {
+        float normalized = static_cast<float>(i) / 255.0f;
+        int mapped = static_cast<int>(lroundf(powf(normalized, exponent) * 255.0f));
+        state.forward[i] = static_cast<fl::u8>(fl::clamp(mapped, 0, 255));
+    }
+    state.forward[255] = 255;
+
+    // Reverse LUT: scaled brightness -> largest source whose forward value is
+    // <= the scaled value. Floor-inverse, so `unmap_power_value()` never
+    // rounds a budgeted scaled brightness *up* past the power budget.
+    state.reverse[0] = 0;
+    int source = 0;
+    for (int scaled = 1; scaled < static_cast<int>(kPowerScalingTableSize); ++scaled) {
+        while (source < 255 && state.forward[source + 1] <= scaled) {
+            ++source;
+        }
+        state.reverse[scaled] = static_cast<fl::u8>(source);
+    }
+}
+#endif
+
+static fl::u8 map_power_value(fl::u8 brightness) {
+#if SKETCH_HAS_LARGE_MEMORY
+    return gPowerScaling().forward[brightness];
+#else
+    return brightness;
+#endif
+}
+
+static fl::u8 unmap_power_value(fl::u8 scaled_brightness) {
+#if SKETCH_HAS_LARGE_MEMORY
+    return gPowerScaling().reverse[scaled_brightness];
+#else
+    return scaled_brightness;
+#endif
+}
+
+fl::u32 scale_power_for_brightness(fl::u32 total_mW, fl::u8 brightness) {
+    return fl::scale32by8(total_mW, map_power_value(brightness));
 }
 
 /// @}
@@ -68,9 +156,9 @@ fl::u32 calculate_unscaled_power_mW(fl::span<const CRGB> leds) {
 
     // Iterate using span's safe indexing
     for(size_t i = 0; i < leds.size(); i++) {
-        red32   += leds[i].r;
-        green32 += leds[i].g;
-        blue32  += leds[i].b;
+        red32   += map_power_value(leds[i].r);
+        green32 += map_power_value(leds[i].g);
+        blue32  += map_power_value(leds[i].b);
     }
 
     red32   *= gPowerModel().red_mW;
@@ -100,11 +188,13 @@ fl::u8 calculate_max_brightness_for_power_vmA(const CRGB* ledbuffer, fl::u16 num
 fl::u8 calculate_max_brightness_for_power_mW(const CRGB* ledbuffer, fl::u16 numLeds, fl::u8 target_brightness, fl::u32 max_power_mW) {
  	fl::u32 total_mW = calculate_unscaled_power_mW( ledbuffer, numLeds);
 
-	fl::u32 requested_power_mW = fl::scale32by8(total_mW, target_brightness);
+	fl::u8 target_brightness_scaled = map_power_value(target_brightness);
+	fl::u32 requested_power_mW = scale_power_for_brightness(total_mW, target_brightness);
 
 	fl::u8 recommended_brightness = target_brightness;
 	if(requested_power_mW > max_power_mW) { 
-        recommended_brightness = (fl::u32)((fl::u8)(target_brightness) * (fl::u32)(max_power_mW)) / ((fl::u32)(requested_power_mW));
+        fl::u8 recommended_scaled = (fl::u32)(target_brightness_scaled * (fl::u32)(max_power_mW)) / requested_power_mW;
+        recommended_brightness = unmap_power_value(recommended_scaled);
 	}
 
 	return recommended_brightness;
@@ -128,7 +218,8 @@ fl::u8 calculate_max_brightness_for_power_mW( fl::u8 target_brightness, fl::u32 
     Serial.println( total_mW);
 #endif
 
-    fl::u32 requested_power_mW = fl::scale32by8(total_mW, target_brightness);
+    fl::u8 target_brightness_scaled = map_power_value(target_brightness);
+    fl::u32 requested_power_mW = scale_power_for_brightness(total_mW, target_brightness);
 #if POWER_DEBUG_PRINT == 1
     if( target_brightness != 255 ) {
         Serial.print("power demand at scaled brightness mW = ");
@@ -150,12 +241,13 @@ fl::u8 calculate_max_brightness_for_power_mW( fl::u8 target_brightness, fl::u32 
         return target_brightness;
     }
 
-    fl::u8 recommended_brightness = (fl::u32)((fl::u8)(target_brightness) * (fl::u32)(max_power_mW)) / ((fl::u32)(requested_power_mW));
+    fl::u8 recommended_scaled = (fl::u32)(target_brightness_scaled * (fl::u32)(max_power_mW)) / ((fl::u32)(requested_power_mW));
+    fl::u8 recommended_brightness = unmap_power_value(recommended_scaled);
 #if POWER_DEBUG_PRINT == 1
     Serial.print("recommended brightness # = ");
     Serial.println( recommended_brightness);
 
-    fl::u32 resultant_power_mW = (total_mW * recommended_brightness) / 256;
+    fl::u32 resultant_power_mW = scale_power_for_brightness(total_mW, recommended_brightness);
     Serial.print("resultant power demand mW = ");
     Serial.println( resultant_power_mW);
 
@@ -178,6 +270,25 @@ void set_max_power_indicator_LED( fl::u8 pinNumber)
 
 void set_power_model(const PowerModelRGB& model) {
     gPowerModel() = model;
+#if SKETCH_HAS_LARGE_MEMORY
+    rebuild_power_scaling_tables(model.exponent);
+#else
+    // Small-memory targets ignore non-linear exponent and keep linear behavior;
+    // clamp the stored field so get_power_scaling_exponent() reports the truth.
+    gPowerModel().exponent = kLinearPowerScalingExponent;
+#endif
+}
+
+void set_power_scaling_exponent(float exponent) {
+    PowerModelRGB model = gPowerModel();
+    model.exponent = exponent;
+    set_power_model(model);
+}
+
+float get_power_scaling_exponent() {
+    // Authoritative storage lives in the model; on small-memory builds the
+    // field is clamped to 1.0 by set_power_model.
+    return gPowerModel().exponent;
 }
 
 PowerModelRGB get_power_model() {

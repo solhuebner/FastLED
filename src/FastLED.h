@@ -1353,10 +1353,35 @@ public:
 	/// @{
 
 	/// Set custom RGB LED power consumption model
-	/// @param model RGB power consumption model
+	/// @param model RGB power consumption model. The model's `exponent` field
+	///        drives the brightness-to-power response, so channel weights and
+	///        the response curve can be configured in a single call:
+	///        @code
+	///        FastLED.setPowerModel(PowerModelRGB(40, 40, 40, 2, 0.87f));
+	///        @endcode
 	/// @example FastLED.setPowerModel(PowerModelRGB(40, 40, 40, 2));
 	inline void setPowerModel(const PowerModelRGB& model) {
 		set_power_model(model);
+	}
+
+	/// Set a non-linear brightness-to-power response exponent
+	/// @param exponent 1.0 = linear (default), values below 1.0 model higher power at mid brightness
+	/// @note Convenience wrapper: equivalent to setting `model.exponent` and
+	///       calling `setPowerModel`. Prefer passing the exponent directly via
+	///       `PowerModelRGB(r, g, b, d, e)` to set both in one step.
+	/// @note `exponent <= 0` or values within 1e-4 of 1.0 fall back to linear
+	///       (identity tables), ignoring the supplied value.
+	/// @note This affects power estimation and limiting only, not rendered brightness.
+	/// @note Only enabled when `SKETCH_HAS_LARGE_MEMORY==1`; smaller-memory targets keep legacy linear behavior.
+	inline void setPowerScalingExponent(float exponent) {
+		set_power_scaling_exponent(exponent);
+	}
+
+	/// Get the configured brightness-to-power response exponent
+	/// @returns the current exponent. Defaults to 1.0 for linear scaling.
+	/// @note Returns 1.0 when `SKETCH_HAS_LARGE_MEMORY==0`.
+	inline float getPowerScalingExponent() const {
+		return get_power_scaling_exponent();
 	}
 
 	/// Set custom RGBW LED power consumption model
@@ -1377,7 +1402,7 @@ public:
 
 	/// Get current RGB power model
 	/// @returns Current RGB power consumption model
-	inline PowerModelRGB getPowerModel() {
+	inline PowerModelRGB getPowerModel() const {
 		return get_power_model();
 	}
 
@@ -1411,11 +1436,14 @@ public:
 	///       fl::u32 total_power = FastLED.getEstimatedPowerInMilliWatts() + mcu_power_mW;
 	///       @endcode
 	///
-	/// @note Uses linear brightness scaling (conservative estimate).
-	///       Power = sum(channel_values * channel_power) * (brightness/255)
+	/// @note Uses the configured power-scaling response.
+	///       Default is linear scaling; use `model.exponent` via `setPowerModel()`
+	///       or the `setPowerScalingExponent()` convenience wrapper to enable a
+	///       non-linear model.
 	///
 	/// @see setMaxPowerInMilliWatts()
 	/// @see setPowerModel()
+	/// @see setPowerScalingExponent()
 	fl::u32 getEstimatedPowerInMilliWatts(bool apply_limiter = true) const;
 
 	/// @} Power Model Configuration

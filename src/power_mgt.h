@@ -20,23 +20,34 @@
 
 /// RGB LED power consumption model
 /// Used for standard 3-channel LEDs (WS2812, WS2812B, APA102, etc.)
+///
+/// The model carries the brightness-to-power response exponent alongside
+/// the per-channel draw so the scaling behavior travels with the model and
+/// can be set in a single `set_power_model(...)` call.
 struct PowerModelRGB {
     fl::u8 red_mW;    ///< Red channel power at full brightness (255), in milliwatts
     fl::u8 green_mW;  ///< Green channel power at full brightness (255), in milliwatts
     fl::u8 blue_mW;   ///< Blue channel power at full brightness (255), in milliwatts
     fl::u8 dark_mW;   ///< Dark LED baseline power consumption, in milliwatts
+    float  exponent;  ///< Brightness-to-power response exponent (1.0 = linear)
 
-    /// Default constructor - WS2812 @ 5V (16mA/11mA/15mA @ 5V)
+    /// Default constructor - WS2812 @ 5V (16mA/11mA/15mA @ 5V), linear response
     constexpr PowerModelRGB()
-        : red_mW(5 * 16), green_mW(5 * 11), blue_mW(5 * 15), dark_mW(5 * 1) {}
+        : red_mW(5 * 16), green_mW(5 * 11), blue_mW(5 * 15), dark_mW(5 * 1),
+          exponent(1.0f) {}
 
     /// Custom RGB power model
     /// @param r Red channel power (mW)
     /// @param g Green channel power (mW)
     /// @param b Blue channel power (mW)
     /// @param d Dark state power (mW)
-    constexpr PowerModelRGB(fl::u8 r, fl::u8 g, fl::u8 b, fl::u8 d)
-        : red_mW(r), green_mW(g), blue_mW(b), dark_mW(d) {}
+    /// @param e Brightness-to-power response exponent. 1.0 = linear (default),
+    ///          values < 1.0 model higher-than-linear draw at mid brightness,
+    ///          values > 1.0 model lower-than-linear draw. Non-positive or
+    ///          near-1.0 values fall back to linear. Only honored on large-memory
+    ///          targets; ignored where `SKETCH_HAS_LARGE_MEMORY==0`.
+    constexpr PowerModelRGB(fl::u8 r, fl::u8 g, fl::u8 b, fl::u8 d, float e = 1.0f)
+        : red_mW(r), green_mW(g), blue_mW(b), dark_mW(d), exponent(e) {}
 };
 
 /// RGBW LED power consumption model
@@ -48,10 +59,12 @@ struct PowerModelRGBW {
     fl::u8 blue_mW;   ///< Blue channel power at full brightness (255), in milliwatts
     fl::u8 white_mW;  ///< White channel power at full brightness (255), in milliwatts
     fl::u8 dark_mW;   ///< Dark LED baseline power consumption, in milliwatts
+    float  exponent;  ///< Brightness-to-power response exponent (1.0 = linear)
 
-    /// Default constructor - SK6812 RGBW @ 5V estimate
+    /// Default constructor - SK6812 RGBW @ 5V estimate, linear response
     constexpr PowerModelRGBW()
-        : red_mW(90), green_mW(70), blue_mW(90), white_mW(100), dark_mW(5) {}
+        : red_mW(90), green_mW(70), blue_mW(90), white_mW(100), dark_mW(5),
+          exponent(1.0f) {}
 
     /// Custom RGBW power model
     /// @param r Red channel power (mW)
@@ -59,13 +72,16 @@ struct PowerModelRGBW {
     /// @param b Blue channel power (mW)
     /// @param w White channel power (mW)
     /// @param d Dark state power (mW)
-    constexpr PowerModelRGBW(fl::u8 r, fl::u8 g, fl::u8 b, fl::u8 w, fl::u8 d)
-        : red_mW(r), green_mW(g), blue_mW(b), white_mW(w), dark_mW(d) {}
+    /// @param e Brightness-to-power response exponent. See PowerModelRGB for details.
+    constexpr PowerModelRGBW(fl::u8 r, fl::u8 g, fl::u8 b, fl::u8 w, fl::u8 d,
+                             float e = 1.0f)
+        : red_mW(r), green_mW(g), blue_mW(b), white_mW(w), dark_mW(d),
+          exponent(e) {}
 
-    /// Convert to RGB model (extracts RGB components only)
+    /// Convert to RGB model (extracts RGB components, preserves exponent)
     /// @note Used internally until RGBW power calculations are implemented
     constexpr PowerModelRGB toRGB() const {
-        return PowerModelRGB(red_mW, green_mW, blue_mW, dark_mW);
+        return PowerModelRGB(red_mW, green_mW, blue_mW, dark_mW, exponent);
     }
 };
 
@@ -79,11 +95,13 @@ struct PowerModelRGBWW {
     fl::u8 white_mW;      ///< Cool white channel power at full brightness (255), in milliwatts
     fl::u8 warm_white_mW; ///< Warm white channel power at full brightness (255), in milliwatts
     fl::u8 dark_mW;       ///< Dark LED baseline power consumption, in milliwatts
+    float  exponent;      ///< Brightness-to-power response exponent (1.0 = linear)
 
-    /// Default constructor - Hypothetical RGBWW @ 5V estimate
+    /// Default constructor - Hypothetical RGBWW @ 5V estimate, linear response
     constexpr PowerModelRGBWW()
         : red_mW(85), green_mW(65), blue_mW(85),
-          white_mW(95), warm_white_mW(95), dark_mW(5) {}
+          white_mW(95), warm_white_mW(95), dark_mW(5),
+          exponent(1.0f) {}
 
     /// Custom RGBWW power model
     /// @param r Red channel power (mW)
@@ -92,21 +110,47 @@ struct PowerModelRGBWW {
     /// @param w Cool white channel power (mW)
     /// @param ww Warm white channel power (mW)
     /// @param d Dark state power (mW)
+    /// @param e Brightness-to-power response exponent. See PowerModelRGB for details.
     constexpr PowerModelRGBWW(fl::u8 r, fl::u8 g, fl::u8 b,
-                              fl::u8 w, fl::u8 ww, fl::u8 d)
+                              fl::u8 w, fl::u8 ww, fl::u8 d,
+                              float e = 1.0f)
         : red_mW(r), green_mW(g), blue_mW(b),
-          white_mW(w), warm_white_mW(ww), dark_mW(d) {}
+          white_mW(w), warm_white_mW(ww), dark_mW(d),
+          exponent(e) {}
 
-    /// Convert to RGB model (extracts RGB components only)
+    /// Convert to RGB model (extracts RGB components, preserves exponent)
     /// @note Used internally until RGBWW power calculations are implemented
     constexpr PowerModelRGB toRGB() const {
-        return PowerModelRGB(red_mW, green_mW, blue_mW, dark_mW);
+        return PowerModelRGB(red_mW, green_mW, blue_mW, dark_mW, exponent);
     }
 };
 
 /// Set custom RGB LED power consumption model
-/// @param model RGB power consumption model
+/// @param model RGB power consumption model. The model's `exponent` field drives
+///        the brightness-to-power response curve used by estimation and limiting;
+///        pass `PowerModelRGB(r, g, b, d, e)` to set channel weights + response
+///        curve in a single call.
+/// @note `exponent <= 0` or values within 1e-4 of 1.0 fall back to linear
+///       (identity tables) rather than rebuilding with a degenerate curve.
 void set_power_model(const PowerModelRGB& model);
+
+/// Set a non-linear brightness-to-power response exponent
+/// @param exponent 1.0 = linear (default), values below 1.0 model higher-than-linear
+///        power draw at mid brightness, values above 1.0 model lower-than-linear draw
+/// @note Convenience wrapper: equivalent to setting `model.exponent` and calling
+///       `set_power_model`. Prefer `set_power_model(PowerModelRGB{..., e})` to
+///       configure channel weights and response in one step.
+/// @note This only affects power estimation and limiting, not rendered LED brightness.
+/// @note `exponent <= 0` or values within 1e-4 of 1.0 fall back to linear
+///       (identity tables) rather than rebuilding with a degenerate curve.
+/// @note Only enabled on platforms where `SKETCH_HAS_LARGE_MEMORY==1`.
+///       Smaller-memory targets keep the legacy linear behavior and ignore this setting.
+void set_power_scaling_exponent(float exponent);
+
+/// Get the current brightness-to-power response exponent
+/// @returns the configured exponent. Defaults to 1.0 for linear scaling.
+/// @note Returns 1.0 on platforms where `SKETCH_HAS_LARGE_MEMORY==0`.
+float get_power_scaling_exponent();
 
 /// Set custom RGBW LED power consumption model
 /// @param model RGBW power consumption model
@@ -187,6 +231,12 @@ fl::u32 calculate_unscaled_power_mW( const CRGB* ledbuffer, fl::u16 numLeds);
 /// @copydoc calculate_unscaled_power_mW(const CRGB*, uint16_t)
 /// @param leds span of LED data to check
 fl::u32 calculate_unscaled_power_mW(fl::span<const CRGB> leds);
+
+/// Applies the configured power-scaling response to a total power value
+/// @param total_mW unscaled total power at full brightness
+/// @param brightness requested brightness in FastLED's 0-255 brightness space
+/// @returns estimated power after applying the configured brightness-to-power response
+fl::u32 scale_power_for_brightness(fl::u32 total_mW, fl::u8 brightness);
 
 /// Determines the highest brightness level you can use and still stay under
 /// the specified power budget for a given set of LEDs.
