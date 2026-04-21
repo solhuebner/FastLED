@@ -131,7 +131,14 @@ bool SPISingleESP32::begin(const SpiHw1::Config& config) FL_NOEXCEPT {
     // Initialize bus with auto DMA channel selection
     esp_err_t ret = spi_bus_initialize(mHost, &bus_config, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
-        return false;
+        if (ret != ESP_ERR_INVALID_STATE) {
+            // Genuine initialization failure — bail out
+            return false;
+        }
+        // ESP_ERR_INVALID_STATE means the bus is already initialized
+        // by another driver. This is the canonical ESP-IDF pattern for
+        // sharing an SPI bus: skip bus init and proceed to
+        // spi_bus_add_device.
     }
 
     // Configure SPI device

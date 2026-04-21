@@ -168,6 +168,7 @@ bool SpiChannelEngineAdapter::initializeControllerIfNeeded(
 
     if (lanes == 1) {
         SpiHw1::Config config;
+        config.bus_num = static_cast<fl::u8>(ctrl.controller->getBusId());
         config.clock_pin = clockPin;
         config.data_pin = dataPin;
         config.clock_speed_hz = 20000000;  // 20 MHz for APA102
