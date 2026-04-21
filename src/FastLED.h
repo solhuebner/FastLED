@@ -1627,7 +1627,15 @@ using fl::UIDropdown;
 using fl::UIGroup;
 using fl::XYMap;
 using fl::round;  // Template version avoids conflicts with ::round
-using fl::delay;  // Explicit fl::delay() stays available without hijacking bare Arduino delay()
+// Only expose fl::delay as global delay() on non-hardware platforms (stub/WASM).
+// On real Arduino platforms, Arduino's native delay(uint32_t) is already in scope;
+// importing fl::delay there causes an ambiguous-overload error for any third-party
+// library (e.g. IRremote) that calls the unqualified delay().
+// Users who need fl::delay's async-task-pumping behaviour can call fl::delay() or
+// fl::delayMs() explicitly.
+#if defined(FASTLED_STUB_IMPL)
+using fl::delay;
+#endif
 
 // Common fl:: type aliases for global namespace convenience
 template<typename T> using fl_vector = fl::vector<T>;
