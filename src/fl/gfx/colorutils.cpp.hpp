@@ -1058,50 +1058,64 @@ CHSV ColorFromPalette(const CHSVPalette256 &pal, fl::u8 index,
     return hsv;
 }
 
+namespace detail {
+
+template <typename TSrcPalette, typename TDestPalette>
+void UpscalePaletteRepeat(const TSrcPalette &srcpal,
+                          TDestPalette &destpal) {
+    const fl::u16 src_size = sizeof(srcpal.entries) / sizeof(srcpal.entries[0]);
+    const fl::u16 dest_size =
+        sizeof(destpal.entries) / sizeof(destpal.entries[0]);
+    const fl::u16 repeat = dest_size / src_size;
+    for (fl::u16 i = 0; i < src_size; ++i) {
+        const fl::u16 start = i * repeat;
+        for (fl::u16 j = 0; j < repeat; ++j) {
+            destpal[static_cast<fl::u8>(start + j)] = srcpal[static_cast<fl::u8>(i)];
+        }
+    }
+}
+
+template <typename TSrcPalette, typename TDestPalette>
+void UpscalePaletteInterpolated(const TSrcPalette &srcpal,
+                                TDestPalette &destpal) {
+    const fl::u16 dest_size =
+        sizeof(destpal.entries) / sizeof(destpal.entries[0]);
+    for (fl::u16 i = 0; i < dest_size; ++i) {
+        destpal[static_cast<fl::u8>(i)] =
+            ColorFromPalette(srcpal, static_cast<fl::u8>(i));
+    }
+}
+
+} // namespace detail
+
 void UpscalePalette(const class CRGBPalette16 &srcpal16,
                     class CRGBPalette256 &destpal256) {
-    for (int i = 0; i < 256; ++i) {
-        destpal256[(fl::u8)(i)] = ColorFromPalette(srcpal16, i);
-    }
+    detail::UpscalePaletteInterpolated(srcpal16, destpal256);
 }
 
 void UpscalePalette(const class CHSVPalette16 &srcpal16,
                     class CHSVPalette256 &destpal256) {
-    for (int i = 0; i < 256; ++i) {
-        destpal256[(fl::u8)(i)] = ColorFromPalette(srcpal16, i);
-    }
+    detail::UpscalePaletteInterpolated(srcpal16, destpal256);
 }
 
 void UpscalePalette(const class CRGBPalette16 &srcpal16,
                     class CRGBPalette32 &destpal32) {
-    for (fl::u8 i = 0; i < 16; ++i) {
-        fl::u8 j = i * 2;
-        destpal32[j + 0] = srcpal16[i];
-        destpal32[j + 1] = srcpal16[i];
-    }
+    detail::UpscalePaletteRepeat(srcpal16, destpal32);
 }
 
 void UpscalePalette(const class CHSVPalette16 &srcpal16,
                     class CHSVPalette32 &destpal32) {
-    for (fl::u8 i = 0; i < 16; ++i) {
-        fl::u8 j = i * 2;
-        destpal32[j + 0] = srcpal16[i];
-        destpal32[j + 1] = srcpal16[i];
-    }
+    detail::UpscalePaletteRepeat(srcpal16, destpal32);
 }
 
 void UpscalePalette(const class CRGBPalette32 &srcpal32,
                     class CRGBPalette256 &destpal256) {
-    for (int i = 0; i < 256; ++i) {
-        destpal256[(fl::u8)(i)] = ColorFromPalette(srcpal32, i);
-    }
+    detail::UpscalePaletteInterpolated(srcpal32, destpal256);
 }
 
 void UpscalePalette(const class CHSVPalette32 &srcpal32,
                     class CHSVPalette256 &destpal256) {
-    for (int i = 0; i < 256; ++i) {
-        destpal256[(fl::u8)(i)] = ColorFromPalette(srcpal32, i);
-    }
+    detail::UpscalePaletteInterpolated(srcpal32, destpal256);
 }
 
 #if 0
