@@ -59,6 +59,7 @@ private:
     spi_host_device_t mHost;
     bool mInitialized;
     bool mTransactionActive;
+    bool mBusInitializedByUs = false;
 
     // DMA buffer management
     DMABuffer mDMABuffer;            // Current DMA buffer
@@ -82,6 +83,7 @@ SPISingleESP32::SPISingleESP32(int bus_id, const char* name) FL_NOEXCEPT
     , mHost(SPI2_HOST)
     , mInitialized(false)
     , mTransactionActive(false)
+    , mBusInitializedByUs(false)
     , mDMABuffer()
     , mBufferAcquired(false) {
 }
@@ -131,7 +133,16 @@ bool SPISingleESP32::begin(const SpiHw1::Config& config) FL_NOEXCEPT {
     // Initialize bus with auto DMA channel selection
     esp_err_t ret = spi_bus_initialize(mHost, &bus_config, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
-        return false;
+        if (ret != ESP_ERR_INVALID_STATE) {
+            // Genuine initialization failure — bail out
+            return false;
+        }
+        // ESP_ERR_INVALID_STATE means the bus is already initialized
+        // by another driver. This is the canonical ESP-IDF pattern for
+        // sharing an SPI bus: skip bus init and proceed to
+        // spi_bus_add_device.
+    } else {
+        mBusInitializedByUs = true;
     }
 
     // Configure SPI device
@@ -145,7 +156,9 @@ bool SPISingleESP32::begin(const SpiHw1::Config& config) FL_NOEXCEPT {
     // Add device to bus
     ret = spi_bus_add_device(mHost, &dev_config, &mSPIHandle);
     if (ret != ESP_OK) {
-        spi_bus_free(mHost);
+        if (mBusInitializedByUs) {
+            spi_bus_free(mHost);
+        }
         return false;
     }
 
@@ -276,7 +289,9 @@ void SPISingleESP32::cleanup() FL_NOEXCEPT {
             mSPIHandle = nullptr;
         }
 
-        spi_bus_free(mHost);
+        if (mBusInitializedByUs) {
+            spi_bus_free(mHost);
+        }
         mInitialized = false;
     }
 }
