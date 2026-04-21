@@ -428,11 +428,9 @@ fl::u32 CFastLED::getEstimatedPowerInMilliWatts(bool apply_limiter) const {
 		effective_brightness = (*mPPowerFunc)(mScale, mNPowerData);
 	}
 
-	// Scale by effective brightness (linear scaling)
-	// Power = unscaled_power * (brightness / 255)
-	// Uses scale32by8() to prevent overflow and ensure proper rounding
+	// Scale by the configured power-brightness response.
 	// Note: MCU power consumption is NOT included - caller should add platform-specific MCU power if needed
-	return fl::scale32by8(total_power_mW, effective_brightness);
+	return scale_power_for_brightness(total_power_mW, effective_brightness);
 }
 
 //
