@@ -85,7 +85,7 @@ namespace fl {
 
 // RMT device specialization for ESP32
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) FL_NOEXCEPT {
     auto device = RmtRxChannel::create(pin);
     if (!device) {
         return fl::make_shared<DummyRxDevice>("RMT RX channel creation failed");
@@ -95,7 +95,7 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) {
 
 // ISR device specialization for ESP32
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) FL_NOEXCEPT {
     auto device = GpioIsrRx::create(pin);
     if (!device) {
         return fl::make_shared<DummyRxDevice>("GPIO ISR RX creation failed");
@@ -105,14 +105,14 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) {
 
 // FLEXPWM not available on ESP32
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) FL_NOEXCEPT {
     (void)pin;
     return fl::make_shared<DummyRxDevice>("FLEXPWM RX not supported on ESP32");
 }
 
 // DEFAULT maps to RMT on ESP32
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) FL_NOEXCEPT {
     return RxDevice::create<RxDeviceType::RMT>(pin);
 }
 
@@ -120,7 +120,7 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pi
 
 // FLEXPWM device specialization for Teensy 4.x
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) FL_NOEXCEPT {
     auto device = FlexPwmRxChannel::create(pin);
     if (!device) {
         return fl::make_shared<DummyRxDevice>("FlexPWM RX channel creation failed");
@@ -130,21 +130,21 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) {
 
 // RMT not available on Teensy
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) FL_NOEXCEPT {
     (void)pin;
     return fl::make_shared<DummyRxDevice>("RMT RX not supported on Teensy");
 }
 
 // ISR not available on Teensy
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) FL_NOEXCEPT {
     (void)pin;
     return fl::make_shared<DummyRxDevice>("ISR RX not supported on Teensy");
 }
 
 // DEFAULT maps to FLEXPWM on Teensy 4.x
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) FL_NOEXCEPT {
     return RxDevice::create<RxDeviceType::FLEXPWM>(pin);
 }
 
@@ -178,28 +178,28 @@ fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pi
 
 // RMT device specialization (dummy for non-ESP32, non-stub)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::RMT>(int pin) FL_NOEXCEPT {
     (void)pin;  // Suppress unused parameter warning
     return RxDevice::createDummy();
 }
 
 // ISR device specialization (dummy for non-ESP32, non-stub)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::ISR>(int pin) FL_NOEXCEPT {
     (void)pin;  // Suppress unused parameter warning
     return RxDevice::createDummy();
 }
 
 // FLEXPWM device specialization (dummy for unsupported platforms)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::FLEXPWM>(int pin) FL_NOEXCEPT {
     (void)pin;  // Suppress unused parameter warning
     return RxDevice::createDummy();
 }
 
 // DEFAULT maps to RMT on unsupported platforms (returns dummy)
 template <>
-fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) {
+fl::shared_ptr<RxDevice> RxDevice::create<RxDeviceType::PLATFORM_DEFAULT>(int pin) FL_NOEXCEPT {
     return RxDevice::create<RxDeviceType::RMT>(pin);
 }
 
