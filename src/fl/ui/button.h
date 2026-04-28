@@ -60,7 +60,7 @@ class UIButton : public UIElement {
         }
         return false;
     }
-    int clickedCount() const FL_NOEXCEPT { return mImpl.clickedCount(); }
+    int clickedCount() const FL_NOEXCEPT;
     operator bool() const FL_NOEXCEPT { return clicked(); }
     bool value() const FL_NOEXCEPT { return clicked(); }
 
@@ -139,20 +139,25 @@ class UIButton : public UIElement {
             added = true;
         }
         void onBeginFrame() FL_NOEXCEPT override;
+        int realButtonClickCount() const FL_NOEXCEPT { return mRealButtonClickCount; }
 
       private:
         UIButton *mOwner;
         bool added = false;
         bool mClickedLastFrame = false;
         bool mPressedLastFrame = false;
+        bool mRealButtonClickedLastFrame = false;
+        int mRealButtonClickCount = 0;
     };
 
   private:
     function_list<void(UIButton &)> mCallbacks;
     function_list<void()> mPressCallbacks;
     function_list<void()> mReleaseCallbacks;
-    Listener mListener;
     fl::shared_ptr<IButtonInput> mButtonInput;
+    // Declared last so it is destroyed first and removes itself from
+    // EngineEvents before mButtonInput / callback lists are torn down.
+    Listener mListener;
 };
 
 FASTLED_UI_DEFINE_OPERATORS(UIButton)
